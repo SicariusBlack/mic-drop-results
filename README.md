@@ -1,5 +1,6 @@
 # Mic Drop Results
-A program that generates result slides from judging data
+A program that generates result slides from judging data<br>
+[More info about Mic Drop here](https://discord.gg/ZeGWzgvFcR)
 
 ## Installation
 To be filled
