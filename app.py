@@ -17,6 +17,10 @@ df.index = np.arange(0, len(df))
 df["r"] = pd.DataFrame(zip(df.iloc[:, 0], df.iloc[:, 1] * -1)) \
     .apply(tuple, axis=1).rank(method="min", ascending=False).astype(int)
 
+# Remove .0 from whole numbers
+format_number = lambda x: str(int(x)) if x % 1 == 0 else str(x)
+df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_number)
+
 print(df)
 
 # Section B: To PowerPoint
