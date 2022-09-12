@@ -7,11 +7,12 @@ assignees: berkeleyfx
 
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. For example: I'm always frustrated when [...]
+Please replace the non-bolded text to match the context that you are describing!
 
-**Describe the solution you would like**
-A clear and concise description of what you want to happen.
+**Describe the feature you would love to see**
+A clear and concise description of what you want to include in this program.
 
 **Additional context**
-Add any other context or screenshots about the feature request here.
+Please also include any other context or screenshots about the feature here.
+
+Thank you for your help and support!

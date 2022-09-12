@@ -7,17 +7,20 @@ assignees: berkeleyfx
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+Please replace the non-bolded text to match the context that you are describing!
 
-**Describe how to reproduce the bug**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '...'
-3. Scroll down to '...' and see the error
+**Describe the bug**
+A clear description of what the bug is.
+
+**Describe the steps to reproduce the bug**
+1. Go to [...]
+2. Click on [...]
+3. Scroll down to [...] and see the error
 
 **Expected behavior**
-A clear and concise description of what you expected to happen instead of what actually happened.
+A clear description of what you expected to happen instead of what actually happened (if it does not show an error).
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**Related files or screenshots**
+If applicable, add screenshots or sample files that you used to help explain your problem.
+
+Thank you for your help and support!
