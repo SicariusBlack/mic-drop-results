@@ -27,8 +27,9 @@ Here are some things you should keep in mind when editing **data.xlsx**:
 - Column names are preferably given in lowercase without any space between characters
 - Do not name any columns `r` because the column for ranks will later use the same name
 
-### Template editing
-This section guides you how to customize **template.pptm**.
+### Template editing**
+<sup>(**This is a very important section)</sup><br>
+This section guides you how to customize **template.pptm** and **data.xlsx**.
 
 - Make sure your template presentation has the extension `.pptm` or macros would not be able to run on this presentation
 - Look up **Trust Center Settings** and make sure **Trust access to the VBA project object model** is checked
