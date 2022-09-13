@@ -36,6 +36,10 @@ Here are some mechanisms behind the conditional color formatting for scores
 
 **Ranking**<br>
 This section explains how ranks are calculated.
+- Ranks are based on the first two columns, with the first (usually the average score) sorted in descending order, and the second column (usually the standard deviation) in ascending order
+- If two people have a different average score, the one with a higher score will get a higher rank
+- If two people have the same average score, the one with a lower std will get a higher rank
+- If two people have the same average and std, they will hold the same rank
 
 (to be continued)
 
