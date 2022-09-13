@@ -9,7 +9,7 @@ To install, please check out the [latest release](https://github.com/berkeleyfx/
 The following files are required and they all have to be in the same directory.
 
 **Program-end**<br>
-These files are inseperable and should never be modified or renamed unless there is an update.
+These files are inseparable and should never be modified or renamed unless there is an update.
 
 - **app.exe**
 - **config.json** (you can modify if you know exactly what you are doing)
