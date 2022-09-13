@@ -16,7 +16,7 @@ These files are inseparable and should never be modified or renamed unless there
 - **Module1.bas**
 
 **Round-dependent**<br>
-These files will vary every round. You can find samples of these files in [`/sample`](./sample).
+These files will vary every round. You can find samples of these files in [`/sample`](./sample) or in the **sample.zip** file included in every release.
 
 - **data.xlsx**
 - **template.pptm**
