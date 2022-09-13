@@ -45,8 +45,9 @@ This section explains how ranks are calculated.
 Here are some tips for special themes that do not depend on the average score or standard deviation.
 - If you want to invert the sorting order (for example, in a theme where you have to submit the worst songs to all judges, the ones with the lowest scores will win), you can create a new temporary column `avg_temp`, which will not appear on the slides, that multiplies all values in the `avg` column by -1 and put it at the beginning.
 - If you want to disable secondary column sorting, you can make a temporary column where every row has the same number, and move it after the first column.
+- There is always a way to sort your data no matter how crazy your theme idea is, otherwise we would never know who places first and who places last, right?
 
-(to be continued)
+More features are on their way on future updates.
 
 ## Contributions
 All contributions are appreciated. Make sure you follow this [Python Style Guide](https://peps.python.org/pep-0008/) for consistency when making changes to the code.
