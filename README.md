@@ -22,7 +22,18 @@ These files will vary every round. You can find samples of these files in [`/sam
 - **template.pptm**
 
 ## Mechanisms
-To be filled
+Before discussing the mechanisms, here are some things you should keep in mind when editing **data.xlsx**:
+- Do not give any two columns the same name
+- Column names are preferably given in lowercase without any space between characters
+- Do not name any columns `r` because the column for ranks will later use the same name
+
+**Conditional formatting**<br>
+Here are some mechanisms behind the conditional color formatting for scores
+- Column names that start with `score` by default (you can change it in **config.json**) will use conditional color formatting for numbers
+- The average scores are not formatted by default. If you want them to be formatted, rename the column from `avg` to `score` for example (previous rule).
+- Conditional formatting will only apply to text in white (**#FFFFFF**). You can customize the range and color in **config.json**.
+
+(to be continued)
 
 ## Contributions
 All contributions are appreciated. Make sure you follow this [Python Style Guide](https://peps.python.org/pep-0008/) for consistency when making changes to the code.
