@@ -9,7 +9,7 @@ To be filled
 The following files are required and they all have to be in the same directory.
 
 ## Contributions
-All contributions are appreciated. Make sure you follow [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html) for consistency when making changes to the code.
+All contributions are appreciated. Make sure you follow this [Python Style Guide](https://peps.python.org/pep-0008/) for consistency when making changes to the code.
 
 #### Additional contributions
 - Report a bug or suggest a feature [(here)](https://github.com/berkeleyfx/mic-drop-results/issues/new/choose)
