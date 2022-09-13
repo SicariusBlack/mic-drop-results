@@ -30,7 +30,7 @@ Before discussing the mechanisms, here are some things you should keep in mind w
 **Conditional formatting**<br>
 Here are some mechanisms behind the conditional color formatting for scores
 - Column names that start with `score` by default (you can change it in **config.json**) will use conditional color formatting for numbers
-- The average scores are not formatted by default. If you want them to be formatted, rename the column from `avg` to `score` for example. (a reference to the previous rule)
+- The average scores are not formatted by default. If you want them to be formatted, rename the column from `avg` to `score` for example (a reference to the previous rule)
 - Conditional formatting will only apply to text in white (**#FFFFFF**)
 - You can customize the range and color in **config.json**.
 
