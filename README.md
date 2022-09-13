@@ -27,12 +27,15 @@ Before discussing the mechanisms, here are some things you should keep in mind w
 - Column names are preferably given in lowercase without any space between characters
 - Do not name any columns `r` because the column for ranks will later use the same name
 
-### Conditional formatting
-Here are some mechanisms behind the conditional color formatting for scores
-- Column names that start with `score` by default (you can change it in **config.json**) will use conditional color formatting for numbers
-- The average scores are not formatted by default. If you want them to be formatted, rename the column from `avg` to `score` for example (a reference to the previous rule)
-- Conditional formatting will only apply to text in white (**#FFFFFF**)
-- You can customize the range and color in **config.json**.
+### Template editing
+This section guides you how to customize **template.pptm**.
+
+- Make sure your template presentation has the extension `.pptm` or macros would not be able to run on this presentation
+- Look up **Trust Center Settings** and make sure **Trust access to the VBA project object model** is checked
+- Each slide is a template. You can specified which template is used for each contestant through the `template` column in **data.xlsx**
+- Any texts in the presentation that follow the format `{column_name}` will be replaced with the corresponding value from the `column_name` column
+- It is fine to have columns that will not appear on the slides and vice versa, a textbox with `{column_name}` that does not have a column named `column_name` will be left as is. They will not throw an error.
+- `{r}` will be replaced with the rank of the contestant in that round
 
 ### Ranking
 This section explains how ranks are calculated.
@@ -47,14 +50,12 @@ Here are some tips for special themes that do not depend on the average score or
 - If you want to disable secondary column sorting, you can make a temporary column where every row has the same number, and move it after the first column.
 - There is always a way to sort your data no matter how crazy your theme idea is, otherwise we would never know who places first and who places last, right?
 
-### Template editing
-This section guides you how to customize **template.pptm**.
-
-- Make sure your template presentation has the extension `.pptm` or macros would not be able to run on this presentation
-- Look up **Trust Center Settings** and make sure **Trust access to the VBA project object model** is checked
-- Each slide is a template. You can specified which template is used for each contestant through the `template` column in **data.xlsx**
-- Any texts in the presentation that follow the format `{column_name}` will be replaced with the corresponding value from the `column_name` column
-- It is fine to have columns that will not appear on the slides and vice versa, a textbox with `{column_name}` that does not have a column named `column_name` will be left as is. They will not throw an error.
+### Conditional formatting
+Here are some mechanisms behind the conditional color formatting for scores
+- Column names that start with `score` by default (you can change it in **config.json**) will use conditional color formatting for numbers
+- The average scores are not formatted by default. If you want them to be formatted, rename the column from `avg` to `score` for example (a reference to the previous rule)
+- Conditional formatting will only apply to text in white (**#FFFFFF**)
+- You can customize the range and color in **config.json**.
 
 More features are on their way in future updates.
 
