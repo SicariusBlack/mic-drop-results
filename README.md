@@ -47,7 +47,7 @@ Here are some tips for special themes that do not depend on the average score or
 - If you want to disable secondary column sorting, you can make a temporary column where every row has the same number, and move it after the first column.
 - There is always a way to sort your data no matter how crazy your theme idea is, otherwise we would never know who places first and who places last, right?
 
-More features are on their way on future updates.
+More features are on their way in future updates.
 
 ## Contributions
 All contributions are appreciated. Make sure you follow this [Python Style Guide](https://peps.python.org/pep-0008/) for consistency when making changes to the code.
