@@ -41,7 +41,7 @@ This section explains how ranks are calculated.
 - If two people have the same average score, the one with a lower std will get a higher rank
 - If two people have the same average and std, they will hold the same rank
 
-**Tips for special rounds**
+**Tips for special rounds**<br>
 Here are some tips for special themes that do not depend on the average score or standard deviation.
 
 (to be continued)
