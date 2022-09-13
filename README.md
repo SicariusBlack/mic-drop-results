@@ -47,6 +47,12 @@ Here are some tips for special themes that do not depend on the average score or
 - If you want to disable secondary column sorting, you can make a temporary column where every row has the same number, and move it after the first column.
 - There is always a way to sort your data no matter how crazy your theme idea is, otherwise we would never know who places first and who places last, right?
 
+### Template editing
+This section guides you how to customize **template.pptm**.
+
+- Make sure your template presentation has the extension `.pptm` or macros would not be able to run on this presentation
+- Look up **Trust Center Settings** and make sure **Trust access to the VBA project object model** is checked
+
 More features are on their way in future updates.
 
 ## Contributions
