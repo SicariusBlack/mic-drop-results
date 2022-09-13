@@ -52,6 +52,8 @@ This section guides you how to customize **template.pptm**.
 
 - Make sure your template presentation has the extension `.pptm` or macros would not be able to run on this presentation
 - Look up **Trust Center Settings** and make sure **Trust access to the VBA project object model** is checked
+- Each slide is a template. You can specified which template is used for each contestant through the `template` column in **data.xlsx**
+- Any texts in the presentation that follow the format `{column_name}` will be replaced with the corresponding value from the `column_name` column
 
 More features are on their way in future updates.
 
