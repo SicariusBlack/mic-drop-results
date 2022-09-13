@@ -1,14 +1,58 @@
+import json
 import numpy as np
+import os
 import pandas as pd
 import pathlib
+import re
 
 from pptx import Presentation
-from pptx_replace import replace_text
+from pptx.dml.color import RGBColor
+from pptx.slide import Slide
 
 import win32com
 import win32com.client
 
+f = open("config.json")
+config = json.load(f)
+
+
+def hex_to_rgb(hex):
+    hex = hex.lstrip("#")
+    return tuple(int(hex[i:i+2], 16) for i in (0, 2, 4))
+
+
+def replace_text(slide: Slide, search_str: str, repl: str) -> Slide:
+    """
+    Modified function from the pptx_replace package
+    https://github.com/PaleNeutron/pptx-replace/blob/master/pptx_replace/replace_core.py
+    """
+    search_pattern = re.compile(re.escape(search_str), re.IGNORECASE)
+
+    range_list = config["format"]["ranges"][::-1]
+    col_list = config["format"]["colors"][::-1]
+    starts = config["format"]["starts_with"]
+
+    for shape in slide.shapes:
+        if shape.has_text_frame and not re.search(search_pattern, shape.text) is None:
+            text_frame = shape.text_frame
+
+            for paragraph in text_frame.paragraphs:
+                for run in paragraph.runs:
+                    if not re.search(search_pattern, run.text) is None:
+                        run.text = re.sub(search_pattern, repl, run.text)
+
+                    if search_str[1:].startswith(starts) and run.font.color.type:
+                        for i, val in enumerate(range_list):
+                            if float(repl) >= val:
+                                run.font.color.rgb = RGBColor(*hex_to_rgb(col_list[i]))
+                                break
+    return slide
+
+
 # Section A: Data Cleaning
+print(f"Mic Drop Results (Version {config['version']})")
+print("https://github.com/berkeleyfx/mic-drop-results")
+
 df = pd.read_excel("data.xlsx")
 df = df.sort_values(by=list(df.columns[:2]), ascending=[False, True])
 df.index = np.arange(0, len(df))
@@ -21,9 +65,10 @@ df["r"] = pd.DataFrame(zip(df.iloc[:, 0], df.iloc[:, 1] * -1)) \
 format_number = lambda x: str(int(x)) if x % 1 == 0 else str(x)
 df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_number)
 
-print(df)
 
 # Section B: To PowerPoint
+print("\nGenerating slides")
+
 path = str(pathlib.Path().resolve()) + "\\"
 
 ppt = win32com.client.Dispatch("PowerPoint.Application")
@@ -46,6 +91,7 @@ output_filename = "output.pptx"
 ppt.Run("SaveAs", f"{path}{output_filename}")
 ppt.Quit()
 
+
 # Section C: Fill in the Blank
 prs = Presentation(output_filename)
 
@@ -54,3 +100,10 @@ for i, slide in enumerate(prs.slides):
         replace_text(slide, "{" + col + "}", str(df[col].iloc[i]))
 
 prs.save(output_filename)
+
+
+# Section D: Launching the File
+print(f"\nExported to {path}{output_filename}")
+input("Press Enter to launch the file...")
+
+os.startfile(path + output_filename)
