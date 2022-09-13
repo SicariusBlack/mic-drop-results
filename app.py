@@ -12,9 +12,6 @@ from pptx.slide import Slide
 import win32com
 import win32com.client
 
-f = open("config.json")
-config = json.load(f)
-
 
 def hex_to_rgb(hex):
     hex = hex.lstrip("#")
@@ -27,10 +24,6 @@ def replace_text(slide: Slide, search_str: str, repl: str) -> Slide:
     https://github.com/PaleNeutron/pptx-replace/blob/master/pptx_replace/replace_core.py
     """
     search_pattern = re.compile(re.escape(search_str), re.IGNORECASE)
-
-    range_list = config["format"]["ranges"][::-1]
-    col_list = config["format"]["colors"][::-1]
-    starts = config["format"]["starts_with"]
 
     for shape in slide.shapes:
         if shape.has_text_frame and not re.search(search_pattern, shape.text) is None:
@@ -49,7 +42,16 @@ def replace_text(slide: Slide, search_str: str, repl: str) -> Slide:
     return slide
 
 
-# Section A: Data Cleaning
+# Section A: Load config.json
+config = json.load(open("config.json"))
+
+# Variable shortcuts
+range_list = config["format"]["ranges"][::-1]
+col_list = config["format"]["colors"][::-1]
+starts = config["format"]["starts_with"]
+
+
+# Section B: Data Cleaning
 print(f"Mic Drop Results (Version {config['version']})")
 print("https://github.com/berkeleyfx/mic-drop-results")
 
@@ -66,7 +68,7 @@ format_number = lambda x: str(int(x)) if x % 1 == 0 else str(x)
 df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_number)
 
 
-# Section B: To PowerPoint
+# Section C: To PowerPoint
 print("\nGenerating slides")
 
 path = str(pathlib.Path().resolve()) + "\\"
@@ -92,7 +94,7 @@ ppt.Run("SaveAs", f"{path}{output_filename}")
 ppt.Quit()
 
 
-# Section C: Fill in the Blank
+# Section D: Fill in the Blank
 prs = Presentation(output_filename)
 
 for i, slide in enumerate(prs.slides):
