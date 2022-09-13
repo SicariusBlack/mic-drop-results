@@ -21,6 +21,10 @@ These files will vary every round. You can find samples of these files in [`/sam
 - **data.xlsx**
 - **template.pptm**
 
+<p align="center">
+  <img src="https://github.com/berkeleyfx/mic-drop-results/blob/ee91a53c19acde31786945378d71c328a626a00f/.github/ISSUE_TEMPLATE/images/required_files.png"></img>
+</p>
+
 ## Guides
 Here are some things you should keep in mind when editing **data.xlsx**:
 - Do not give any two columns the same name
