@@ -21,8 +21,8 @@ These files will vary every round. You can find samples of these files in [`/sam
 - **data.xlsx**
 - **template.pptm**
 
-## Mechanisms
-Before discussing the mechanisms, here are some things you should keep in mind when editing **data.xlsx**:
+## Guides
+Here are some things you should keep in mind when editing **data.xlsx**:
 - Do not give any two columns the same name
 - Column names are preferably given in lowercase without any space between characters
 - Do not name any columns `r` because the column for ranks will later use the same name
