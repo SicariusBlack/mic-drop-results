@@ -6,7 +6,7 @@ A program that generates result slides from judging data<br>
 To install, please check out the [latest release](https://github.com/berkeleyfx/mic-drop-results/releases/), download **mic-drop-results.zip**, and extract it. [Round-dependent](https://github.com/berkeleyfx/mic-drop-results#requirements) files are included in **sample.zip**.
 
 ## Requirements
-The following files are required and they all have to be in the same directory.
+The following files are required (five files in total) and they all have to be in the same directory.
 
 **Program-end**<br>
 These files are inseparable and should never be modified or renamed unless there is an update.
