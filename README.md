@@ -27,19 +27,22 @@ Before discussing the mechanisms, here are some things you should keep in mind w
 - Column names are preferably given in lowercase without any space between characters
 - Do not name any columns `r` because the column for ranks will later use the same name
 
-**Conditional formatting**<br>
+### Conditional formatting
 Here are some mechanisms behind the conditional color formatting for scores
 - Column names that start with `score` by default (you can change it in **config.json**) will use conditional color formatting for numbers
 - The average scores are not formatted by default. If you want them to be formatted, rename the column from `avg` to `score` for example (a reference to the previous rule)
 - Conditional formatting will only apply to text in white (**#FFFFFF**)
 - You can customize the range and color in **config.json**.
 
-**Ranking**<br>
+### Ranking
 This section explains how ranks are calculated.
 - Ranks are based on the first two columns, with the first (usually the average score) sorted in descending order, and the second column (usually the standard deviation) in ascending order
 - If two people have a different average score, the one with a higher score will get a higher rank
 - If two people have the same average score, the one with a lower std will get a higher rank
 - If two people have the same average and std, they will hold the same rank
+
+**Tips for special rounds**
+Here are some tips for special themes that do not depend on the average score or standard deviation.
 
 (to be continued)
 
