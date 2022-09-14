@@ -1,5 +1,5 @@
 > **Note**<br>
-> This documentation is a work in progress. Some details may not be explained clearly enough.
+> This documentation is a work in progress. Some details may not have been explained clearly enough.
 
 <h1 align="center">Mic Drop Results</h1>
 
