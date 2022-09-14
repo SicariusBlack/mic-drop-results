@@ -1,9 +1,12 @@
 > **Note**<br>
 > This documentation is a work in progress. Some details may not be explained clearly enough.
 
-# Mic Drop Results
-A program that generates result slides from judging data<br>
-**[More info about Mic Drop here](https://discord.gg/ZeGWzgvFcR)**
+<h1 align="center">Mic Drop Results</h1>
+
+<p align="center">
+  A program that generates result slides from judging data<br>
+  <a href="https://discord.gg/ZeGWzgvFcR"><b>More info about Mic Drop here</b></a>
+</p>
 
 <h2 align="center">Installation</h2>
 
@@ -33,6 +36,8 @@ These files will vary every round. You can find samples of these files in [`/sam
 </p>
 
 <h2 align="center">Guides</h2>
+
+<p align="center">Get to know how the program works through the guides that cover most of the core features.</p>
 
 Here are some things you should keep in mind when editing **data.xlsx**:
 - Do not give any two columns the same name
