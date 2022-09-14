@@ -99,7 +99,11 @@ ppt = win32com.client.Dispatch("PowerPoint.Application")
 ppt.Presentations.Open(f"{path}template.pptm")
 
 # Exported Module
-ppt.VBE.ActiveVBProject.VBComponents.Import(f"{path}Module1.bas")
+try:
+    ppt.VBE.ActiveVBProject.VBComponents.Import(f"{path}Module1.bas")
+except:
+    input("\nError: Please open PowerPoint, look up Trust Center Settings, "
+        "and make sure Trust access to the VBA project object model is checked.")
 
 # Running VBA Functions
 slides_count = ppt.Run("Count")
