@@ -104,7 +104,7 @@ df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_nu
 # Section D: To PowerPoint
 print("\nGenerating slides...")
 print("Please do not click on any PowerPoint windows that may show up in the process.")
-print("Try hitting Enter if the program freezes for more than 20 seconds.")
+print("Try hitting Enter if the program does not respond for more than 15 seconds.")
 
 # Kill all PowerPoint instances
 subprocess.run("TASKKILL /F /IM powerpnt.exe",
