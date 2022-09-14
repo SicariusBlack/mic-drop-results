@@ -56,7 +56,7 @@ col_list = list(map(hex_to_rgb, col_list))
 
 
 # Section B: Check for Updates
-up_to_date = ""
+status = ""
 
 if config["update_check"]:
     try:
@@ -70,17 +70,19 @@ if config["update_check"]:
                 "You can download it using the link below.")
             print("https://github.com/berkeleyfx/mic-drop-results/releases/latest/\n")
 
-            up_to_date = " [update available]"
+            status = "update available"
         elif version < config["version"]:
-            up_to_date = " [beta]"
+            status = "beta"
         else:
-            up_to_date = " [up to date]"
+            status = "up to date"
+        
+        status = " [" + status + "]"
     except:
         pass
 
-print(f"Mic Drop Results (v{config['version']}){up_to_date}")
+print(f"Mic Drop Results (v{config['version']}){status}")
 
-if not "update available" in up_to_date:
+if not "update available" in status:
     print("https://github.com/berkeleyfx/mic-drop-results")
 
 
