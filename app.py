@@ -1,4 +1,5 @@
 from dataclasses import replace
+from genericpath import isdir
 import json
 import os
 import pandas as pd
@@ -137,7 +138,7 @@ ppt.Run("DelSlide", *range(1, slides_count + 1))
 output_filename = "output.pptx"
 path += "output\\"
 
-pathlib.Path(path).mkdir(parents=True, exist_ok=True)
+os.makedirs(path, exist_ok=True)
 
 ppt.Run("SaveAs", f"{path}{output_filename}")
 ppt.Quit()
