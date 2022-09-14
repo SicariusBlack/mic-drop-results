@@ -6,6 +6,6 @@ __pycache__/
 # Repo-exclusive
 build/
 sample/
-*.xlsx
-*.pptm
-*.pptx
+output/
+data.xlsx
+template.pptm

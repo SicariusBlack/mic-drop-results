@@ -15,7 +15,7 @@ import win32com.client
 
 def hex_to_rgb(hex):
     hex = hex.lstrip("#")
-    return tuple(int(hex[i:i+2], 16) for i in (0, 2, 4))
+    return tuple(int(hex[i:i + 2], 16) for i in (0, 2, 4))
 
 
 def replace_text(slide: Slide, search_str: str, repl: str) -> Slide:
@@ -37,7 +37,7 @@ def replace_text(slide: Slide, search_str: str, repl: str) -> Slide:
                     if search_str[1:].startswith(starts) and run.font.color.type:
                         for i, val in enumerate(range_list):
                             if float(repl) >= val:
-                                run.font.color.rgb = RGBColor(*hex_to_rgb(col_list[i]))
+                                run.font.color.rgb = RGBColor(*col_list[i])
                                 break
     return slide
 
@@ -50,6 +50,7 @@ range_list = config["format"]["ranges"][::-1]
 col_list = config["format"]["colors"][::-1]
 starts = config["format"]["starts_with"]
 
+col_list = list(map(hex_to_rgb, col_list))
 
 # Section B: Data Cleaning
 print(f"Mic Drop Results (Version {config['version']})")
@@ -69,7 +70,8 @@ df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_nu
 
 
 # Section C: To PowerPoint
-print("\nGenerating slides")
+print("\nGenerating slides...\nPlease do not click on any PowerPoint windows that may show up in the process.")
+print("Try hitting Enter if the program freezes for more than 30 seconds.")
 
 path = str(pathlib.Path().resolve()) + "\\"
 
@@ -90,18 +92,24 @@ for i in range(slides_count):
     ppt.Run("DelSlide", 1)
 
 output_filename = "output.pptx"
+path += "output\\"
+
+print(path)
+
+pathlib.Path(path).mkdir(parents=True, exist_ok=True)
+
 ppt.Run("SaveAs", f"{path}{output_filename}")
 ppt.Quit()
 
 
 # Section D: Fill in the Blank
-prs = Presentation(output_filename)
+prs = Presentation(path + output_filename)
 
 for i, slide in enumerate(prs.slides):
     for col in df.columns:
         replace_text(slide, "{" + col + "}", str(df[col].iloc[i]))
 
-prs.save(output_filename)
+prs.save(path + output_filename)
 
 
 # Section D: Launching the File
