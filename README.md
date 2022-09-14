@@ -1,4 +1,5 @@
-> Note: This documentation is a work in progress. Some details may not be explained clearly.
+> **Note**<br>
+> This documentation is a work in progress. Some details may not be explained clearly.
 
 # Mic Drop Results
 A program that generates result slides from judging data<br>
