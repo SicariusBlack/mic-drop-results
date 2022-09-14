@@ -59,7 +59,7 @@ This section guides you how to customize **template.pptm** and **data.xlsx**.
 ### Tips and tricks
 Some tips as well as tricks to avoid certain issue that may appear.
 
-- You can design your templates somewhere else (Google Slides or a PPTX file, for example) and copy the slides to the PPTM file
+- You can design your templates somewhere else (Google Slides or a `.pptx` file, for example) and copy the slides to the `.pptm` file
 - Please do not copy text and use the paste-and-keep-text-only feature. Copy the whole textbox or type everything again yourself or the program will not replace the text that you have just pasted. I ran into this issue once and there is no fix for it.
 
 <h2 align="center">Advanced Guides</h2>
