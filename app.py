@@ -19,28 +19,29 @@ def hex_to_rgb(hex):
     return tuple(int(hex[i:i + 2], 16) for i in (0, 2, 4))
 
 
-def replace_text(slide: Slide, df, search_str: str, repl: str) -> Slide:
-    """Replaces and formats text
-    
-    Modified function from the pptx_replace package
-    https://github.com/PaleNeutron/pptx-replace/blob/master/pptx_replace/replace_core.py
-    """
-    search_pattern = re.compile(re.escape(search_str), re.IGNORECASE)
+def replace_text(slide: Slide, df, i) -> Slide:
+    """Replaces and formats text"""
+    cols = df.columns.values.tolist()
 
     for shape in slide.shapes:
-        if shape.has_text_frame and re.search(search_pattern, shape.text):
-            text_frame = shape.text_frame
+        if not shape.has_text_frame or not "{" in shape.text:
+            continue
 
-            for paragraph in text_frame.paragraphs:
-                for run in paragraph.runs:
-                    if re.search(search_pattern, run.text):
-                        run.text = re.sub(search_pattern, repl, run.text)
+        text_frame = shape.text_frame
 
-                    if search_str[1:].startswith(starts) and run.font.color.type:
-                        for i, val in enumerate(range_list):
-                            if float(repl) >= val:
-                                run.font.color.rgb = RGBColor(*col_list[i])
-                                break
+        for paragraph in text_frame.paragraphs:
+            for run in paragraph.runs:
+                for search_str in set(re.findall(r"(?<={)(.*?)(?=})", run.text)).intersection(cols):
+                    repl = str(df[search_str].iloc[i])
+                    run.text = re.sub("{" + search_str + "}", repl, run.text)
+
+                    if not search_str[1:].startswith(starts) or not run.font.color.type:
+                        continue
+
+                    for ind, val in enumerate(range_list):
+                        if float(repl) >= val:
+                            run.font.color.rgb = RGBColor(*col_list[ind])
+                            break
     return slide
 
 
@@ -104,7 +105,7 @@ df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_nu
 # Section D: To PowerPoint
 print("\nGenerating slides...")
 print("Please do not click on any PowerPoint windows that may show up in the process.")
-print("Try hitting Enter if the program does not respond for more than 15 seconds.")
+print("Try hitting Enter if the program does not respond for more than 10 seconds.")
 
 # Kill all PowerPoint instances
 subprocess.run("TASKKILL /F /IM powerpnt.exe",
@@ -146,8 +147,7 @@ ppt.Quit()
 prs = Presentation(path + output_filename)
 
 for i, slide in enumerate(prs.slides):
-    for col in df.columns:
-        replace_text(slide, df, "{" + col + "}", str(df[col].iloc[i]))
+    replace_text(slide, df, i)
 
 prs.save(path + output_filename)
 
