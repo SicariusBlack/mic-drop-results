@@ -68,7 +68,7 @@ if config["update_check"]:
         if version > config["version"]:
             print(f"\nA new version (v{version}) is available. "
                 "You can download it using the link below.")
-            print("https://github.com/berkeleyfx/mic-drop-results/releases/latest/")
+            print("https://github.com/berkeleyfx/mic-drop-results/releases/latest/\n")
 
             up_to_date = " [update available]"
         elif version < config["version"]:
@@ -78,7 +78,7 @@ if config["update_check"]:
     except:
         pass
 
-print(f"\nMic Drop Results (v{config['version']}){up_to_date}")
+print(f"Mic Drop Results (v{config['version']}){up_to_date}")
 
 if not "update available" in up_to_date:
     print("https://github.com/berkeleyfx/mic-drop-results")
