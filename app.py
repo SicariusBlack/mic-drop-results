@@ -124,6 +124,7 @@ for t in df.loc[:, "template"]:
 # Delete template slides when done
 ppt.Run("DelSlide", *range(1, slides_count + 1))
 
+# Save as output file
 output_filename = "output.pptx"
 path += "output\\"
 
