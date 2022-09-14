@@ -8,4 +8,4 @@ build/
 sample/
 output/
 data.xlsx
-template.pptm
+*.pptm
