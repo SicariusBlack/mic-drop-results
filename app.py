@@ -26,12 +26,12 @@ def replace_text(slide: Slide, search_str: str, repl: str) -> Slide:
     search_pattern = re.compile(re.escape(search_str), re.IGNORECASE)
 
     for shape in slide.shapes:
-        if shape.has_text_frame and not re.search(search_pattern, shape.text) is None:
+        if shape.has_text_frame and re.search(search_pattern, shape.text):
             text_frame = shape.text_frame
 
             for paragraph in text_frame.paragraphs:
                 for run in paragraph.runs:
-                    if not re.search(search_pattern, run.text) is None:
+                    if re.search(search_pattern, run.text):
                         run.text = re.sub(search_pattern, repl, run.text)
 
                     if search_str[1:].startswith(starts) and run.font.color.type:
@@ -57,12 +57,13 @@ print(f"Mic Drop Results (Version {config['version']})")
 print("https://github.com/berkeleyfx/mic-drop-results")
 
 df = pd.read_excel("data.xlsx")
-df = df.sort_values(by=list(df.columns[:2]), ascending=[False, True])
-df.index = np.arange(0, len(df))
 
 # Check for cases where avg and std are the same (hold the same rank)
 df["r"] = pd.DataFrame(zip(df.iloc[:, 0], df.iloc[:, 1] * -1)) \
     .apply(tuple, axis=1).rank(method="min", ascending=False).astype(int)
+
+# Sort the slides
+df = df.sort_values(by="r", ascending=True)
 
 # Remove .0 from whole numbers
 format_number = lambda x: str(int(x)) if x % 1 == 0 else str(x)
@@ -70,7 +71,8 @@ df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_nu
 
 
 # Section C: To PowerPoint
-print("\nGenerating slides...\nPlease do not click on any PowerPoint windows that may show up in the process.")
+print("\nGenerating slides...")
+print("Please do not click on any PowerPoint windows that may show up in the process.")
 print("Try hitting Enter if the program freezes for more than 30 seconds.")
 
 path = str(pathlib.Path().resolve()) + "\\"
@@ -93,8 +95,6 @@ for i in range(slides_count):
 
 output_filename = "output.pptx"
 path += "output\\"
-
-print(path)
 
 pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
