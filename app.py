@@ -122,8 +122,7 @@ for t in df.loc[:, "template"]:
     ppt.Run("Duplicate", t)
 
 # Delete template slides when done
-for i in range(slides_count):
-    ppt.Run("DelSlide", 1)
+ppt.Run("DelSlide", *range(1, slides_count + 1))
 
 output_filename = "output.pptx"
 path += "output\\"

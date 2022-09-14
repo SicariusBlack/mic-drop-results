@@ -1,6 +1,6 @@
 Attribute VB_Name = "Module1"
-Function DelSlide(index As Integer)
-    ActivePresentation.Slides(index).Delete
+Function DelSlide(ParamArray ind() As Variant)
+    ActivePresentation.Slides.Range(ind()).Delete
 End Function
 
 Function Count()
