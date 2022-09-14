@@ -19,7 +19,7 @@ def hex_to_rgb(hex):
     return tuple(int(hex[i:i + 2], 16) for i in (0, 2, 4))
 
 
-def replace_text(slide: Slide, search_str: str, repl: str) -> Slide:
+def replace_text(slide: Slide, df, search_str: str, repl: str) -> Slide:
     """Replaces and formats text
     
     Modified function from the pptx_replace package
@@ -66,16 +66,22 @@ if config["update_check"]:
         version = float(response.json()["tag_name"][1:])
         
         if version > config["version"]:
-            print(f"\nA new version (Version {version}) is available. "
+            print(f"\nA new version (v{version}) is available. "
                 "You can download it using the link below.")
-            print("https://github.com/berkeleyfx/mic-drop-results/releases/latest")
+            print("https://github.com/berkeleyfx/mic-drop-results/releases/latest/")
+
+            up_to_date = " [update available]"
+        elif version < config["version"]:
+            up_to_date = " [beta]"
         else:
             up_to_date = " [up to date]"
     except:
         pass
 
-print(f"Mic Drop Results (Version {config['version']}){up_to_date}")
-print("https://github.com/berkeleyfx/mic-drop-results")
+print(f"\nMic Drop Results (v{config['version']}){up_to_date}")
+
+if not "update available" in up_to_date:
+    print("https://github.com/berkeleyfx/mic-drop-results")
 
 
 # Section C: Data Cleaning
@@ -139,7 +145,7 @@ prs = Presentation(path + output_filename)
 
 for i, slide in enumerate(prs.slides):
     for col in df.columns:
-        replace_text(slide, "{" + col + "}", str(df[col].iloc[i]))
+        replace_text(slide, df, "{" + col + "}", str(df[col].iloc[i]))
 
 prs.save(path + output_filename)
 
