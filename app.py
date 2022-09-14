@@ -1,4 +1,4 @@
-import itertools
+from dataclasses import replace
 import json
 import os
 import pandas as pd
@@ -33,7 +33,7 @@ def replace_text(slide: Slide, df, i) -> Slide:
         for run in [p.runs[0] for p in text_frame.paragraphs]:
             for search_str in set(re.findall(r"(?<={)(.*?)(?=})", run.text)).intersection(cols):
                 repl = str(df[search_str].iloc[i])
-                run.text = re.sub("{" + search_str + "}", repl, run.text)
+                run.text = run.text.replace("{" + search_str + "}", repl)
 
                 if not search_str[1:].startswith(starts) or not run.font.color.type:
                     continue
