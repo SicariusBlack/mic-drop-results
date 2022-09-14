@@ -6,6 +6,8 @@ A program that generates result slides from judging data<br>
 
 To install, please check out the [latest release](https://github.com/berkeleyfx/mic-drop-results/releases/), download **mic-drop-results.zip**, and extract it. [Round-dependent](https://github.com/berkeleyfx/mic-drop-results#requirements) files are included in **sample.zip**.
 
+In the end, there should be five files and they should all be put in the same directory.
+
 <h2 align="center">Requirements</h2>
 
 <p align="center">The following files are required and they all have to be in the same directory.</p>
@@ -43,6 +45,12 @@ This section guides you how to customize **template.pptm** and **data.xlsx**.
 - Any texts in the presentation that follow the format `{column_name}` will be replaced with the corresponding value from the `column_name` column
 - It is fine to have columns that will not appear on the slides and vice versa, a textbox with `{column_name}` that does not have a column named `column_name` will be left as is. They will not throw an error.
 - `{r}` will be replaced with the rank of the contestant in that round
+
+### Tips and tricks
+Some tips as well as tricks to avoid certain issue that may appear.
+
+- You can design your templates somewhere else (Google Slides or a PPTX file, for example) and copy the slides to the PPTM file
+- Please do not copy text and use the paste-and-keep-text-only feature. Copy the whole textbox or type everything again yourself or the program will not replace the text that you have just pasted. I ran into this issue once and there is no fix for it.
 
 <h2 align="center">Advanced Guides</h2>
 
