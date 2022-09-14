@@ -54,7 +54,7 @@ This section guides you how to customize **template.pptm** and **data.xlsx**.
 - **`{r}`** will be replaced with the rank of the contestant in that round
 
 > **Note**<br>
-> Look up **Trust Center Settings** in the PowerPoint search box and make sure **Trust access to the VBA project object model** is checked. If you skip this step, macros cannot be imported.
+> Look up **Trust Center Settings** in the PowerPoint search box and make sure **Trust access to the VBA project object model** is checked. If you skip this step, macros will not be able to import.
 
 ### Tips and tricks
 Some tips as well as tricks to avoid certain issue that may appear.
