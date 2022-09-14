@@ -1,5 +1,6 @@
 {
     "version": 1.2,
+    "update_check": 1,
     "format": {
         "starts_with": "score",
         "ranges": [0, 4, 9, 10],

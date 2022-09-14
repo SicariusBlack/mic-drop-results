@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import pathlib
 import re
+import requests
 
 from pptx import Presentation
 from pptx.dml.color import RGBColor
@@ -52,10 +53,27 @@ starts = config["format"]["starts_with"]
 
 col_list = list(map(hex_to_rgb, col_list))
 
-# Section B: Data Cleaning
+
+# Section B: Check for Updates
 print(f"Mic Drop Results (Version {config['version']})")
 print("https://github.com/berkeleyfx/mic-drop-results")
 
+if config["update_check"]:
+    try:
+        response = requests.get("https://api.github.com/repos/"
+            "berkeleyfx/mic-drop-results/releases/latest")
+
+        version = float(response.json()["tag_name"][1:])
+        
+        if version > config["version"]:
+            print(f"\nA new version (Version {version}) is available. "
+                "You can download it using the link below.")
+            print("https://github.com/berkeleyfx/mic-drop-results/releases/latest")
+    except:
+        pass
+
+
+# Section C: Data Cleaning
 df = pd.read_excel("data.xlsx")
 
 # Check for cases where avg and std are the same (hold the same rank)
@@ -70,7 +88,7 @@ format_number = lambda x: str(int(x)) if x % 1 == 0 else str(x)
 df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_number)
 
 
-# Section C: To PowerPoint
+# Section D: To PowerPoint
 print("\nGenerating slides...")
 print("Please do not click on any PowerPoint windows that may show up in the process.")
 print("Try hitting Enter if the program freezes for more than 30 seconds.")
@@ -102,7 +120,7 @@ ppt.Run("SaveAs", f"{path}{output_filename}")
 ppt.Quit()
 
 
-# Section D: Fill in the Blank
+# Section E: Fill in the Blank
 prs = Presentation(path + output_filename)
 
 for i, slide in enumerate(prs.slides):
@@ -112,7 +130,7 @@ for i, slide in enumerate(prs.slides):
 prs.save(path + output_filename)
 
 
-# Section D: Launching the File
+# Section F: Launching the File
 print(f"\nExported to {path}{output_filename}")
 input("Press Enter to launch the file...")
 
