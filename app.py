@@ -1,3 +1,4 @@
+import itertools
 import json
 import os
 import pandas as pd
@@ -29,19 +30,18 @@ def replace_text(slide: Slide, df, i) -> Slide:
 
         text_frame = shape.text_frame
 
-        for paragraph in text_frame.paragraphs:
-            for run in paragraph.runs:
-                for search_str in set(re.findall(r"(?<={)(.*?)(?=})", run.text)).intersection(cols):
-                    repl = str(df[search_str].iloc[i])
-                    run.text = re.sub("{" + search_str + "}", repl, run.text)
+        for run in [p.runs[0] for p in text_frame.paragraphs]:
+            for search_str in set(re.findall(r"(?<={)(.*?)(?=})", run.text)).intersection(cols):
+                repl = str(df[search_str].iloc[i])
+                run.text = re.sub("{" + search_str + "}", repl, run.text)
 
-                    if not search_str[1:].startswith(starts) or not run.font.color.type:
-                        continue
+                if not search_str[1:].startswith(starts) or not run.font.color.type:
+                    continue
 
-                    for ind, val in enumerate(range_list):
-                        if float(repl) >= val:
-                            run.font.color.rgb = RGBColor(*col_list[ind])
-                            break
+                for ind, val in enumerate(range_list):
+                    if float(repl) >= val:
+                        run.font.color.rgb = RGBColor(*col_list[ind])
+                        break
     return slide
 
 
