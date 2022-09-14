@@ -1,5 +1,4 @@
 import json
-import numpy as np
 import os
 import pandas as pd
 import pathlib
@@ -19,7 +18,8 @@ def hex_to_rgb(hex):
 
 
 def replace_text(slide: Slide, search_str: str, repl: str) -> Slide:
-    """
+    """Replaces and formats text
+    
     Modified function from the pptx_replace package
     https://github.com/PaleNeutron/pptx-replace/blob/master/pptx_replace/replace_core.py
     """
