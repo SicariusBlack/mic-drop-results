@@ -55,13 +55,12 @@ col_list = list(map(hex_to_rgb, col_list))
 
 
 # Section B: Check for Updates
-print(f"Mic Drop Results (Version {config['version']})")
-print("https://github.com/berkeleyfx/mic-drop-results")
+up_to_date = ""
 
 if config["update_check"]:
     try:
         response = requests.get("https://api.github.com/repos/"
-            "berkeleyfx/mic-drop-results/releases/latest")
+            "berkeleyfx/mic-drop-results/releases/latest", timeout=3)
 
         version = float(response.json()["tag_name"][1:])
         
@@ -69,8 +68,13 @@ if config["update_check"]:
             print(f"\nA new version (Version {version}) is available. "
                 "You can download it using the link below.")
             print("https://github.com/berkeleyfx/mic-drop-results/releases/latest")
+        else:
+            up_to_date = " [up to date]"
     except:
         pass
+
+print(f"Mic Drop Results (Version {config['version']}){up_to_date}")
+print("https://github.com/berkeleyfx/mic-drop-results")
 
 
 # Section C: Data Cleaning
@@ -98,7 +102,7 @@ path = str(pathlib.Path().resolve()) + "\\"
 ppt = win32com.client.Dispatch("PowerPoint.Application")
 ppt.Presentations.Open(f"{path}template.pptm")
 
-# Exported Module
+# Import module
 try:
     ppt.VBE.ActiveVBProject.VBComponents.Import(f"{path}Module1.bas")
 except:
