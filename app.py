@@ -4,6 +4,7 @@ import pandas as pd
 import pathlib
 import re
 import requests
+import subprocess
 
 from pptx import Presentation
 from pptx.dml.color import RGBColor
@@ -97,6 +98,11 @@ print("\nGenerating slides...")
 print("Please do not click on any PowerPoint windows that may show up in the process.")
 print("Try hitting Enter if the program freezes for more than 30 seconds.")
 
+# Kill all PowerPoint instances
+subprocess.run("TASKKILL /F /IM powerpnt.exe",
+    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+# Open template presentation
 path = str(pathlib.Path().resolve()) + "\\"
 
 ppt = win32com.client.Dispatch("PowerPoint.Application")
@@ -106,7 +112,7 @@ ppt.Presentations.Open(f"{path}template.pptm")
 try:
     ppt.VBE.ActiveVBProject.VBComponents.Import(f"{path}Module1.bas")
 except:
-    input("\nError: Please open PowerPoint, look up Trust Center Settings, "
+    input("\nERROR: Please open PowerPoint, look up Trust Center Settings, "
         "and make sure Trust access to the VBA project object model is checked.")
 
 # Running VBA Functions
