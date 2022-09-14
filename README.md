@@ -2,11 +2,13 @@
 A program that generates result slides from judging data<br>
 **[More info about Mic Drop here](https://discord.gg/ZeGWzgvFcR)**
 
-## Installation
+<h2 align="center">Installation</h2>
+
 To install, please check out the [latest release](https://github.com/berkeleyfx/mic-drop-results/releases/), download **mic-drop-results.zip**, and extract it. [Round-dependent](https://github.com/berkeleyfx/mic-drop-results#requirements) files are included in **sample.zip**.
 
-## Requirements
-The following files are required and they all have to be in the same directory.
+<h2 align="center">Requirements</h2>
+
+<p align="center">The following files are required and they all have to be in the same directory.</p>
 
 **Program-end**<br>
 These files are inseparable and should never be modified or renamed unless there is an update.
@@ -25,14 +27,14 @@ These files will vary every round. You can find samples of these files in [`/sam
   <img src="https://github.com/berkeleyfx/mic-drop-results/blob/bd2f8a7760670de02baa8e718791ffb044f664ae/.github/images/required_files.png"></img>
 </p>
 
-## Guides
+<h2 align="center">Guides</h2>
+
 Here are some things you should keep in mind when editing **data.xlsx**:
 - Do not give any two columns the same name
 - Column names are preferably given in lowercase without any space between characters
 - Do not name any columns `r` because the column for ranks will later use the same name
 
-### Template editing**
-<sup>(**This is a very important section)</sup><br>
+### Template editing
 This section guides you how to customize **template.pptm** and **data.xlsx**.
 
 - Make sure your template presentation has the extension `.pptm` or macros would not be able to run on this presentation
@@ -41,6 +43,10 @@ This section guides you how to customize **template.pptm** and **data.xlsx**.
 - Any texts in the presentation that follow the format `{column_name}` will be replaced with the corresponding value from the `column_name` column
 - It is fine to have columns that will not appear on the slides and vice versa, a textbox with `{column_name}` that does not have a column named `column_name` will be left as is. They will not throw an error.
 - `{r}` will be replaced with the rank of the contestant in that round
+
+<h2 align="center">Advanced Guides</h2>
+
+<p align="center">More in-depth guides to explore the full potential of this program.</p>
 
 ### Ranking
 This section explains how ranks are calculated.
@@ -64,7 +70,8 @@ Here are some mechanisms behind the conditional color formatting for scores
 
 More features are on their way in future updates.
 
-## Contributions
+<h2 align="center">Contributions</h2>
+
 All contributions are appreciated. Make sure you follow this [Python Style Guide](https://peps.python.org/pep-0008/) for consistency when making changes to the code.
 
 #### Additional contributions
