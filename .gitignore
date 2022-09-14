@@ -7,5 +7,6 @@ __pycache__/
 build/
 sample/
 output/
+releases/
 data.xlsx
 *.pptm
