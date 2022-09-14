@@ -66,7 +66,7 @@ if config["update_check"]:
         version = float(response.json()["tag_name"][1:])
         
         if version > config["version"]:
-            print(f"\nA new version (v{version}) is available. "
+            print(f"A new version (v{version}) is available. "
                 "You can download it using the link below.")
             print("https://github.com/berkeleyfx/mic-drop-results/releases/latest/\n")
 
@@ -102,7 +102,7 @@ df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_nu
 # Section D: To PowerPoint
 print("\nGenerating slides...")
 print("Please do not click on any PowerPoint windows that may show up in the process.")
-print("Try hitting Enter if the program freezes for more than 30 seconds.")
+print("Try hitting Enter if the program freezes for more than 20 seconds.")
 
 # Kill all PowerPoint instances
 subprocess.run("TASKKILL /F /IM powerpnt.exe",
