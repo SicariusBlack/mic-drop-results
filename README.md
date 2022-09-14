@@ -1,3 +1,5 @@
+> Note: This documentation is a work in progress. Some details may not be explained clearly.
+
 # Mic Drop Results
 A program that generates result slides from judging data<br>
 **[More info about Mic Drop here](https://discord.gg/ZeGWzgvFcR)**
@@ -40,7 +42,7 @@ Here are some things you should keep in mind when editing **data.xlsx**:
 This section guides you how to customize **template.pptm** and **data.xlsx**.
 
 - Make sure your template presentation has the extension `.pptm` or macros would not be able to run on this presentation
-- Look up **Trust Center Settings** in PowerPoint and make sure **Trust access to the VBA project object model** is checked
+- Look up **Trust Center Settings** in the PowerPoint search box and make sure **Trust access to the VBA project object model** is checked
 - Each slide is a template. You can specified which template is used for each contestant through the `template` column in **data.xlsx**
 - Any texts in the presentation that follow the format `{column_name}` will be replaced with the corresponding value from the `column_name` column
 - It is fine to have columns that will not appear on the slides and vice versa, a textbox with `{column_name}` that does not have a column named `column_name` will be left as is. They will not throw an error.
