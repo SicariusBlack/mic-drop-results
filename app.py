@@ -1,5 +1,3 @@
-from dataclasses import replace
-from genericpath import isdir
 import json
 import os
 import pandas as pd
@@ -10,6 +8,7 @@ import subprocess
 
 from pptx import Presentation
 from pptx.dml.color import RGBColor
+from pptx.enum.dml import MSO_COLOR_TYPE
 from pptx.slide import Slide
 
 import win32com
@@ -36,8 +35,12 @@ def replace_text(slide: Slide, df, i) -> Slide:
                 repl = str(df[search_str].iloc[i])
                 run.text = run.text.replace("{" + search_str + "}", repl)
 
-                if not search_str[1:].startswith(starts) or not run.font.color.type:
+                if not search_str.startswith(starts) or not run.font.color.type:
                     continue
+
+                if run.font.color.type == MSO_COLOR_TYPE.RGB:
+                    if not run.font.color.rgb == RGBColor(255, 255, 255):
+                        continue
 
                 for ind, val in enumerate(range_list):
                     if float(repl) >= val:
@@ -80,7 +83,7 @@ if config["update_check"]:
         
         status = " [" + status + "]"
     except:
-        pass
+        pass  # Move on if there is no internet connection
 
 print(f"Mic Drop Results (v{config['version']}){status}")
 
