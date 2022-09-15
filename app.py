@@ -6,6 +6,8 @@ import re
 import requests
 import subprocess
 
+from alive_progress import alive_bar
+
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.dml import MSO_COLOR_TYPE
@@ -94,11 +96,12 @@ if not "update available" in status:
 # Section C: Data Cleaning
 xls = pd.ExcelFile("data.xlsx")
 
-sheetnames = [n for n in xls.sheet_names if n.lower() != "contestants"]
+sheetnames_raw = [n for n in xls.sheet_names if n.lower() != "contestants"]
+sheetnames = [re.sub(r'[\\\/:"*?<>|]+', "", name) for name in sheetnames_raw]
 data = {}
 
-for sheet in sheetnames:
-    data[sheet] = pd.read_excel(xls, sheet)
+for i, sheet in enumerate(sheetnames_raw):
+    data[sheetnames[i]] = pd.read_excel(xls, sheet)
 
 for k, df in data.items():
     # Check for cases where avg and std are the same (hold the same rank)
@@ -118,9 +121,7 @@ for k, df in data.items():
 
 # Section D: To PowerPoint
 print("\nGenerating slides...")
-print("Please do not click on any PowerPoint windows that may show up in the process.")
-print("Try hitting Enter if the program does not respond "
-     f"for more than {5 * len(sheetnames) + 3} seconds.")
+print("Please do not click on any PowerPoint windows that may show up in the process.\n")
 
 # Kill all PowerPoint instances
 subprocess.run("TASKKILL /F /IM powerpnt.exe",
@@ -132,38 +133,56 @@ outpath = path + "output\\"
 os.makedirs(outpath, exist_ok=True)
 
 for k, df in data.items():
-    ppt = win32com.client.Dispatch("PowerPoint.Application")
-    ppt.Presentations.Open(f"{path}template.pptm")
+    with alive_bar(8, title=k, title_length=max(map(len, sheetnames)), ctrl_c=False,
+        dual_line=True) as bar:
+        # Open template presentation
+        bar.text = "Opening template.pptm"
+        ppt = win32com.client.Dispatch("PowerPoint.Application")
+        ppt.Presentations.Open(f"{path}template.pptm")
+        bar()
 
-    # Import module
-    try:
-        ppt.VBE.ActiveVBProject.VBComponents.Import(f"{path}Module1.bas")
-    except:
-        input("\nERROR: Please open PowerPoint, look up Trust Center Settings, "
-            "and make sure Trust access to the VBA project object model is checked.")
+        # Import macros
+        bar.text = "Importing macros"
+        try:
+            ppt.VBE.ActiveVBProject.VBComponents.Import(f"{path}Module1.bas")
+        except:
+            input("\nERROR: Please open PowerPoint, look up Trust Center Settings, "
+                "and make sure Trust access to the VBA project object model is checked.")
+        bar()
 
-    # Running VBA Functions
-    slides_count = ppt.Run("Count")
+        # Duplicate slides
+        bar.text = "Duplicating slides"
+        slides_count = ppt.Run("Count")
 
-    for t in df.loc[:, "template"]:
-        ppt.Run("Duplicate", t)
+        for t in df.loc[:, "template"]:
+            ppt.Run("Duplicate", t)
+        bar()
 
-    # Delete template slides when done
-    ppt.Run("DelSlide", *range(1, slides_count + 1))
+        # Delete template slides when done
+        ppt.Run("DelSlide", *range(1, slides_count + 1))
+        bar()
 
-    # Save as output file
-    output_filename = f"{k}.pptx"
+        # Save as output file
+        bar.text = "Saving templates"
+        output_filename = f"{k}.pptx"
 
-    ppt.Run("SaveAs", f"{outpath}{output_filename}")
-    ppt.Quit()
+        ppt.Run("SaveAs", f"{outpath}{output_filename}")
+        bar()
+        ppt.Quit()
+        bar()
 
-    # Fill in the blank
-    prs = Presentation(outpath + output_filename)
+        # Replace text
+        bar.text = "Filling in judging data"
+        prs = Presentation(outpath + output_filename)
 
-    for i, slide in enumerate(prs.slides):
-        replace_text(slide, df, i)
+        for i, slide in enumerate(prs.slides):
+            replace_text(slide, df, i)
+        bar()
 
-    prs.save(outpath + output_filename)
+        # Save
+        bar.text = f"Saving as {outpath + output_filename}"
+        prs.save(outpath + output_filename)
+        bar()
 
 
 # Section E: Launching the File
