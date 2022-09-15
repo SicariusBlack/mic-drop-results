@@ -4,7 +4,9 @@ import pandas as pd
 import pathlib
 import re
 import requests
+import signal
 import subprocess
+import webbrowser
 
 from alive_progress import alive_bar
 
@@ -64,6 +66,7 @@ col_list = list(map(hex_to_rgb, col_list))
 
 # Section B: Check for Updates
 status = ""
+link = ""
 
 if config["update_check"]:
     try:
@@ -75,7 +78,9 @@ if config["update_check"]:
         if version > config["version"]:
             print(f"A new version (v{version}) is available. "
                 "You can download it using the link below.")
-            print("https://github.com/berkeleyfx/mic-drop-results/releases/latest/\n")
+            
+            link = "https://github.com/berkeleyfx/mic-drop-results/releases/latest/"
+            print(link + "\n")
 
             status = "update available"
         elif version < config["version"]:
@@ -90,7 +95,11 @@ if config["update_check"]:
 print(f"Mic Drop Results (v{config['version']}){status}")
 
 if not "update available" in status:
-    print("https://github.com/berkeleyfx/mic-drop-results")
+    link = "https://github.com/berkeleyfx/mic-drop-results"
+    print(link)
+
+# Handle KeyboardInterrupt: automatically open the only link
+signal.signal(signal.SIGINT, lambda *_: webbrowser.open(link, new=0, autoraise=True))
 
 
 # Section C: Data Cleaning
@@ -115,7 +124,7 @@ for k, df in data.items():
     format_number = lambda x: str(int(x)) if x % 1 == 0 else str(x)
     df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_number)
 
-    # Replace {sheet} with sheetname
+    # Replace {sheet} with sheet name
     df["sheet"] = k
 
     # Save df to data dictionary
@@ -136,7 +145,7 @@ outpath = path + "output\\"
 os.makedirs(outpath, exist_ok=True)
 
 for k, df in data.items():
-    with alive_bar(8, title=k, title_length=max(map(len, sheetnames)), ctrl_c=False,
+    with alive_bar(8, title=k, title_length=max(map(len, sheetnames)),
         dual_line=True, spinner="classic") as bar:
         # Open template presentation
         bar.text = "Opening template.pptm"
