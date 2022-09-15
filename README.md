@@ -10,7 +10,7 @@
 
 <h2 align="center">Installation</h2>
 
-To install, please check out the [latest release](https://github.com/berkeleyfx/mic-drop-results/releases/), download **mic-drop-results.zip**, and extract it. [Round-dependent](https://github.com/berkeleyfx/mic-drop-results#requirements) files are included in **sample.zip**.
+To install, please check out the [latest release](https://github.com/berkeleyfx/mic-drop-results/releases/), download [**mic-drop-results.zip**](https://github.com/berkeleyfx/mic-drop-results/releases/latest/download/mic-drop-results.zip), and extract it. Round-dependent files are included in [**sample.zip**](https://github.com/berkeleyfx/mic-drop-results/releases/latest/download/sample.zip).
 
 In the end, there should be five files and they should all be put in the same directory.
 
@@ -26,7 +26,7 @@ These files are inseparable and should never be modified or renamed unless there
 - **Module1.bas**
 
 **Round-dependent**<br>
-These files will vary every round. You can find samples of these files in [`/sample`](./sample) or in the **sample.zip** file included in every release.
+These files will vary every round. You can find samples of these files in [`/sample`](./sample) or in the [**sample.zip**](https://github.com/berkeleyfx/mic-drop-results/releases/latest/download/sample.zip) file included in every release.
 
 - **data.xlsx**
 - **template.pptm**
@@ -48,16 +48,18 @@ Here are some things you should keep in mind when editing **data.xlsx**:
 This section guides you how to customize **template.pptm** and **data.xlsx**.
 
 - Make sure your template presentation has the extension `.pptm` or macros would not be able to run on this presentation
-- Look up **Trust Center Settings** in the PowerPoint search box and make sure **Trust access to the VBA project object model** is checked
 - Each slide is a template. You can specified which template is used for each contestant through the `template` column in **data.xlsx**
-- Any texts in the presentation that follow the format `{column_name}` will be replaced with the corresponding value from the `column_name` column
-- It is fine to have columns that will not appear on the slides and vice versa, a textbox with `{column_name}` that does not have a column named `column_name` will be left as is. They will not throw an error.
-- `{r}` will be replaced with the rank of the contestant in that round
+- Any texts in the presentation that follow the format **`{column_name}`** will be replaced with the corresponding value from the `column_name` column
+- It is fine to have columns that will not appear on the slides and vice versa, a textbox with **`{column_name}`** that does not have a column named `column_name` will be left as is. They will not throw an error.
+- **`{r}`** will be replaced with the rank of the contestant in that round
+
+> **Note**<br>
+> Look up **Trust Center Settings** in the PowerPoint search box and make sure **Trust access to the VBA project object model** is checked. If you skip this step, macros will not be able to import.
 
 ### Tips and tricks
 Some tips as well as tricks to avoid certain issue that may appear.
 
-- You can design your templates somewhere else (Google Slides or a PPTX file, for example) and copy the slides to the PPTM file
+- You can design your templates somewhere else (Google Slides or a `.pptx` file, for example) and copy the slides to the `.pptm` file
 - Please do not copy text and use the paste-and-keep-text-only feature. Copy the whole textbox or type everything again yourself or the program will not replace the text that you have just pasted. I ran into this issue once and there is no fix for it.
 
 <h2 align="center">Advanced Guides</h2>
@@ -92,4 +94,4 @@ All contributions are appreciated. Make sure you follow this [Python Style Guide
 
 #### Additional contributions
 - Report a bug or suggest a feature [(here)](https://github.com/berkeleyfx/mic-drop-results/issues/new/choose)
-- Contact Banz#6175 on Discord for bug reports, suggestions, and support
+- Contact me on Discord for bug reports, suggestions, and support [(here)](https://discord.com/users/1010885414850154587)
