@@ -92,24 +92,35 @@ if not "update available" in status:
 
 
 # Section C: Data Cleaning
-df = pd.read_excel("data.xlsx")
+xls = pd.ExcelFile("data.xlsx")
 
-# Check for cases where avg and std are the same (hold the same rank)
-df["r"] = pd.DataFrame(zip(df.iloc[:, 0], df.iloc[:, 1] * -1)) \
-    .apply(tuple, axis=1).rank(method="min", ascending=False).astype(int)
+sheetnames = [n for n in xls.sheet_names if n.lower() != "contestants"]
+data = {}
 
-# Sort the slides
-df = df.sort_values(by="r", ascending=True)
+for sheet in sheetnames:
+    data[sheet] = pd.read_excel(xls, sheet)
 
-# Remove .0 from whole numbers
-format_number = lambda x: str(int(x)) if x % 1 == 0 else str(x)
-df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_number)
+for k, df in data.items():
+    # Check for cases where avg and std are the same (hold the same rank)
+    df["r"] = pd.DataFrame(zip(df.iloc[:, 0], df.iloc[:, 1] * -1)) \
+        .apply(tuple, axis=1).rank(method="min", ascending=False).astype(int)
+
+    # Sort the slides
+    df = df.sort_values(by="r", ascending=True)
+
+    # Remove .0 from whole numbers
+    format_number = lambda x: str(int(x)) if x % 1 == 0 else str(x)
+    df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_number)
+
+    # Save df to data dictionary
+    data[k] = df
 
 
 # Section D: To PowerPoint
 print("\nGenerating slides...")
 print("Please do not click on any PowerPoint windows that may show up in the process.")
-print("Try hitting Enter if the program does not respond for more than 10 seconds.")
+print("Try hitting Enter if the program does not respond "
+     f"for more than {5 * len(sheetnames) + 3} seconds.")
 
 # Kill all PowerPoint instances
 subprocess.run("TASKKILL /F /IM powerpnt.exe",
@@ -117,47 +128,46 @@ subprocess.run("TASKKILL /F /IM powerpnt.exe",
 
 # Open template presentation
 path = str(pathlib.Path().resolve()) + "\\"
+outpath = path + "output\\"
+os.makedirs(outpath, exist_ok=True)
 
-ppt = win32com.client.Dispatch("PowerPoint.Application")
-ppt.Presentations.Open(f"{path}template.pptm")
+for k, df in data.items():
+    ppt = win32com.client.Dispatch("PowerPoint.Application")
+    ppt.Presentations.Open(f"{path}template.pptm")
 
-# Import module
-try:
-    ppt.VBE.ActiveVBProject.VBComponents.Import(f"{path}Module1.bas")
-except:
-    input("\nERROR: Please open PowerPoint, look up Trust Center Settings, "
-        "and make sure Trust access to the VBA project object model is checked.")
+    # Import module
+    try:
+        ppt.VBE.ActiveVBProject.VBComponents.Import(f"{path}Module1.bas")
+    except:
+        input("\nERROR: Please open PowerPoint, look up Trust Center Settings, "
+            "and make sure Trust access to the VBA project object model is checked.")
 
-# Running VBA Functions
-slides_count = ppt.Run("Count")
+    # Running VBA Functions
+    slides_count = ppt.Run("Count")
 
-for t in df.loc[:, "template"]:
-    ppt.Run("Duplicate", t)
+    for t in df.loc[:, "template"]:
+        ppt.Run("Duplicate", t)
 
-# Delete template slides when done
-ppt.Run("DelSlide", *range(1, slides_count + 1))
+    # Delete template slides when done
+    ppt.Run("DelSlide", *range(1, slides_count + 1))
 
-# Save as output file
-output_filename = "output.pptx"
-path += "output\\"
+    # Save as output file
+    output_filename = f"{k}.pptx"
 
-os.makedirs(path, exist_ok=True)
+    ppt.Run("SaveAs", f"{outpath}{output_filename}")
+    ppt.Quit()
 
-ppt.Run("SaveAs", f"{path}{output_filename}")
-ppt.Quit()
+    # Fill in the blank
+    prs = Presentation(outpath + output_filename)
 
+    for i, slide in enumerate(prs.slides):
+        replace_text(slide, df, i)
 
-# Section E: Fill in the Blank
-prs = Presentation(path + output_filename)
-
-for i, slide in enumerate(prs.slides):
-    replace_text(slide, df, i)
-
-prs.save(path + output_filename)
+    prs.save(outpath + output_filename)
 
 
-# Section F: Launching the File
-print(f"\nExported to {path}{output_filename}")
-input("Press Enter to launch the file...")
+# Section E: Launching the File
+print(f"\nExported to {outpath}")
+input("Press Enter to open the output folder...")
 
-os.startfile(path + output_filename)
+os.startfile(outpath)
