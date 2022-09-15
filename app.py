@@ -7,7 +7,6 @@ import requests
 import subprocess
 
 from alive_progress import alive_bar
-from alive_progress.animations.spinners import frame_spinner_factory
 
 from pptx import Presentation
 from pptx.dml.color import RGBColor
@@ -115,6 +114,9 @@ for k, df in data.items():
     # Remove .0 from whole numbers
     format_number = lambda x: str(int(x)) if x % 1 == 0 else str(x)
     df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_number)
+
+    # Replace {sheet} with sheetname
+    df["sheet"] = k
 
     # Save df to data dictionary
     data[k] = df
