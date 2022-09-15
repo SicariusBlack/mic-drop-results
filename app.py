@@ -7,9 +7,7 @@ import requests
 import subprocess
 
 from alive_progress import alive_bar
-from alive_progress.animations.spinners import alongside_spinner_factory, bouncing_spinner_factory, \
-    delayed_spinner_factory, frame_spinner_factory, scrolling_spinner_factory, \
-    sequential_spinner_factory
+from alive_progress.animations.spinners import frame_spinner_factory
 
 from pptx import Presentation
 from pptx.dml.color import RGBColor
@@ -137,7 +135,7 @@ os.makedirs(outpath, exist_ok=True)
 
 for k, df in data.items():
     with alive_bar(8, title=k, title_length=max(map(len, sheetnames)), ctrl_c=False,
-        dual_line=True, spinner=frame_spinner_factory(("   ", ".  ", ".. ", "..."))) as bar:
+        dual_line=True, spinner="classic") as bar:
         # Open template presentation
         bar.text = "Opening template.pptm"
         ppt = win32com.client.Dispatch("PowerPoint.Application")
