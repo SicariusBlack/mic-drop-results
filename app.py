@@ -86,7 +86,7 @@ if config["update_check"]:
         elif version < config["version"]:
             status = "beta"
         else:
-            status = "up to date"
+            status = "latest version"
         
         status = " [" + status + "]"
     except:
