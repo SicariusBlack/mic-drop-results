@@ -7,6 +7,7 @@ import re
 import requests
 import signal
 import subprocess
+import webbrowser
 
 from alive_progress import alive_bar
 
@@ -53,18 +54,6 @@ def replace_text(slide: Slide, df, i) -> Slide:
     return slide
 
 
-def link(uri, label=None):
-    """Prints text as a clickable link."""
-    if label is None: 
-        label = uri
-    parameters = ''
-
-    # OSC 8 ; params ; URI ST <name> OSC 8 ;; ST 
-    escape_mask = '\033]8;{};{}\033\\{}\033]8;;\033\\'
-
-    print(escape_mask.format(parameters, uri, label))
-
-
 # Section A: Loading config.json
 config = json.load(open("config.json"))
 
@@ -91,21 +80,18 @@ if config["update_check"]:
         version = float(response.json()["tag_name"][1:])
         
         if version > config["version"]:
-            print(f"A new version is available. "
-                "You can download it using the link below.")
-            
-            print(f"\nVersion {version}")
+            print(f"Version {version}")
             print(response.json()["body"].partition("\n")[0])
             
             url = "https://github.com/berkeleyfx/mic-drop-results/releases/latest/"
-            link(url)
-            print()
+            print(url + "\n")
+            webbrowser.open(url, new=2)
 
             status = "update available"
         elif version < config["version"]:
             status = "beta"
         else:
-            status = "latest version"
+            status = "latest"
         
         status = " [" + status + "]"
     except:
@@ -115,7 +101,7 @@ print(f"Mic Drop Results (v{config['version']}){status}")
 
 if not "update available" in status:
     url = "https://github.com/berkeleyfx/mic-drop-results"
-    link(url)
+    print(url)
 
 
 # Section C: Fixing Command Prompt issues
