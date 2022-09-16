@@ -53,6 +53,18 @@ def replace_text(slide: Slide, df, i) -> Slide:
     return slide
 
 
+def link(uri, label=None):
+    """Prints text as a clickable link."""
+    if label is None: 
+        label = uri
+    parameters = ''
+
+    # OSC 8 ; params ; URI ST <name> OSC 8 ;; ST 
+    escape_mask = '\033]8;{};{}\033\\{}\033]8;;\033\\'
+
+    return escape_mask.format(parameters, uri, label)
+
+
 # Section A: Loading config.json
 config = json.load(open("config.json"))
 
@@ -66,7 +78,7 @@ col_list = list(map(hex_to_rgb, col_list))
 
 # Section B: Checking for Updates
 status = ""
-link = ""
+url = ""
 
 if config["update_check"]:
     try:
@@ -85,8 +97,9 @@ if config["update_check"]:
             print(f"\nVersion {version}")
             print(response.json()["body"].partition("\n")[0])
             
-            link = "https://github.com/berkeleyfx/mic-drop-results/releases/latest/"
-            print(link + "\n")
+            url = "https://github.com/berkeleyfx/mic-drop-results/releases/latest/"
+            link(url)
+            print()
 
             status = "update available"
         elif version < config["version"]:
@@ -101,8 +114,8 @@ if config["update_check"]:
 print(f"Mic Drop Results (v{config['version']}){status}")
 
 if not "update available" in status:
-    link = "https://github.com/berkeleyfx/mic-drop-results"
-    print(link)
+    url = "https://github.com/berkeleyfx/mic-drop-results"
+    link(url)
 
 
 # Section C: Fixing Command Prompt issues
