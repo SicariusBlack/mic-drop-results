@@ -110,7 +110,7 @@ signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 # Disable pausing (QuickEdit and Insert modes)
 kernel32 = ctypes.windll.kernel32
-kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), 128)
+kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
 
 
 # Section D: Data Cleaning
@@ -210,4 +210,6 @@ for k, df in data.items():
 
 # Section F: Launching the File
 print(f"\nExported to {outpath}")
+input("Press Enter to open the output folder...")
+
 os.startfile(outpath)
