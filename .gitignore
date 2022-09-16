@@ -10,3 +10,4 @@ output/
 releases/
 *.xlsx
 *.pptm
+response.json
