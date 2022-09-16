@@ -73,11 +73,17 @@ if config["update_check"]:
         response = requests.get("https://api.github.com/repos/"
             "berkeleyfx/mic-drop-results/releases/latest", timeout=3)
 
+        with open("response.json", "w") as fp:
+            json.dump(response.json(), fp)
+
         version = float(response.json()["tag_name"][1:])
         
         if version > config["version"]:
-            print(f"A new version (v{version}) is available. "
+            print(f"A new version is available. "
                 "You can download it using the link below.")
+            
+            print(f"\nVersion {version}")
+            print(response.json()["body"].partition("\n")[0])
             
             link = "https://github.com/berkeleyfx/mic-drop-results/releases/latest/"
             print(link + "\n")
