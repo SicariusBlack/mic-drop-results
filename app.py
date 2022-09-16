@@ -108,9 +108,9 @@ if not "update available" in status:
 # Handle KeyboardInterrupt: automatically open the only link
 signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-# Disable QuickEdit
+# Disable QuickEdit and Insert mode
 kernel32 = ctypes.windll.kernel32
-kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
+kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), 128)
 
 
 # Section D: Data Cleaning
@@ -210,6 +210,9 @@ for k, df in data.items():
 
 # Section F: Launching the File
 print(f"\nExported to {outpath}")
-input("Press Enter to open the output folder...\n")
 
+# Enable QuickEdit
+kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
+
+input("Press Enter to open the output folder...\n")
 os.startfile(outpath)
