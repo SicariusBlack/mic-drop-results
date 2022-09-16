@@ -99,7 +99,7 @@ if not "update available" in status:
     print(link)
 
 # Handle KeyboardInterrupt: automatically open the only link
-signal.signal(signal.SIGINT, lambda *_: webbrowser.open(link, new=0, autoraise=True))
+signal.signal(signal.SIGINT, lambda *_: webbrowser.open(link, new=2, autoraise=True))
 
 
 # Section C: Data Cleaning
@@ -199,6 +199,13 @@ for k, df in data.items():
 
 # Section E: Launching the File
 print(f"\nExported to {outpath}")
-input("Press Enter to open the output folder...")
+print("Press Enter to open the output folder...")
+
+while True:
+    try:
+        input()
+        break
+    except EOFError:
+        continue
 
 os.startfile(outpath)
