@@ -1,3 +1,4 @@
+import ctypes
 import json
 import os
 import pandas as pd
@@ -6,7 +7,6 @@ import re
 import requests
 import signal
 import subprocess
-import webbrowser
 
 from alive_progress import alive_bar
 
@@ -53,7 +53,7 @@ def replace_text(slide: Slide, df, i) -> Slide:
     return slide
 
 
-# Section A: Load config.json
+# Section A: Loading config.json
 config = json.load(open("config.json"))
 
 # Variable shortcuts
@@ -64,7 +64,7 @@ starts = config["format"]["starts_with"]
 col_list = list(map(hex_to_rgb, col_list))
 
 
-# Section B: Check for Updates
+# Section B: Checking for Updates
 status = ""
 link = ""
 
@@ -104,11 +104,17 @@ if not "update available" in status:
     link = "https://github.com/berkeleyfx/mic-drop-results"
     print(link)
 
+
+# Section C: Fixing Command Prompt issues
 # Handle KeyboardInterrupt: automatically open the only link
-signal.signal(signal.SIGINT, lambda *_: webbrowser.open(link, new=2, autoraise=True))
+signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+# Disable pausing (QuickEdit and Insert modes)
+kernel32 = ctypes.windll.kernel32
+kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), 128)
 
 
-# Section C: Data Cleaning
+# Section D: Data Cleaning
 xls = pd.ExcelFile("data.xlsx")
 
 sheetnames_raw = [n for n in xls.sheet_names if n.lower() != "contestants"]
@@ -137,7 +143,7 @@ for k, df in data.items():
     data[k] = df
 
 
-# Section D: To PowerPoint
+# Section E: To PowerPoint
 print("\nGenerating slides...")
 print("Please do not click on any PowerPoint windows that may show up in the process.\n")
 
@@ -203,7 +209,7 @@ for k, df in data.items():
         bar()
 
 
-# Section E: Launching the File
+# Section F: Launching the File
 print(f"\nExported to {outpath}")
 print("Press Enter to open the output folder...")
 
