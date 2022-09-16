@@ -1,13 +1,15 @@
 import ctypes
 import json
+import numpy as np
 import os
-import pandas as pd
 import pathlib
 import re
 import requests
 import signal
 import subprocess
 import webbrowser
+
+import pandas as pd
 
 from alive_progress import alive_bar
 
@@ -38,6 +40,8 @@ def replace_text(slide: Slide, df, i) -> Slide:
         for run in [p.runs[0] for p in text_frame.paragraphs]:
             for search_str in set(re.findall(r"(?<={)(.*?)(?=})", run.text)).intersection(cols):
                 repl = str(df[search_str].iloc[i])
+                repl = repl if repl != "nan" else ""  # Replace missing values with blank
+
                 run.text = run.text.replace("{" + search_str + "}", repl)
 
                 if not search_str.startswith(starts) or not run.font.color.type:
@@ -49,7 +53,7 @@ def replace_text(slide: Slide, df, i) -> Slide:
 
                 for ind, val in enumerate(range_list):
                     if float(repl) >= val:
-                        run.font.color.rgb = RGBColor(*col_list[ind])
+                        run.font.color.rgb = RGBColor(*color_list[ind])
                         break
     return slide
 
@@ -59,10 +63,10 @@ config = json.load(open("config.json"))
 
 # Variable shortcuts
 range_list = config["format"]["ranges"][::-1]
-col_list = config["format"]["colors"][::-1]
+color_list = config["format"]["colors"][::-1]
 starts = config["format"]["starts_with"]
 
-col_list = list(map(hex_to_rgb, col_list))
+color_list = list(map(hex_to_rgb, color_list))
 
 
 # Section B: Checking for Updates
@@ -110,18 +114,37 @@ signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 # Disable QuickEdit and Insert mode
 kernel32 = ctypes.windll.kernel32
-kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), 128)
+kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
 
 
 # Section D: Data Cleaning
 xls = pd.ExcelFile("data.xlsx")
 
-sheetnames_raw = [n for n in xls.sheet_names if n.lower() != "contestants"]
+sheetnames_raw = xls.sheet_names
 sheetnames = [re.sub(r'[\\\/:"*?<>|]+', "", name) for name in sheetnames_raw]
 data = {}
 
 for i, sheet in enumerate(sheetnames_raw):
-    data[sheetnames[i]] = pd.read_excel(xls, sheet)
+    df = pd.read_excel(xls, sheet)
+
+    # Validate shape
+    if df.empty or df.shape < (1, 2):
+        continue
+
+    # Exclude contestants database
+    if sheet.lower() == "contestants":
+        continue
+
+    # Exclude sheets with first two columns where data types are not numeric
+    if sum([df.iloc[:, i].dtype.kind in "fucbi" for i in range(2)]) < 2:
+        print(f"\nERROR: Invalid data type. The following rows of {sheet} contain string "
+               "instead of the supposed numeric data type in the first two columns. "
+               "The sheet will be skipped for now.\n")
+        print(df[~df.iloc[:, :2].applymap(np.isreal).all(1)])
+        input("\nPress Enter to continue...")
+        continue
+
+    data[sheetnames[i]] = df
 
 for k, df in data.items():
     # Check for cases where avg and std are the same (hold the same rank)
