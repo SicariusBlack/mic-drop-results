@@ -210,13 +210,4 @@ for k, df in data.items():
 
 # Section F: Launching the File
 print(f"\nExported to {outpath}")
-print("Press Enter to open the output folder...")
-
-while True:
-    try:
-        input()
-        break
-    except EOFError:
-        continue
-
 os.startfile(outpath)
