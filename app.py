@@ -62,7 +62,7 @@ def link(uri, label=None):
     # OSC 8 ; params ; URI ST <name> OSC 8 ;; ST 
     escape_mask = '\033]8;{};{}\033\\{}\033]8;;\033\\'
 
-    return escape_mask.format(parameters, uri, label)
+    print(escape_mask.format(parameters, uri, label))
 
 
 # Section A: Loading config.json
