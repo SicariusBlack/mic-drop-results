@@ -26,6 +26,10 @@ import win32com.client
 
 def show_exception_and_exit(exc_type, exc_value, tb):
     traceback.print_exception(exc_type, exc_value, tb)
+
+    # Enable QuickEdit
+    kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
+
     input("\nPress Enter to exit the program...")
     sys.exit()
 
