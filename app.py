@@ -7,6 +7,8 @@ import re
 import requests
 import signal
 import subprocess
+import sys
+import traceback
 import webbrowser
 
 import pandas as pd
@@ -20,6 +22,14 @@ from pptx.slide import Slide
 
 import win32com
 import win32com.client
+
+
+def show_exception_and_exit(exc_type, exc_value, tb):
+    traceback.print_exception(exc_type, exc_value, tb)
+    print("\nNOTE: This is an unhandled error. You may report this error to the developer "
+        "if you believe this should not have happened.")
+    input("Press Enter to exit the program...")
+    sys.exit()
 
 
 def hex_to_rgb(hex):
@@ -58,7 +68,19 @@ def replace_text(slide: Slide, df, i) -> Slide:
     return slide
 
 
-# Section A: Loading config.json
+# Section A: Fixing Command Prompt issues
+# Handle KeyboardInterrupt: automatically open the only link
+signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+# Disable QuickEdit and Insert mode
+kernel32 = ctypes.windll.kernel32
+kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
+
+# Avoid exiting the program when an error is thrown
+sys.excepthook = show_exception_and_exit
+
+
+# Section B: Loading config.json
 config = json.load(open("config.json"))
 
 # Variable shortcuts
@@ -69,7 +91,7 @@ starts = config["format"]["starts_with"]
 color_list = list(map(hex_to_rgb, color_list))
 
 
-# Section B: Checking for Updates
+# Section C: Checking for Updates
 status = ""
 url = ""
 
@@ -108,16 +130,10 @@ if not "update available" in status:
     print(url)
 
 
-# Section C: Fixing Command Prompt issues
-# Handle KeyboardInterrupt: automatically open the only link
-signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-# Disable QuickEdit and Insert mode
-kernel32 = ctypes.windll.kernel32
-kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
-
-
 # Section D: Data Cleaning
+path = str(pathlib.Path().resolve()) + "\\"
+outpath = path + "output\\"
+
 xls = pd.ExcelFile("data.xlsx")
 
 sheetnames_raw = xls.sheet_names
@@ -138,13 +154,18 @@ for i, sheet in enumerate(sheetnames_raw):
     # Exclude sheets with first two columns where data types are not numeric
     if sum([df.iloc[:, i].dtype.kind in "fucbi" for i in range(2)]) < 2:
         print(f"\nERROR: Invalid data type. The following rows of {sheet} contain string "
-               "instead of the supposed numeric data type in the first two columns. "
+               "instead of the supposed numeric data type within the first two columns. "
                "The sheet will be skipped for now.\n")
         print(df[~df.iloc[:, :2].applymap(np.isreal).all(1)])
         input("\nPress Enter to continue...")
         continue
 
     data[sheetnames[i]] = df
+
+if len(data) < 1:
+    print(f"\nERROR: No valid sheet was found in {path}data.xlsx")
+    input("Press Enter to exit the program...")
+    sys.exit()
 
 for k, df in data.items():
     # Check for cases where avg and std are the same (hold the same rank)
@@ -174,8 +195,6 @@ subprocess.run("TASKKILL /F /IM powerpnt.exe",
     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 # Open template presentation
-path = str(pathlib.Path().resolve()) + "\\"
-outpath = path + "output\\"
 os.makedirs(outpath, exist_ok=True)
 
 for k, df in data.items():
@@ -237,5 +256,5 @@ print(f"\nExported to {outpath}")
 # Enable QuickEdit
 kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
 
-input("Press Enter to open the output folder...\n")
+input("Press Enter to open the output folder...")
 os.startfile(outpath)
