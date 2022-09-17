@@ -24,6 +24,19 @@ import win32com
 import win32com.client
 
 
+def throw(*messages, err_type=str):
+    """Throws a handled error with additional guides and details."""
+    messages = list(messages)
+    messages[0] = f"\n\n{err_type.upper()}: {messages[0]}"
+    print(*messages, sep="\n\n")
+
+    if err_type.lower() == "error":
+        input("\nPress Enter to exit the program...")
+        sys.exit(1)
+    else:
+        input("\nPress Enter to continue...")
+
+
 def show_exception_and_exit(exc_type, exc_value, tb):
     traceback.print_exception(exc_type, exc_value, tb)
 
@@ -152,34 +165,38 @@ for i, sheet in enumerate(sheetnames_raw):
 
     # Exclude sheets with first two columns where data types are not numeric
     if sum([df.iloc[:, i].dtype.kind in "fucbi" for i in range(2)]) < 2:
-        print(f"\nERROR: Invalid data type. The following rows of {sheet} contain string "
-               "instead of the supposed numeric data type within the first two columns. "
-               "The sheet will be skipped for now.\n")
-        print(df[~df.iloc[:, :2].applymap(np.isreal).all(1)])
-        input("\nPress Enter to continue...")
+        throw(f"Invalid data type. The following rows of {sheet} contain string "
+            "instead of the supposed numeric data type within the first two columns. "
+            "The sheet will be skipped for now.",
+
+            df[~df.iloc[:, :2].applymap(np.isreal).all(1)],
+
+            err_type="warning"
+        )
+
         continue
 
     # Replace NaN values within the first two columns with 0
     if df.iloc[:, :2].isnull().values.any():
-        print(f"\nWARNING: The following rows of {sheet} contain empty values "
-            "within the first two columns.\n")
+        throw(f"The following rows of {sheet} contain empty values "
+            "within the first two columns.",
 
-        print(df[df.iloc[:, :2].isnull().any(axis=1)])
+            df[df.iloc[:, :2].isnull().any(axis=1)],
 
-        print("\nYou may exit this program and modify the data or continue with "
-            "these values substituted with 0.")
-        print("NOTE: Please exit this program before modifying or "
-            "Microsoft Excel will throw a sharing violation error.")
+            "You may exit this program and modify the data or continue with "
+            "these values substituted with 0."
+            "\nNOTE: Please exit this program before modifying or "
+            "Microsoft Excel will throw a sharing violation error.",
 
-        input("\nPress Enter to continue...")
+            err_type="warning"
+        )
+
         df.iloc[:, :2] = df.iloc[:, :2].fillna(0)
 
     data[sheetnames[i]] = df
 
 if len(data) < 1:
-    print(f"\nERROR: No valid sheet was found in {path}data.xlsx")
-    input("Press Enter to exit the program...")
-    sys.exit()
+    throw(f"No valid sheet was found in {path}data.xlsx", err_type="error")
 
 for k, df in data.items():
     # Check for cases where avg and std are the same (hold the same rank)
