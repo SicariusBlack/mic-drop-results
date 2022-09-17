@@ -26,9 +26,10 @@ import win32com.client
 
 def throw(*messages, err_type=str):
     """Throws a handled error with additional guides and details."""
-    messages = list(messages)
-    messages[0] = f"\n\n{err_type.upper()}: {messages[0]}"
-    print(*messages, sep="\n\n")
+    if len(messages) > 0:
+        messages = list(messages)
+        messages[0] = f"\n\n{err_type.upper()}: {messages[0]}"
+        print(*messages, sep="\n\n")
 
     if err_type.lower() == "error":
         input("\nPress Enter to exit the program...")
@@ -43,8 +44,7 @@ def show_exception_and_exit(exc_type, exc_value, tb):
     # Enable QuickEdit
     kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
 
-    input("\nPress Enter to exit the program...")
-    sys.exit()
+    throw(err_type="error")
 
 
 def hex_to_rgb(hex):
@@ -95,7 +95,16 @@ kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|
 sys.excepthook = show_exception_and_exit
 
 
-# Section B: Loading config.json
+# Section B: Check if all files are present
+missing = [f for f in ["config.json", "data.xlsx", "template.pptm", "Module1.bas"]
+    if not os.path.isfile(f)]
+    
+if len(missing) > 0:
+    throw("The following files are missing. Please review the documentation for more "
+        "information related to file requirements.", "\n".join(missing), err_type="error")
+
+
+# Section C: Loading config.json
 config = json.load(open("config.json"))
 
 # Variable shortcuts
@@ -106,7 +115,7 @@ starts = config["format"]["starts_with"]
 color_list = list(map(hex_to_rgb, color_list))
 
 
-# Section C: Checking for Updates
+# Section D: Checking for Updates
 status = ""
 url = ""
 
@@ -142,7 +151,7 @@ if not "update available" in status:
     print(url)
 
 
-# Section D: Data Cleaning
+# Section E: Data Cleaning
 path = str(pathlib.Path().resolve()) + "\\"
 outpath = path + "output\\"
 
@@ -217,7 +226,7 @@ for k, df in data.items():
     data[k] = df
 
 
-# Section E: To PowerPoint
+# Section F: To PowerPoint
 print("\nGenerating slides...")
 print("Please do not click on any PowerPoint windows that may show up in the process.\n")
 
@@ -281,7 +290,7 @@ for k, df in data.items():
         bar()
 
 
-# Section F: Launching the File
+# Section G: Launching the File
 print(f"\nExported to {outpath}")
 
 # Enable QuickEdit
