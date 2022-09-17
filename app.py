@@ -147,7 +147,7 @@ for i, sheet in enumerate(sheetnames_raw):
     if df.empty or df.shape < (1, 2):
         continue
 
-    # Exclude contestants database
+    # Exclude contestant database
     if sheet.lower() == "contestants":
         continue
 
