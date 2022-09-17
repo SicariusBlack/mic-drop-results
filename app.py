@@ -26,9 +26,7 @@ import win32com.client
 
 def show_exception_and_exit(exc_type, exc_value, tb):
     traceback.print_exception(exc_type, exc_value, tb)
-    print("\nNOTE: This is an unhandled error. You may report this error to the developer "
-        "if you believe this should not have happened.")
-    input("Press Enter to exit the program...")
+    input("\nPress Enter to exit the program...")
     sys.exit()
 
 
@@ -99,9 +97,6 @@ if config["update_check"]:
     try:
         response = requests.get("https://api.github.com/repos/"
             "berkeleyfx/mic-drop-results/releases/latest", timeout=3)
-
-        with open("response.json", "w") as fp:
-            json.dump(response.json(), fp)
 
         version = float(response.json()["tag_name"][1:])
         
