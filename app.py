@@ -160,6 +160,21 @@ for i, sheet in enumerate(sheetnames_raw):
         input("\nPress Enter to continue...")
         continue
 
+    # Replace NaN values within the first two columns with 0
+    if df.iloc[:, :2].isnull().values.any():
+        print(f"\nWARNING: The following rows of {sheet} contain empty values "
+            "within the first two columns.\n")
+
+        print(df[df.iloc[:, :2].isnull().any(axis=1)])
+
+        print("\nYou may exit this program and modify the data or continue with "
+            "these values substituted with 0.")
+        print("NOTE: Please exit this program before modifying or "
+            "Microsoft Excel will throw a sharing violation error.")
+
+        input("\nPress Enter to continue...")
+        df.iloc[:, :2] = df.iloc[:, :2].fillna(0)
+
     data[sheetnames[i]] = df
 
 if len(data) < 1:
