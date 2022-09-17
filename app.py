@@ -24,7 +24,7 @@ import win32com
 import win32com.client
 
 
-def throw(*messages, err_type=str):
+def throw(*messages, err_type: str = "error"):
     """Throws a handled error with additional guides and details."""
     if len(messages) > 0:
         messages = list(messages)
@@ -44,7 +44,7 @@ def show_exception_and_exit(exc_type, exc_value, tb):
     # Enable QuickEdit
     kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
 
-    throw(err_type="error")
+    throw()
 
 
 def hex_to_rgb(hex):
@@ -101,7 +101,7 @@ missing = [f for f in ["config.json", "data.xlsx", "template.pptm", "Module1.bas
     
 if len(missing) > 0:
     throw("The following files are missing. Please review the documentation for more "
-        "information related to file requirements.", "\n".join(missing), err_type="error")
+        "information related to file requirements.", "\n".join(missing))
 
 
 # Section C: Loading config.json
@@ -205,7 +205,7 @@ for i, sheet in enumerate(sheetnames_raw):
     data[sheetnames[i]] = df
 
 if len(data) < 1:
-    throw(f"No valid sheet was found in {path}data.xlsx", err_type="error")
+    throw(f"No valid sheet was found in {path}data.xlsx")
 
 for k, df in data.items():
     # Check for cases where avg and std are the same (hold the same rank)
@@ -251,7 +251,7 @@ for k, df in data.items():
         try:
             ppt.VBE.ActiveVBProject.VBComponents.Import(f"{path}Module1.bas")
         except:
-            input("\nERROR: Please open PowerPoint, look up Trust Center Settings, "
+            throw("Please open PowerPoint, look up Trust Center Settings, "
                 "and make sure Trust access to the VBA project object model is checked.")
         bar()
 
