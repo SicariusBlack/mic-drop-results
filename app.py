@@ -237,6 +237,7 @@ subprocess.run("TASKKILL /F /IM powerpnt.exe",
 # Open template presentation
 os.makedirs(outpath, exist_ok=True)
 
+access_error = False
 for k, df in data.items():
     with alive_bar(8, title=k, title_length=max(map(len, sheetnames)),
         dual_line=True, spinner="classic") as bar:
@@ -251,8 +252,8 @@ for k, df in data.items():
         try:
             ppt.VBE.ActiveVBProject.VBComponents.Import(f"{path}Module1.bas")
         except:
-            throw("Please open PowerPoint, look up Trust Center Settings, "
-                "and make sure Trust access to the VBA project object model is checked.")
+            access_error = True
+            break     
         bar()
 
         # Duplicate slides
@@ -288,6 +289,11 @@ for k, df in data.items():
         bar.text = f"Saving as {outpath + output_filename}"
         prs.save(outpath + output_filename)
         bar()
+
+# Warns the user about trust access error
+if access_error:
+    throw("Please open PowerPoint, look up Trust Center Settings, "
+        "and make sure Trust access to the VBA project object model is enabled.")
 
 
 # Section G: Launching the File
