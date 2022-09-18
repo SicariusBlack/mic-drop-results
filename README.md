@@ -32,7 +32,7 @@ These files will vary every round. You can find samples of these files in [`/sam
 - **template.pptm**
 
 <p align="center">
-  <img src=".github/images/required_files.png"></img>
+  <img src=".github/images/requirements.png"></img>
 </p>
 
 <h2 align="center">Guides</h2>
