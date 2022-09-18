@@ -32,7 +32,7 @@ These files will vary every round. You can find samples of these files in [`/sam
 - **template.pptm**
 
 <p align="center">
-  <img src="https://github.com/berkeleyfx/mic-drop-results/blob/9fa34fb890d8bcefe0dbdb95b8bc8db093b585a8/.github/images/required_files.png"></img>
+  <img src=".github/images/required_files.png"></img>
 </p>
 
 <h2 align="center">Guides</h2>
