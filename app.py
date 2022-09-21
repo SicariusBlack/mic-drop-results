@@ -161,8 +161,6 @@ starts = config["format"]["starts_with"]
 api_token = config["api_token"] if not config["api_token"].startswith("!<") \
     else config["api_token"][:1:-1]  # Discord token detector bypass
 
-print(api_token)
-
 color_list = list(map(hex_to_rgb, color_list))
 
 
