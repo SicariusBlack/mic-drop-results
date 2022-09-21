@@ -1,5 +1,5 @@
 import ctypes
-from email import message
+import cv2
 from io import BytesIO
 import json
 import numpy as np
@@ -11,6 +11,7 @@ import signal
 import subprocess
 import sys
 import traceback
+from urllib.request import Request, urlopen
 import webbrowser
 
 import pandas as pd
@@ -71,19 +72,28 @@ def replace_text(slide: Slide, df, i) -> Slide:
                     if df["uid"].iloc[i] == np.nan:
                         continue
 
+                    effect = run.text[3:]
+                    effect = int(effect) if effect != "" else 0
                     run.text = ""
 
                     # Load image from link
-                    avatar_url = get_avatar(df["uid"].iloc[i])
+                    avatar_url = get_avatar(df["uid"].iloc[i]) + ".png"
 
                     if avatar_url is None:
                         continue
 
-                    response = requests.get(avatar_url)
+                    req = urlopen(Request(avatar_url, headers={"User-Agent": "Mozilla/5.0"}))
+                    arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
+                    img = cv2.imdecode(arr, -1)
+
+                    match effect:
+                        case 1:
+                            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
                     new_shape = slide.shapes.add_picture(
-                        BytesIO(response.content),
-                        shape.left, shape.top, shape.width, shape.height
+                        BytesIO(cv2.imencode(".png", img)[1].tobytes()),
+                        shape.left, shape.top,
+                        shape.width, shape.height
                     )
                     new_shape.auto_shape_type = MSO_SHAPE.OVAL
                     old = shape._element
@@ -203,6 +213,7 @@ if not "update available" in status:
 # Section E: Data Cleaning
 path = str(pathlib.Path().resolve()) + "\\"
 outpath = path + "output\\"
+temppath = path + "temp\\"
 
 xls = pd.ExcelFile("data.xlsx")
 
@@ -293,6 +304,7 @@ subprocess.run("TASKKILL /F /IM powerpnt.exe",
 
 # Open template presentation
 os.makedirs(outpath, exist_ok=True)
+os.makedirs(temppath, exist_ok=True)
 
 access_error = False
 for k, df in data.items():
