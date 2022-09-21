@@ -1,4 +1,5 @@
 import ctypes
+from io import BytesIO
 import json
 import numpy as np
 import os
@@ -18,6 +19,7 @@ from alive_progress import alive_bar
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.dml import MSO_COLOR_TYPE
+from pptx.enum.shapes import MSO_SHAPE
 from pptx.slide import Slide
 
 import win32com
@@ -53,8 +55,9 @@ def hex_to_rgb(hex):
 
 
 def replace_text(slide: Slide, df, i) -> Slide:
-    """Replaces and formats text"""
-    cols = df.columns.values.tolist()
+    """Replaces and formats text."""
+    cols = df.columns.values.tolist() + ["p"]
+    uid = df["uid"].iloc[i]
 
     for shape in slide.shapes:
         if not shape.has_text_frame or not "{" in shape.text:
@@ -64,6 +67,28 @@ def replace_text(slide: Slide, df, i) -> Slide:
 
         for run in [p.runs[0] for p in text_frame.paragraphs]:
             for search_str in set(re.findall(r"(?<={)(.*?)(?=})", run.text)).intersection(cols):
+                if search_str == "p" and uid != np.nan:
+                    run.text = ""
+
+                    # Load image from link
+                    avatar_url = get_avatar(uid)
+
+                    if avatar_url is None:
+                        continue
+
+                    response = requests.get(avatar_url)
+
+                    new_shape = slide.shapes.add_picture(
+                        BytesIO(response.content),
+                        shape.left, shape.top, shape.width, shape.height
+                    )
+                    new_shape.auto_shape_type = MSO_SHAPE.OVAL
+                    old = shape._element
+                    new = new_shape._element
+                    old.addnext(new)
+                    old.getparent().remove(old)
+                    continue
+
                 repl = str(df[search_str].iloc[i])
                 repl = repl if repl != "nan" else ""  # Replace missing values with blank
 
@@ -81,6 +106,22 @@ def replace_text(slide: Slide, df, i) -> Slide:
                         run.font.color.rgb = RGBColor(*color_list[ind])
                         break
     return slide
+
+
+def get_avatar(id):
+    header = {
+        "Authorization": "Bot MTAyMTU5OTE3ODQyMzUzMzY0OQ.Gkx8DG.y_wbRnnf0Nog1UfnpDbGgPellwMi72JyfY5MxU"
+    }
+
+    response = requests.get(f"https://discord.com/api/v9/users/{id}", headers=header)
+
+    link = None
+    try:
+        link = f"https://cdn.discordapp.com/avatars/{id}/{response.json()['avatar']}"
+    except KeyError:
+        pass
+
+    return link
 
 
 # Section A: Fixing Command Prompt issues
@@ -161,6 +202,11 @@ sheetnames_raw = xls.sheet_names
 sheetnames = [re.sub(r'[\\\/:"*?<>|]+', "", name) for name in sheetnames_raw]
 data = {}
 
+contestants = None
+for s in sheetnames_raw:
+    if s.lower() == "contestants":
+        contestants = pd.read_excel(xls, s)
+
 for i, sheet in enumerate(sheetnames_raw):
     df = pd.read_excel(xls, sheet)
 
@@ -173,7 +219,7 @@ for i, sheet in enumerate(sheetnames_raw):
         continue
 
     # Exclude sheets with first two columns where data types are not numeric
-    if sum([df.iloc[:, i].dtype.kind in "fucbi" for i in range(2)]) < 2:
+    if sum([df.iloc[:, i].dtype.kind in "fuckbitch" for i in range(2)]) < 2:
         throw(f"Invalid data type. The following rows of {sheet} contain string "
             "instead of the supposed numeric data type within the first two columns. "
             "The sheet will be skipped for now.",
@@ -201,6 +247,11 @@ for i, sheet in enumerate(sheetnames_raw):
         )
 
         df.iloc[:, :2] = df.iloc[:, :2].fillna(0)
+
+    if contestants is not None:
+        df = df.merge(contestants, on="name", how="left")
+    
+    print(df)
 
     data[sheetnames[i]] = df
 
