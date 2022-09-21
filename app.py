@@ -158,7 +158,10 @@ config = json.load(open("config.json"))
 range_list = config["format"]["ranges"][::-1]
 color_list = config["format"]["colors"][::-1]
 starts = config["format"]["starts_with"]
-api_token = config["api_token"]
+api_token = config["api_token"] if not config["api_token"].startswith("!<") \
+    else config["api_token"][:1:-1]
+
+print(api_token)
 
 color_list = list(map(hex_to_rgb, color_list))
 
