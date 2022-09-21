@@ -58,7 +58,6 @@ def hex_to_rgb(hex):
 def replace_text(slide: Slide, df, i) -> Slide:
     """Replaces and formats text."""
     cols = df.columns.values.tolist() + ["p"]
-    uid = df["uid"].iloc[i]
 
     for shape in slide.shapes:
         if not shape.has_text_frame or not "{" in shape.text:
@@ -68,11 +67,14 @@ def replace_text(slide: Slide, df, i) -> Slide:
 
         for run in [p.runs[0] for p in text_frame.paragraphs]:
             for search_str in set(re.findall(r"(?<={)(.*?)(?=})", run.text)).intersection(cols):
-                if search_str == "p" and uid != np.nan:
+                if search_str == "p":
+                    if df["uid"].iloc[i] == np.nan:
+                        continue
+
                     run.text = ""
 
                     # Load image from link
-                    avatar_url = get_avatar(uid)
+                    avatar_url = get_avatar(df["uid"].iloc[i])
 
                     if avatar_url is None:
                         continue
