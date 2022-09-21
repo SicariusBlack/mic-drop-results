@@ -250,8 +250,6 @@ for i, sheet in enumerate(sheetnames_raw):
 
     if contestants is not None:
         df = df.merge(contestants, on="name", how="left")
-    
-    print(df)
 
     data[sheetnames[i]] = df
 
