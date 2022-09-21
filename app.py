@@ -213,7 +213,6 @@ if not "update available" in status:
 # Section E: Data Cleaning
 path = str(pathlib.Path().resolve()) + "\\"
 outpath = path + "output\\"
-temppath = path + "temp\\"
 
 xls = pd.ExcelFile("data.xlsx")
 
@@ -304,7 +303,6 @@ subprocess.run("TASKKILL /F /IM powerpnt.exe",
 
 # Open template presentation
 os.makedirs(outpath, exist_ok=True)
-os.makedirs(temppath, exist_ok=True)
 
 access_error = False
 for k, df in data.items():
