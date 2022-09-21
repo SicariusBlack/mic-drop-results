@@ -1,4 +1,5 @@
 import ctypes
+from email import message
 from io import BytesIO
 import json
 import numpy as np
@@ -110,7 +111,7 @@ def replace_text(slide: Slide, df, i) -> Slide:
 
 def get_avatar(id):
     header = {
-        "Authorization": "Bot MTAyMTU5OTE3ODQyMzUzMzY0OQ.Gkx8DG.y_wbRnnf0Nog1UfnpDbGgPellwMi72JyfY5MxU"
+        "Authorization": "Bot " + api_token
     }
 
     response = requests.get(f"https://discord.com/api/v9/users/{id}", headers=header)
@@ -119,6 +120,9 @@ def get_avatar(id):
     try:
         link = f"https://cdn.discordapp.com/avatars/{id}/{response.json()['avatar']}"
     except KeyError:
+        if response.json()["message"] != "Unknown User":
+            throw("API limit reached. Please provide a new token in config.json.")
+
         pass
 
     return link
@@ -152,6 +156,7 @@ config = json.load(open("config.json"))
 range_list = config["format"]["ranges"][::-1]
 color_list = config["format"]["colors"][::-1]
 starts = config["format"]["starts_with"]
+api_token = config["api_token"]
 
 color_list = list(map(hex_to_rgb, color_list))
 

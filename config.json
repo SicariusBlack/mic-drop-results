@@ -5,5 +5,6 @@
         "starts_with": "score",
         "ranges": [0, 4, 9, 10],
         "colors": ["#EA9999", "#FFFFFF", "#93C47D", "#FFD966"]
-    }
+    },
+    "api_token": "MTAyMTU5OTE3ODQyMzUzMzY0OQ.Gi2Ibs.ToPYnbd2xAJgpwM_3OPAhb-w_yUxc0EH3yzRtU"
 }
