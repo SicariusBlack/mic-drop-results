@@ -1,9 +1,10 @@
 import ctypes
-import cv2
+from io import BytesIO
 import json
 import numpy as np
 import os
 import pathlib
+from PIL import Image
 import re
 import requests
 import signal
@@ -13,6 +14,7 @@ import traceback
 from urllib.request import Request, urlopen
 import webbrowser
 
+import cv2
 import pandas as pd
 
 from alive_progress import alive_bar
@@ -76,6 +78,7 @@ def replace_text(slide: Slide, df, i) -> Slide:
 
         for run in [p.runs[0] for p in text_frame.paragraphs]:
             for search_str in set(re.findall(r"(?<={)(.*?)(?=})", run.text)).intersection(cols):
+                # Profile picture
                 if search_str == "p":
                     effect = run.text[3:].replace(" ", "")
                     if is_number(effect):
@@ -127,11 +130,31 @@ def replace_text(slide: Slide, df, i) -> Slide:
                     old.getparent().remove(old)
                     continue
 
+                # Actual text
                 repl = str(df[search_str].iloc[i])
                 repl = repl if repl != "nan" else ""  # Replace missing values with blank
 
                 run.text = run.text.replace("{" + search_str + "}", repl)
 
+                # Replace image links
+                pattern = r"\<\<(.*?)\>\>"
+                img_link = re.findall(pattern, run.text)
+
+                if len(img_link) > 0:
+                    img = BytesIO(requests.get(img_link[0]).content)
+                    pil = Image.open(img)
+
+                    im_width = shape.height / pil.height * pil.width
+                    new_shape = slide.shapes.add_picture(
+                        img, (shape.width - im_width) / 2, shape.top,
+                        im_width, shape.height
+                    )
+
+                    old = shape._element.addnext(new_shape._element)
+
+                    run.text = ""
+
+                # Conditional formatting for columns start with "score"
                 if not search_str.startswith(starts) or not run.font.color.type:
                     continue
 
