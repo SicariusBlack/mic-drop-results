@@ -12,3 +12,4 @@ releases/
 *.xlsx
 *.pptm
 response.json
+markdown.py
