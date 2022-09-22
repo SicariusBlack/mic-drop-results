@@ -77,11 +77,6 @@ def replace_text(slide: Slide, df, i) -> Slide:
         for run in [p.runs[0] for p in text_frame.paragraphs]:
             for search_str in set(re.findall(r"(?<={)(.*?)(?=})", run.text)).intersection(cols):
                 if search_str == "p":
-                    if df["uid"].iloc[i] == np.nan:
-                        continue
-
-                    uid = df["uid"].iloc[i]
-
                     effect = run.text[3:].replace(" ", "")
                     if is_number(effect):
                         effect = int(effect)
@@ -89,15 +84,26 @@ def replace_text(slide: Slide, df, i) -> Slide:
                         effect = 0
 
                     run.text = ""
+                    
+                    if db is None:
+                        continue
+
+                    if df["uid"].iloc[i] == "nan" or not str(df["uid"].iloc[i]).startswith("_"):
+                        continue
+
+                    uid = df["uid"].iloc[i][1:]
+
 
                     img_path = avapath + str(effect) + "_" + str(uid) + ".png"
 
                     if not os.path.isfile(img_path):
                         # Load image from link
-                        avatar_url = get_avatar(df["uid"].iloc[i]) + ".png"
+                        avatar_url = get_avatar(uid)
 
                         if avatar_url is None:
                             continue
+
+                        avatar_url += ".png"
 
                         req = urlopen(Request(avatar_url, headers={"User-Agent": "Mozilla/5.0"}))
                         arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
@@ -146,6 +152,9 @@ def get_avatar(id):
         "Authorization": "Bot " + api_token
     }
 
+    if not is_number(id):
+        return None
+
     response = requests.get(f"https://discord.com/api/v9/users/{id}", headers=header)
 
     link = None
@@ -154,7 +163,7 @@ def get_avatar(id):
     except KeyError:
         if response.json()["message"] != "Unknown User":
             throw("Invalid token or API limit reached. Please provide a new token in config.json.",
-                response.json()["message"])
+                response.json())
 
     return link
 
@@ -243,10 +252,24 @@ sheetnames_raw = xls.sheet_names
 sheetnames = [re.sub(r'[\\\/:"*?<>|]+', "", name) for name in sheetnames_raw]
 data = {}
 
-contestants = None
+db = None
 for s in sheetnames_raw:
     if s.lower() == "contestants":
-        contestants = pd.read_excel(xls, s)
+        db = pd.read_excel(xls, s)
+
+        # Validate shape
+        if db.empty or db.shape[0] < 1 or db.shape[1] != 2:
+            throw("Contestant database is empty or has invalid shape.\n"
+                "Profile pictures will be disabled for now.", err_type="warning")
+            db = None
+            break
+
+        # Validate name
+        if db.columns.values.tolist() != ["name", "uid"]:
+            throw("Contestant database does not have valid column names. "
+                "The supposed column names are 'name' and 'uid'.\n"
+                "Profile pictures will be disabled for now.", err_type="warning")
+            db = None
 
 for i, sheet in enumerate(sheetnames_raw):
     df = pd.read_excel(xls, sheet)
@@ -289,8 +312,8 @@ for i, sheet in enumerate(sheetnames_raw):
 
         df.iloc[:, :2] = df.iloc[:, :2].fillna(0)
 
-    if contestants is not None:
-        df = df.merge(contestants, on="name", how="left")
+    if db is not None:
+        df = df.merge(db, on="name", how="left")
 
     data[sheetnames[i]] = df
 
