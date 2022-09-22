@@ -1,2 +1,2 @@
-while True:
-    text = input(">>> ")
+text = ["I *really* do **not** like this song!",
+        "~~"]
