@@ -141,18 +141,26 @@ def replace_text(slide: Slide, df, i) -> Slide:
                 img_link = re.findall(pattern, run.text)
 
                 if len(img_link) > 0:
-                    img = BytesIO(requests.get(img_link[0]).content)
-                    pil = Image.open(img)
+                    try:
+                        img = BytesIO(requests.get(img_link[0]).content)
+                        pil = Image.open(img)
 
-                    im_width = shape.height / pil.height * pil.width
-                    new_shape = slide.shapes.add_picture(
-                        img, (shape.width - im_width) / 2, shape.top,
-                        im_width, shape.height
-                    )
+                        im_width = shape.height / pil.height * pil.width
+                        new_shape = slide.shapes.add_picture(
+                            img, (shape.width - im_width) / 2, shape.top,
+                            im_width, shape.height
+                        )
 
-                    old = shape._element.addnext(new_shape._element)
+                        old = shape._element.addnext(new_shape._element)
 
-                    run.text = ""
+                        run.text = ""
+                    except:
+                        throw("Could not load the following image "
+                           f"(Slide {i + 1}, {df['sheet'].iloc[0]}).\n{img_link[0]}",
+                            "Please check your internet connection and verify that "
+                            "the link leads to an image file. "
+                            "It should end with an image extension like .png in most cases.",
+                            err_type="warning")
 
                 # Conditional formatting for columns start with "score"
                 if not search_str.startswith(starts) or not run.font.color.type:
