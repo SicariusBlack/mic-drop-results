@@ -85,6 +85,8 @@ def replace_text(slide: Slide, df, i) -> Slide:
                     effect = run.text[3:].replace(" ", "")
                     if is_number(effect):
                         effect = int(effect)
+                    else:
+                        effect = 0
 
                     run.text = ""
 
