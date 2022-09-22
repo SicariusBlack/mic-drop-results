@@ -1,6 +1,5 @@
 import ctypes
 import cv2
-from io import BytesIO
 import json
 import numpy as np
 import os
@@ -26,6 +25,15 @@ from pptx.slide import Slide
 
 import win32com
 import win32com.client
+
+
+def is_number(n):
+    """Returns True is string is a number."""
+    try:
+        float(n)
+        return True
+    except ValueError:
+        return False
 
 
 def throw(*messages, err_type: str = "error"):
@@ -72,29 +80,38 @@ def replace_text(slide: Slide, df, i) -> Slide:
                     if df["uid"].iloc[i] == np.nan:
                         continue
 
-                    effect = run.text[3:]
-                    effect = int(effect) if effect != "" else 0
+                    uid = df["uid"].iloc[i]
+
+                    effect = run.text[3:].replace(" ", "")
+                    if is_number(effect):
+                        effect = int(effect)
+
                     run.text = ""
 
-                    # Load image from link
-                    avatar_url = get_avatar(df["uid"].iloc[i]) + ".png"
+                    img_path = avapath + str(effect) + "_" + str(uid) + ".png"
 
-                    if avatar_url is None:
-                        continue
+                    if not os.path.isfile(img_path):
+                        # Load image from link
+                        avatar_url = get_avatar(df["uid"].iloc[i]) + ".png"
 
-                    req = urlopen(Request(avatar_url, headers={"User-Agent": "Mozilla/5.0"}))
-                    arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
-                    img = cv2.imdecode(arr, -1)
+                        if avatar_url is None:
+                            continue
 
-                    match effect:
-                        case 1:
-                            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                        req = urlopen(Request(avatar_url, headers={"User-Agent": "Mozilla/5.0"}))
+                        arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
+                        img = cv2.imdecode(arr, -1)
+
+                        match effect:
+                            case 1:
+                                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                        
+                        cv2.imwrite(img_path, img)
 
                     new_shape = slide.shapes.add_picture(
-                        BytesIO(cv2.imencode(".png", img)[1].tobytes()),
-                        shape.left, shape.top,
+                        img_path, shape.left, shape.top,
                         shape.width, shape.height
                     )
+
                     new_shape.auto_shape_type = MSO_SHAPE.OVAL
                     old = shape._element
                     new = new_shape._element
@@ -115,9 +132,10 @@ def replace_text(slide: Slide, df, i) -> Slide:
                         continue
 
                 for ind, val in enumerate(range_list):
-                    if float(repl) >= val:
-                        run.font.color.rgb = RGBColor(*color_list[ind])
-                        break
+                    if is_number(repl):
+                        if float(repl) >= val:
+                            run.font.color.rgb = RGBColor(*color_list[ind])
+                            break
     return slide
 
 
@@ -133,9 +151,8 @@ def get_avatar(id):
         link = f"https://cdn.discordapp.com/avatars/{id}/{response.json()['avatar']}"
     except KeyError:
         if response.json()["message"] != "Unknown User":
-            throw("API limit reached. Please provide a new token in config.json.")
-
-        pass
+            throw("Invalid token or API limit reached. Please provide a new token in config.json.",
+                response.json()["message"])
 
     return link
 
@@ -178,15 +195,18 @@ color_list = list(map(hex_to_rgb, color_list))
 status = ""
 url = ""
 
-if config["update_check"]:
-    try:
+try:
+    if config["update_check"]:
         response = requests.get("https://api.github.com/repos/"
             "berkeleyfx/mic-drop-results/releases/latest", timeout=3)
 
-        version = float(response.json()["tag_name"][1:])
+        raw_ver = response.json()["tag_name"][1:]
+        version, config_ver = [tuple(map(int, v.split("."))) for v in 
+            [raw_ver, config["version"]]
+        ]
         
-        if version > config["version"]:
-            print(f"Version {version}")
+        if version > config_ver:
+            print(f"Version {raw_ver}")
             print(response.json()["body"].partition("\n")[0])
             
             url = "https://github.com/berkeleyfx/mic-drop-results/releases/latest/"
@@ -194,14 +214,14 @@ if config["update_check"]:
             webbrowser.open(url, new=2)
 
             status = "update available"
-        elif version < config["version"]:
+        elif version < config_ver:
             status = "beta"
         else:
             status = "latest"
         
         status = " [" + status + "]"
-    except:
-        pass  # Move on if there is no internet connection
+except requests.exceptions.ConnectionError:
+    pass  # Ignore checking for updates without internet connection
 
 print(f"Mic Drop Results (v{config['version']}){status}")
 
@@ -213,6 +233,7 @@ if not "update available" in status:
 # Section E: Data Cleaning
 path = str(pathlib.Path().resolve()) + "\\"
 outpath = path + "output\\"
+avapath = path + "avatars\\"
 
 xls = pd.ExcelFile("data.xlsx")
 
@@ -303,11 +324,11 @@ subprocess.run("TASKKILL /F /IM powerpnt.exe",
 
 # Open template presentation
 os.makedirs(outpath, exist_ok=True)
+os.makedirs(avapath, exist_ok=True)
 
-access_error = False
 for k, df in data.items():
     with alive_bar(8, title=k, title_length=max(map(len, sheetnames)),
-        dual_line=True, spinner="classic") as bar:
+        dual_line=True, spinner="classic", enrich_print=False) as bar:
         # Open template presentation
         bar.text = "Opening template.pptm"
         ppt = win32com.client.Dispatch("PowerPoint.Application")
@@ -319,8 +340,10 @@ for k, df in data.items():
         try:
             ppt.VBE.ActiveVBProject.VBComponents.Import(f"{path}Module1.bas")
         except:
-            access_error = True
-            break     
+            # Warns the user about trust access error
+            throw("Please open PowerPoint, look up Trust Center Settings, "
+                "and make sure Trust access to the VBA project object model is enabled.")
+
         bar()
 
         # Duplicate slides
@@ -356,11 +379,6 @@ for k, df in data.items():
         bar.text = f"Saving as {outpath + output_filename}"
         prs.save(outpath + output_filename)
         bar()
-
-# Warns the user about trust access error
-if access_error:
-    throw("Please open PowerPoint, look up Trust Center Settings, "
-        "and make sure Trust access to the VBA project object model is enabled.")
 
 
 # Section G: Launching the File
