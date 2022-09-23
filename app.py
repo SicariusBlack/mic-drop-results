@@ -186,11 +186,7 @@ def get_avatar(id):
     if not is_number(id):
         return None
 
-    # response = requests.get(f"https://discord.com/api/v9/users/{id}", headers=header)
-    response = requests.get(f"https://discord.com/api/v9/guilds/{guild_id}/members/{id}", headers=header)
-
-    if id == "430503618680979457":
-        print(response.json())
+    response = requests.get(f"https://discord.com/api/v9/users/{id}", headers=header)
 
     link = None
     try:
@@ -231,8 +227,7 @@ config = json.load(open("config.json"))
 range_list = config["format"]["ranges"][::-1]
 color_list = config["format"]["colors"][::-1]
 starts = config["format"]["starts_with"]
-api_token = os.environ.get("TOKEN", "/client/")
-guild_id = config["guild_id"]
+api_token = 
 
 color_list = list(map(hex_to_rgb, color_list))
 
