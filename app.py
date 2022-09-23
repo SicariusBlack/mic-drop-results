@@ -186,10 +186,10 @@ def get_avatar(id):
     if not is_number(id):
         return None
 
-    response = requests.get(f"https://discord.com/api/v9/users/{id}", headers=header)
-
     link = None
+
     try:
+        response = requests.get(f"https://discord.com/api/v9/users/{id}", headers=header)
         link = f"https://cdn.discordapp.com/avatars/{id}/{response.json()['avatar']}"
     except KeyError:
         if response.json()["message"] == "401: Unauthorized":
@@ -197,11 +197,13 @@ def get_avatar(id):
                 response.json())
         else:
             throw(response.json(), err_type="warning")
-    else:
+    except requests.exceptions.ConnectionError:
         global avatar_mode
         avatar_mode = 0
-        throw("Connection error. Please check your internet connection and try again.",
-            "Avatars will not be downloaded for now.")
+        throw("Please check your internet connection and try again.",
+            "Avatars downloading will be skipped for now.", err_type="warning")
+    else:
+        pass  # Skip all remaining errors
 
     return link
 
