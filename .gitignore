@@ -13,7 +13,4 @@ releases/
 *.pptm
 response.json
 markdown.py
-
-# Bot
-node_modules/
-.env
+token.txt
