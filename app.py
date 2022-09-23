@@ -197,7 +197,7 @@ def get_avatar(id):
                 response.json())
         else:
             throw(response.json(), err_type="warning")
-    except requests.exceptions.ConnectionError:
+    else:
         global avatar_mode
         avatar_mode = 0
         throw("Connection error. Please check your internet connection and try again.",
