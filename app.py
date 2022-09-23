@@ -79,7 +79,7 @@ def replace_text(slide: Slide, df, i) -> Slide:
         for run in [p.runs[0] for p in text_frame.paragraphs]:
             for search_str in set(re.findall(r"(?<={)(.*?)(?=})", run.text)).intersection(cols):
                 # Profile picture
-                if search_str == "p":
+                if search_str == "p" and avatar_mode:
                     effect = run.text[3:].replace(" ", "")
                     if is_number(effect):
                         effect = int(effect)
@@ -227,7 +227,13 @@ config = json.load(open("config.json"))
 range_list = config["format"]["ranges"][::-1]
 color_list = config["format"]["colors"][::-1]
 starts = config["format"]["starts_with"]
-api_token = 
+avatar_mode = config["avatars"]
+
+with open("token.txt") as f:
+    api_token = f.read().splitlines()[0].replace('"', "")
+
+if len(api_token) < 30 and avatar_mode:
+    throw("Please a valid bot token in token.txt or turn off avatar mode in config.json.")
 
 color_list = list(map(hex_to_rgb, color_list))
 
