@@ -79,7 +79,7 @@ def replace_text(slide: Slide, df, i) -> Slide:
         for run in [p.runs[0] for p in text_frame.paragraphs]:
             for search_str in set(re.findall(r"(?<={)(.*?)(?=})", run.text)).intersection(cols):
                 # Profile picture
-                if search_str == "p" and avatar_mode:
+                if search_str == "p":
                     effect = run.text[3:].replace(" ", "")
                     if is_number(effect):
                         effect = int(effect)
@@ -88,7 +88,7 @@ def replace_text(slide: Slide, df, i) -> Slide:
 
                     run.text = ""
                     
-                    if db is None:
+                    if db is None or not avatar_mode:
                         continue
 
                     if df["uid"].iloc[i] == "nan" or not str(df["uid"].iloc[i]).startswith("_"):
@@ -195,6 +195,13 @@ def get_avatar(id):
         if response.json()["message"] == "401: Unauthorized":
             throw("Invalid token. Please provide a new token in config.json.",
                 response.json())
+        else:
+            throw(response.json(), err_type="warning")
+    except requests.exceptions.ConnectionError:
+        global avatar_mode
+        avatar_mode = 0
+        throw("Connection error. Please check your internet connection and try again.",
+            "Avatars will not be downloaded for now.")
 
     return link
 
