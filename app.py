@@ -192,8 +192,8 @@ def get_avatar(id):
     try:
         link = f"https://cdn.discordapp.com/avatars/{id}/{response.json()['avatar']}"
     except KeyError:
-        if response.json()["message"] != "Unknown User":
-            throw("Invalid token or API limit reached. Please provide a new token in config.json.",
+        if response.json()["message"] == "401: Unauthorized":
+            throw("Invalid token. Please provide a new token in config.json.",
                 response.json())
 
     return link
