@@ -230,7 +230,7 @@ starts = config["format"]["starts_with"]
 avatar_mode = config["avatars"]
 
 with open("token.txt") as f:
-    api_token = f.read().splitlines()[0].replace('"', "")
+    api_token = f.read().splitlines()[0].strip('"')
 
 if len(api_token) < 30 and avatar_mode:
     throw("Please a valid bot token in token.txt or turn off avatar mode in config.json.")
