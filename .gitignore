@@ -16,3 +16,4 @@ markdown.py
 
 # Bot
 node_modules/
+.env
