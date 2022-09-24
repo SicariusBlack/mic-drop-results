@@ -28,10 +28,12 @@ import win32com.client
 
 
 class Progress:
-    def __init__(self, total, bar_len):
+    def __init__(self, total, bar_len, group, group_len):
         self.count = 0
         self.total = total
         self.bar_len = bar_len
+        self.group = group
+        self.group_len = group_len
         self.desc = ""
 
     def add(self, incr=1):
@@ -47,7 +49,9 @@ class Progress:
         if self.count > 0:
             self.remove()
 
-        sys.stdout.write(f"|{bar}| {self.count}/{self.total} [{percents}%]{self.desc}")
+        sys.stdout.write(f"{self.group}{'' * (self.group_len - len(self.group))} "
+            f"|{bar}| {self.count}/{self.total} [{percents}%]{self.desc}")
+
         sys.stdout.flush()
     
     def remove(self):
@@ -426,9 +430,9 @@ subprocess.run("TASKKILL /F /IM powerpnt.exe",
 os.makedirs(outpath, exist_ok=True)
 os.makedirs(avapath, exist_ok=True)
 
-bar = Progress(8, bar_len=40)
-
 for k, df in data.items():
+    bar = Progress(8, 40, group=k, group_len=max(map(len, data.keys())))
+
     # Open template presentation
     bar.set_description("Opening template.pptm")
     ppt = win32com.client.Dispatch("PowerPoint.Application")
