@@ -14,6 +14,9 @@ import traceback
 from urllib.request import Request, urlopen
 import webbrowser
 
+import cursor
+from colorama import init
+
 import cv2
 import pandas as pd
 
@@ -80,10 +83,10 @@ def throw(*messages, err_type: str = "error"):
         print(*messages, sep="\n\n")
 
     if err_type.lower() == "error":
-        input("\nPress Enter to exit the program...")
+        _input("\nPress Enter to exit the program...")
         sys.exit(1)
     else:
-        input("\nPress Enter to continue...")
+        _input("\nPress Enter to continue...")
 
 
 def show_exception_and_exit(exc_type, exc_value, tb):
@@ -98,6 +101,13 @@ def show_exception_and_exit(exc_type, exc_value, tb):
 def hex_to_rgb(hex):
     hex = hex.lstrip("#")
     return tuple(int(hex[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def _input(*args, **kwargs):
+    cursor.show()
+    i = input(*args, **kwargs)
+    cursor.hide()
+    return i
 
 
 def replace_text(slide: Slide, df, i) -> Slide:
@@ -252,6 +262,12 @@ kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|
 
 # Avoid exiting the program when an error is thrown
 sys.excepthook = show_exception_and_exit
+
+# Enable ANSI escape sequences
+init()
+
+# Hide cursor
+cursor.hide()
 
 
 # Section B: Check if all files are present
@@ -493,5 +509,5 @@ print(f"\n\nExported to {outpath}")
 # Enable QuickEdit
 kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
 
-input("Press Enter to open the output folder...")
+_input("Press Enter to open the output folder...")
 os.startfile(outpath)
