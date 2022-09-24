@@ -42,7 +42,7 @@ class Progress:
     def add(self, incr=1):
         self.count += incr
         self.refresh()
-    
+
     def refresh(self):
         filled_len = int(round(self.bar_len * self.count / float(self.total)))
 
@@ -52,11 +52,14 @@ class Progress:
         if self.count > 0:
             self.remove()
 
-        sys.stdout.write(f"{self.group}{'' * (self.group_len - len(self.group))} "
+        sys.stdout.write(f"{self.group}{' ' * (self.group_len - len(self.group))} "
             f"|{bar}| {self.count}/{self.total} [{percents}%]{self.desc}")
 
+        if self.count >= self.total:
+            sys.stdout.write("\033[2K\r")  # Delete line and move cursor to beginning
+
         sys.stdout.flush()
-    
+
     def remove(self):
         sys.stdout.write("\033[2K\033[A\r")  # Delete line, move up, and move cursor to beginning
         sys.stdout.flush()
@@ -271,7 +274,7 @@ cursor.hide()
 
 
 # Section B: Check if all files are present
-missing = [f for f in ["config.json", "data.xlsx", "template.pptm", "Module1.bas"]
+missing = [f for f in ["config.json", "data.xlsx", "template.pptm", "Module1.bas", "token.txt"]
     if not os.path.isfile(f)]
     
 if len(missing) > 0:
@@ -504,7 +507,7 @@ for k, df in data.items():
 
 
 # Section G: Launching the File
-print(f"\n\nExported to {outpath}")
+print(f"\nExported to {outpath}")
 
 # Enable QuickEdit
 kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
