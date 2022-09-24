@@ -17,8 +17,6 @@ import webbrowser
 import cv2
 import pandas as pd
 
-from alive_progress import alive_bar
-
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.dml import MSO_COLOR_TYPE
@@ -27,6 +25,38 @@ from pptx.slide import Slide
 
 import win32com
 import win32com.client
+
+
+class Progress:
+    def __init__(self, total, bar_len):
+        self.count = 0
+        self.total = total
+        self.bar_len = bar_len
+        self.desc = ""
+
+    def add(self, incr=1):
+        self.count += incr
+        self.refresh()
+    
+    def refresh(self):
+        filled_len = int(round(self.bar_len * self.count / float(self.total)))
+
+        percents = round(100 * self.count / float(self.total), 1)
+        bar = "█" * filled_len + " " * (self.bar_len - filled_len)
+
+        if self.count > 0:
+            self.remove()
+
+        sys.stdout.write(f"|{bar}| {self.count}/{self.total} [{percents}%]{self.desc}")
+        sys.stdout.flush()
+    
+    def remove(self):
+        sys.stdout.write("\033[2K\033[A\r")  # Delete line, move up, and move cursor to beginning
+        sys.stdout.flush()
+
+    def set_description(self, text):
+        self.desc = "\n" + text
+        self.refresh()
 
 
 def is_number(n):
@@ -396,63 +426,65 @@ subprocess.run("TASKKILL /F /IM powerpnt.exe",
 os.makedirs(outpath, exist_ok=True)
 os.makedirs(avapath, exist_ok=True)
 
+bar = Progress(8, bar_len=40)
+
 for k, df in data.items():
-    with alive_bar(8, title=k, title_length=max(map(len, sheetnames)),
-        dual_line=True, spinner="classic", enrich_print=False) as bar:
-        # Open template presentation
-        bar.text = "Opening template.pptm"
-        ppt = win32com.client.Dispatch("PowerPoint.Application")
-        ppt.Presentations.Open(f"{path}template.pptm")
-        bar()
+    # Open template presentation
+    bar.set_description("Opening template.pptm")
+    ppt = win32com.client.Dispatch("PowerPoint.Application")
+    ppt.Presentations.Open(f"{path}template.pptm")
+    bar.add()
 
-        # Import macros
-        bar.text = "Importing macros"
-        try:
-            ppt.VBE.ActiveVBProject.VBComponents.Import(f"{path}Module1.bas")
-        except:
-            # Warns the user about trust access error
-            throw("Please open PowerPoint, look up Trust Center Settings, "
-                "and make sure Trust access to the VBA project object model is enabled.")
+    # Import macros
+    bar.set_description("Importing macros")
 
-        bar()
+    try:
+        ppt.VBE.ActiveVBProject.VBComponents.Import(f"{path}Module1.bas")
+    except:
+        # Warns the user about trust access error
+        throw("Please open PowerPoint, look up Trust Center Settings, "
+            "and make sure Trust access to the VBA project object model is enabled.")
 
-        # Duplicate slides
-        bar.text = "Duplicating slides"
-        slides_count = ppt.Run("Count")
+    bar.add()
 
-        for t in df.loc[:, "template"]:
-            ppt.Run("Duplicate", t)
-        bar()
+    # Duplicate slides
+    bar.set_description("Duplicating slides")
+    slides_count = ppt.Run("Count")
 
-        # Delete template slides when done
-        ppt.Run("DelSlide", *range(1, slides_count + 1))
-        bar()
+    for t in df.loc[:, "template"]:
+        ppt.Run("Duplicate", t)
 
-        # Save as output file
-        bar.text = "Saving templates"
-        output_filename = f"{k}.pptx"
+    bar.add()
 
-        ppt.Run("SaveAs", f"{outpath}{output_filename}")
-        bar()
-        ppt.Quit()
-        bar()
+    # Delete template slides when done
+    ppt.Run("DelSlide", *range(1, slides_count + 1))
+    bar.add()
 
-        # Replace text
-        bar.text = "Filling in judging data"
-        prs = Presentation(outpath + output_filename)
+    # Save as output file
+    bar.set_description("Saving templates")
+    output_filename = f"{k}.pptx"
 
-        for i, slide in enumerate(prs.slides):
-            replace_text(slide, df, i)
-        bar()
+    ppt.Run("SaveAs", f"{outpath}{output_filename}")
+    bar.add()
+    ppt.Quit()
+    bar.add()
 
-        # Save
-        bar.text = f"Saving as {outpath + output_filename}"
-        prs.save(outpath + output_filename)
-        bar()
+    # Replace text
+    bar.set_description("Downloading profile pictures and filling in judging data")
+    prs = Presentation(outpath + output_filename)
+
+    for i, slide in enumerate(prs.slides):
+        replace_text(slide, df, i)
+    bar.add()
+
+    # Save
+    bar.set_description(f"Saving as {outpath + output_filename}")
+    prs.save(outpath + output_filename)
+    bar.add()
 
 
 # Section G: Launching the File
-print(f"\nExported to {outpath}")
+print(f"\n\nExported to {outpath}")
 
 # Enable QuickEdit
 kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
