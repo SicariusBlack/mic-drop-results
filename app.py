@@ -138,11 +138,11 @@ def replace_text(slide: Slide, df, i) -> Slide:
                     if db is None or not avatar_mode:
                         continue
 
-                    if df["uid"].iloc[i] == "nan" or not str(df["uid"].iloc[i]).startswith("_"):
+                    if pd.isnull(df["uid"].iloc[i]) or not str(df["uid"].iloc[i]).startswith("_"):
                         continue
 
+                    print(df["uid"].iloc[i])
                     uid = df["uid"].iloc[i][1:]
-
 
                     img_path = avapath + str(effect) + "_" + str(uid) + ".png"
 
@@ -410,10 +410,14 @@ for i, sheet in enumerate(sheetnames_raw):
 
         df.iloc[:, :2] = df.iloc[:, :2].fillna(0)
 
+    # Merge contestant database
     if db is not None:
-        df = df.merge(db, on="name", how="left")
+        df = df.merge(db, left_on=df["name"].str.lower(), right_on=db["name"].str.lower(), how="left")
+        df.loc[:, "name"] = df["name_x"]
+        df.drop(["key_0", "name_x", "name_y"], axis=1, inplace=True)
 
     data[sheetnames[i]] = df
+    print(df)
 
 if len(data) < 1:
     throw(f"No valid sheet was found in {path}data.xlsx")
