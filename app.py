@@ -1,5 +1,6 @@
 import ctypes
 from io import BytesIO
+import itertools
 import json
 import numpy as np
 import os
@@ -123,7 +124,7 @@ def replace_text(slide: Slide, df, i) -> Slide:
 
         text_frame = shape.text_frame
 
-        for run in [p.runs[0] for p in text_frame.paragraphs]:
+        for run in itertools.chain.from_iterable([p.runs for p in text_frame.paragraphs]):
             for search_str in set(re.findall(r"(?<={)(.*?)(?=})", run.text)).intersection(cols):
                 # Profile picture
                 if search_str == "p":
