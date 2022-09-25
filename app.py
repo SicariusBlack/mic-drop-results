@@ -416,7 +416,6 @@ for i, sheet in enumerate(sheetnames_raw):
         df.drop(["key_0", "name_x", "name_y"], axis=1, inplace=True)
 
     data[sheetnames[i]] = df
-    print(df)
 
 if len(data) < 1:
     throw(f"No valid sheet was found in {path}data.xlsx")
