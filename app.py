@@ -141,7 +141,6 @@ def replace_text(slide: Slide, df, i) -> Slide:
                     if pd.isnull(df["uid"].iloc[i]) or not str(df["uid"].iloc[i]).startswith("_"):
                         continue
 
-                    print(df["uid"].iloc[i])
                     uid = df["uid"].iloc[i][1:]
 
                     img_path = avapath + str(effect) + "_" + str(uid) + ".png"
