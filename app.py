@@ -411,10 +411,14 @@ for i, sheet in enumerate(sheetnames_raw):
         df.iloc[:, :2] = df.iloc[:, :2].fillna(0)
 
     # Merge contestant database
+    clean_name = lambda x: x.str.lower().str.strip()
     if db is not None:
-        df = df.merge(db, left_on=df["name"].str.lower(), right_on=db["name"].str.lower(), how="left")
+        df = df.merge(db, left_on=clean_name(df["name"]), right_on=clean_name(db["name"]), how="left")
         df.loc[:, "name"] = df["name_x"]
         df.drop(["key_0", "name_x", "name_y"], axis=1, inplace=True)
+    
+    # Fill in missing templates
+    df.loc[:, "template"] = df.loc[:, "template"].fillna(1)
 
     data[sheetnames[i]] = df
 
@@ -477,7 +481,12 @@ for k, df in data.items():
     bar.set_description("Duplicating slides")
     slides_count = ppt.Run("Count")
 
+    # Duplicate slides
     for t in df.loc[:, "template"]:
+        if not t in range(1, slides_count + 1):
+            throw(f"Template No. {t} does not exist. Please exit the "
+                f"program and modify the 'template' column of data.xlsx ({k})")
+
         ppt.Run("Duplicate", t)
 
     bar.add()
@@ -492,7 +501,8 @@ for k, df in data.items():
 
     ppt.Run("SaveAs", f"{outpath}{output_filename}")
     bar.add()
-    ppt.Quit()
+    subprocess.run("TASKKILL /F /IM powerpnt.exe",
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     bar.add()
 
     # Replace text
