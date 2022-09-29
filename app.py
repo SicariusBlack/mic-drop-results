@@ -95,17 +95,19 @@ def throw(*messages, err_type: str = "error"):
     match err_type.lower():
         case "error":
             console_col(Fore.RED)
-        case "warning":
-            console_col(Fore.YELLOW)
         case _:
-            console_col(Fore.BLUE)
+            console_col(Fore.YELLOW)
 
     if len(messages) > 0:
         messages = list(messages)
-        messages[0] = f"\n\n{err_type.upper()}: {messages[0]}"
-        print(*messages, sep="\n\n")
-    
-    console_col(Fore.RESET)
+
+        print(f"\n\n{err_type.upper()}: {messages[0]}")
+        console_col(Fore.RESET)
+        messages.pop(0)
+
+        if len(messages) > 0:
+            print()
+            print(*messages, sep="\n\n")
 
     match err_type.lower():
         case "error":
@@ -274,8 +276,8 @@ def get_avatar(id):
     except requests.exceptions.ConnectionError:
         global avatar_mode
         avatar_mode = 0
-        throw("Please check your internet connection and try again.",
-            "Avatars downloading will be skipped for now.", err_type="warning")
+        throw("Could not connect to Discord API. Please check your internet "
+            "connection and try again.", err_type="warning")
     else:
         pass  # Skip all remaining errors
 
@@ -350,10 +352,10 @@ try:
             print(url + "\n")
             webbrowser.open(url, new=2)
 
-            start_ansi = "\033[34m"
+            start_ansi = "\033[32m"
             status = "update available"
         elif version < config_ver:
-            start_ansi = "\033[33m"
+            start_ansi = "\033[31m"
             status = "beta"
         else:
             status = "latest"
@@ -388,7 +390,7 @@ for s in sheetnames_raw:
 
         # Validate shape
         if db.empty or db.shape[0] < 1 or db.shape[1] < 2:
-            throw("Contestant database is empty or has invalid shape.\n"
+            throw("Contestant database is empty or has an invalid shape.",
                 "Profile pictures will be disabled for now.", err_type="warning")
             db = None
             break
@@ -531,8 +533,8 @@ for k, df in data.items():
     # Duplicate slides
     for t in df.loc[:, "template"]:
         if not as_int(t) in range(1, slides_count + 1):
-            throw(f"Template No. {t} does not exist. Please exit the "
-                f"program and modify the 'template' column of data.xlsx ({k})")
+            throw(f"Template {t} does not exist.",
+                f"Please exit the program and modify the 'template' column of data.xlsx ({k})")
 
         ppt.Run("Duplicate", t)
 
