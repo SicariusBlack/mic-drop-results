@@ -79,6 +79,13 @@ def is_number(n):
         return False
 
 
+def as_int(n):
+    try:
+        return int(n)
+    except ValueError:
+        return n
+
+
 def throw(*messages, err_type: str = "error"):
     """Throws a handled error with additional guides and details."""
     if len(messages) > 0:
@@ -361,17 +368,16 @@ for s in sheetnames_raw:
         db = pd.read_excel(xls, s)
 
         # Validate shape
-        if db.empty or db.shape[0] < 1 or db.shape[1] != 2:
+        if db.empty or db.shape[0] < 1 or db.shape[1] < 2:
             throw("Contestant database is empty or has invalid shape.\n"
                 "Profile pictures will be disabled for now.", err_type="warning")
             db = None
             break
 
         # Validate name
-        if db.columns.values.tolist() != ["name", "uid"]:
-            throw("Contestant database does not have valid column names. "
-                "The supposed column names are 'name' and 'uid'.\n"
-                "Profile pictures will be disabled for now.", err_type="warning")
+        if not "name" in db.columns.values.tolist():
+            throw("The 'name' column is missing from the contestant database.",
+                "Database merging will be skipped for now.", err_type="warning")
             db = None
 
 for i, sheet in enumerate(sheetnames_raw):
@@ -417,11 +423,28 @@ for i, sheet in enumerate(sheetnames_raw):
 
     # Merge contestant database
     clean_name = lambda x: x.str.lower().str.strip()
-    if db is not None:
-        df = df.merge(db, left_on=clean_name(df["name"]), right_on=clean_name(db["name"]), how="left")
+    if not db is None:
+        df_cols = df.columns.values.tolist()
+        db_cols = db.columns.values.tolist()
+
+        # Use merge for non-existing columns
+        df = df.merge(db[["name"] + [i for i in db_cols if not i in df_cols]],
+            left_on=clean_name(df["name"]), right_on=clean_name(db["name"]), how="left")
         df.loc[:, "name"] = df["name_x"]
         df.drop(["key_0", "name_x", "name_y"], axis=1, inplace=True)
-    
+
+        # Use update for existing columns
+        df["update_index"] = clean_name(df["name"])
+        df = df.set_index("update_index")
+
+        db["update_index"] = clean_name(db["name"])
+        db = db.set_index("update_index")
+        db_cols.remove("name")
+
+        update_cols = [i for i in db_cols if i in df_cols]
+        df.update(db[update_cols])
+        df.reset_index(drop=True, inplace=True)
+
     # Fill in missing templates
     df.loc[:, "template"] = df.loc[:, "template"].fillna(1)
 
@@ -488,7 +511,7 @@ for k, df in data.items():
 
     # Duplicate slides
     for t in df.loc[:, "template"]:
-        if not t in range(1, slides_count + 1):
+        if not as_int(t) in range(1, slides_count + 1):
             throw(f"Template No. {t} does not exist. Please exit the "
                 f"program and modify the 'template' column of data.xlsx ({k})")
 
