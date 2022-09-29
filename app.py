@@ -344,14 +344,14 @@ try:
         ]
         
         if version > config_ver:
-            console_col(Fore.RED)
+            console_col(Fore.YELLOW)
             print(f"Update {raw_ver}")
             print(response.json()["body"].partition("\n")[0])
-            console_col(Fore.RESET)
             
             url = "https://github.com/berkeleyfx/mic-drop-results/releases/latest/"
             print(url + "\n")
             webbrowser.open(url, new=2)
+            console_col(Fore.RESET)
 
             status = "update available"
         elif version < config_ver:
