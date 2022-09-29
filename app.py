@@ -17,6 +17,7 @@ import webbrowser
 
 import cursor
 from colorama import init
+from colorama import Fore
 
 import cv2
 import pandas as pd
@@ -85,19 +86,33 @@ def as_int(n):
     except ValueError:
         return n
 
+def console_col(col):
+    print(col, end="")
+
 
 def throw(*messages, err_type: str = "error"):
     """Throws a handled error with additional guides and details."""
+    match err_type.lower():
+        case "error":
+            console_col(Fore.RED)
+        case "warning":
+            console_col(Fore.YELLOW)
+        case _:
+            console_col(Fore.BLUE)
+
     if len(messages) > 0:
         messages = list(messages)
         messages[0] = f"\n\n{err_type.upper()}: {messages[0]}"
         print(*messages, sep="\n\n")
+    
+    console_col(Fore.RESET)
 
-    if err_type.lower() == "error":
-        _input("\nPress Enter to exit the program...")
-        sys.exit(1)
-    else:
-        _input("\nPress Enter to continue...")
+    match err_type.lower():
+        case "error":
+            _input("\nPress Enter to exit the program...")
+            sys.exit(1)
+        case _:
+            _input("\nPress Enter to continue...")
 
 
 def show_exception_and_exit(exc_type, exc_value, tb):
@@ -314,6 +329,7 @@ color_list = list(map(hex_to_rgb, color_list))
 
 # Section D: Checking for Updates
 status = ""
+start_ansi = ""
 url = ""
 
 try:
@@ -334,8 +350,10 @@ try:
             print(url + "\n")
             webbrowser.open(url, new=2)
 
+            start_ansi = "\033[34m"
             status = "update available"
         elif version < config_ver:
+            start_ansi = "\033[33m"
             status = "beta"
         else:
             status = "latest"
@@ -344,7 +362,8 @@ try:
 except requests.exceptions.ConnectionError:
     pass  # Ignore checking for updates without internet connection
 
-print(f"Mic Drop Results (v{config['version']}){status}")
+print(f"Mic Drop Results (v{config['version']}){start_ansi + status}")
+console_col(Fore.RESET)
 
 if not "update available" in status:
     url = "https://github.com/berkeleyfx/mic-drop-results"
@@ -548,7 +567,9 @@ for k, df in data.items():
 
 
 # Section G: Launching the File
+console_col(Fore.GREEN)
 print(f"\nExported to {outpath}")
+console_col(Fore.RESET)
 
 # Enable QuickEdit
 kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
