@@ -128,6 +128,7 @@ def replace_text(slide: Slide, df, i) -> Slide:
             for search_str in set(re.findall(r"(?<={)(.*?)(?=})", run.text)).intersection(cols):
                 # Profile picture
                 if search_str == "p":
+                    # Extract effect index and remove {p}
                     effect = run.text[3:].replace(" ", "")
                     if is_number(effect):
                         effect = int(effect)
@@ -136,13 +137,17 @@ def replace_text(slide: Slide, df, i) -> Slide:
 
                     run.text = ""
                     
-                    if db is None or not avatar_mode:
+                    # Test cases
+                    if not "uid" in cols or not avatar_mode:
                         continue
 
-                    if pd.isnull(df["uid"].iloc[i]) or not str(df["uid"].iloc[i]).startswith("_"):
+                    if df["uid"].dtype.kind in "biufc":
                         continue
 
-                    uid = df["uid"].iloc[i][1:]
+                    if pd.isnull(df["uid"].iloc[i]):
+                        continue
+
+                    uid = "".join(re.findall(r"\d+", df["uid"].iloc[i]))
 
                     img_path = avapath + str(effect) + "_" + str(uid) + ".png"
 
@@ -381,7 +386,7 @@ for i, sheet in enumerate(sheetnames_raw):
         continue
 
     # Exclude sheets with first two columns where data types are not numeric
-    if sum([df.iloc[:, i].dtype.kind in "fuckbitch" for i in range(2)]) < 2:
+    if sum([df.iloc[:, i].dtype.kind in "biufc" for i in range(2)]) < 2:
         throw(f"Invalid data type. The following rows of {sheet} contain string "
             "instead of the supposed numeric data type within the first two columns. "
             "The sheet will be skipped for now.",
