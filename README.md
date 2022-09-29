@@ -10,7 +10,7 @@
 
 <h2 align="center">Installation</h2>
 
-To install, please check out the [latest release](https://github.com/berkeleyfx/mic-drop-results/releases/), download [**mic-drop-results.zip**](https://github.com/berkeleyfx/mic-drop-results/releases/latest/download/mic-drop-results.zip), and extract it. Round-dependent files are included in [**sample.zip**](https://github.com/berkeleyfx/mic-drop-results/releases/latest/download/sample.zip).
+To install, please check out the [latest release](https://github.com/berkeleyfx/mic-drop-results/releases/), download [**mic-drop-results.zip**](https://github.com/berkeleyfx/mic-drop-results/releases/latest/download/mic-drop-results.zip), and extract it. Round-dependent files are included in [`/sample`](./sample).
 
 In the end, there should be five files and they should all be put in the same directory.
 
