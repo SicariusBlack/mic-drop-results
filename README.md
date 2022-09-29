@@ -24,6 +24,7 @@ These files are inseparable and should never be modified or renamed unless there
 - **app.exe**
 - **config.json** (you can modify if you know exactly what you are doing)
 - **Module1.bas**
+- **token.txt** (not included in every release, check [`/sample`](./sample) for more info)
 
 **Round-dependent**<br>
 These files will vary every round. You can find samples of these files in [`/sample`](./sample) or in the [**sample.zip**](https://github.com/berkeleyfx/mic-drop-results/releases/latest/download/sample.zip) file included in every release.
