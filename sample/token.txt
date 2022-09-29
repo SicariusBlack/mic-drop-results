@@ -1,0 +1,4 @@
+"YOUR_TOKEN"
+
+Follow these steps to get your own token.
+https://mee6.xyz/tutorials/how-to-generate-a-custom-bot-token
