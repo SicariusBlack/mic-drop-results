@@ -1,17 +1,16 @@
-import ctypes
+from ctypes import windll
 from io import BytesIO
-import itertools
-import json
+from itertools import chain
+from json import load
 import numpy as np
-import os
-import pathlib
+from os import path, makedirs, startfile, getcwd
 from PIL import Image
 import re
 import requests
-import signal
-import subprocess
+from signal import signal, SIGINT, SIG_IGN
+from subprocess import run, DEVNULL
 import sys
-import traceback
+from traceback import print_exception
 from urllib.request import Request, urlopen
 import webbrowser
 
@@ -28,7 +27,6 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.slide import Slide
 
 from pywintypes import com_error
-import win32com
 import win32com.client
 
 
@@ -66,7 +64,7 @@ class Progress:
         sys.stdout.write("\033[2K\033[A\r")  # Delete line, move up, and move cursor to beginning
         sys.stdout.flush()
 
-    def set_description(self, text):
+    def description(self, text):
         self.desc = "\n" + text
         self.refresh()
 
@@ -119,7 +117,7 @@ def throw(*messages, err_type: str = "error"):
 
 
 def show_exception_and_exit(exc_type, exc_value, tb):
-    traceback.print_exception(exc_type, exc_value, tb)
+    print_exception(exc_type, exc_value, tb)
 
     # Enable QuickEdit
     kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
@@ -148,19 +146,10 @@ def replace_text(slide: Slide, df, i) -> Slide:
 
         text_frame = shape.text_frame
 
-        for run in itertools.chain.from_iterable([p.runs for p in text_frame.paragraphs]):
+        for run in chain.from_iterable([p.runs for p in text_frame.paragraphs]):
             for search_str in set(re.findall(r"(?<={)(.*?)(?=})", run.text)).intersection(cols):
                 # Profile picture
                 if search_str == "p":
-                    # Extract effect index and remove {p}
-                    effect = run.text[3:].replace(" ", "")
-                    if is_number(effect):
-                        effect = int(effect)
-                    else:
-                        effect = 0
-
-                    run.text = ""
-                    
                     # Test cases
                     if not "uid" in cols or not avatar_mode:
                         continue
@@ -171,11 +160,15 @@ def replace_text(slide: Slide, df, i) -> Slide:
                     if pd.isnull(df["uid"].iloc[i]):
                         continue
 
+                    # Extract effect index and remove {p}
+                    effect = as_int(run.text.strip()[3:])
+                    run.text = ""
+
                     uid = "".join(re.findall(r"\d+", df["uid"].iloc[i]))
 
                     img_path = avapath + str(effect) + "_" + str(uid) + ".png"
 
-                    if not os.path.isfile(img_path):
+                    if not path.isfile(img_path):
                         # Load image from link
                         avatar_url = get_avatar(uid)
 
@@ -284,10 +277,10 @@ def get_avatar(id):
 # Section A: Fixing Command Prompt issues
 # Handle KeyboardInterrupt: automatically open the only link
 import contextlib
-signal.signal(signal.SIGINT, signal.SIG_IGN)
+signal(SIGINT, SIG_IGN)
 
 # Disable QuickEdit and Insert mode
-kernel32 = ctypes.windll.kernel32
+kernel32 = windll.kernel32
 kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
 
 # Avoid exiting the program when an error is thrown
@@ -300,13 +293,15 @@ init()
 cursor.hide()
 
 
-if missing := [f for f in ["config.json", "data.xlsx", "template.pptm", "Module1.bas", "token.txt"] if not os.path.isfile(f)]:
+if missing := [f for f in [
+        "config.json", "data.xlsx", "template.pptm", "Module1.bas", "token.txt"
+    ] if not path.isfile(f)]:
     throw("The following files are missing. Please review the documentation for more "
         "information related to file requirements.", "\n".join(missing))
 
 
 # Section C: Loading config.json
-config = json.load(open("config.json"))
+config = load(open("config.json"))
 
 # Variable shortcuts
 range_list = config["format"]["ranges"][::-1]
@@ -324,8 +319,7 @@ color_list = list(map(hex_to_rgb, color_list))
 
 
 # Section D: Checking for Updates
-status = ""
-url = ""
+status, url = "", ""
 
 with contextlib.suppress(requests.exceptions.ConnectionError):
     if config["update_check"]:
@@ -364,9 +358,9 @@ if "update available" not in status:
 
 
 # Section E: Data Cleaning
-path = str(pathlib.Path().resolve()) + "\\"
-outpath = path + "output\\"
-avapath = path + "avatars\\"
+folder_path = getcwd() + "\\"
+outpath = folder_path + "output\\"
+avapath = folder_path + "avatars\\"
 
 xls = pd.ExcelFile("data.xlsx")
 
@@ -440,7 +434,8 @@ for i, sheet in enumerate(sheetnames_raw):
         db_cols = db.columns.values.tolist()
 
         # Use merge for non-existing columns
-        df = df.merge(db[["name"] + [i for i in db_cols if i not in df_cols]], left_on=clean_name(df["name"]), right_on=clean_name(db["name"]), how="left")
+        df = df.merge(db[["name"] + [i for i in db_cols if i not in df_cols]],
+            left_on=clean_name(df["name"]), right_on=clean_name(db["name"]), how="left")
 
         df.loc[:, "name"] = df["name_x"]
         df.drop(["key_0", "name_x", "name_y"], axis=1, inplace=True)
@@ -463,7 +458,7 @@ for i, sheet in enumerate(sheetnames_raw):
     data[sheetnames[i]] = df
 
 if not data:
-    throw(f"No valid sheet was found in {path}data.xlsx")
+    throw(f"No valid sheet was found in {folder_path}data.xlsx")
 
 for k, df in data.items():
     # Check for cases where avg and std are the same (hold the same rank)
@@ -489,27 +484,26 @@ print("\nGenerating slides...")
 print("Please do not click on any PowerPoint windows that may show up in the process.\n")
 
 # Kill all PowerPoint instances
-subprocess.run("TASKKILL /F /IM powerpnt.exe",
-    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+run("TASKKILL /F /IM powerpnt.exe", stdout=DEVNULL, stderr=DEVNULL)
 
 # Open template presentation
-os.makedirs(outpath, exist_ok=True)
-os.makedirs(avapath, exist_ok=True)
+makedirs(outpath, exist_ok=True)
+makedirs(avapath, exist_ok=True)
 
 for k, df in data.items():
     bar = Progress(8, 40, group=k, group_len=max(map(len, data.keys())))
 
     # Open template presentation
-    bar.set_description("Opening template.pptm")
+    bar.description("Opening template.pptm")
     ppt = win32com.client.Dispatch("PowerPoint.Application")
-    ppt.Presentations.Open(f"{path}template.pptm")
+    ppt.Presentations.Open(f"{folder_path}template.pptm")
     bar.add()
 
     # Import macros
-    bar.set_description("Importing macros")
+    bar.description("Importing macros")
 
     try:
-        ppt.VBE.ActiveVBProject.VBComponents.Import(f"{path}Module1.bas")
+        ppt.VBE.ActiveVBProject.VBComponents.Import(f"{folder_path}Module1.bas")
     except com_error as e:
         if e.hresult == -2147352567:
             # Warns the user about trust access error
@@ -521,7 +515,7 @@ for k, df in data.items():
     bar.add()
 
     # Duplicate slides
-    bar.set_description("Duplicating slides")
+    bar.description("Duplicating slides")
     slides_count = ppt.Run("Count")
 
     # Duplicate slides
@@ -539,17 +533,16 @@ for k, df in data.items():
     bar.add()
 
     # Save as output file
-    bar.set_description("Saving templates")
+    bar.description("Saving templates")
     output_filename = f"{k}.pptx"
 
     ppt.Run("SaveAs", f"{outpath}{output_filename}")
     bar.add()
-    subprocess.run("TASKKILL /F /IM powerpnt.exe",
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    run("TASKKILL /F /IM powerpnt.exe", stdout=DEVNULL, stderr=DEVNULL)
     bar.add()
 
     # Replace text
-    bar.set_description("Downloading profile pictures and filling in judging data")
+    bar.description("Downloading profile pictures and filling in judging data")
     prs = Presentation(outpath + output_filename)
 
     for i, slide in enumerate(prs.slides):
@@ -557,7 +550,7 @@ for k, df in data.items():
     bar.add()
 
     # Save
-    bar.set_description(f"Saving as {outpath + output_filename}")
+    bar.description(f"Saving as {outpath + output_filename}")
     prs.save(outpath + output_filename)
     bar.add()
 
@@ -569,4 +562,4 @@ print(f"\nExported to {outpath}")
 kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
 
 _input("Press Enter to open the output folder...")
-os.startfile(outpath)
+startfile(outpath)
