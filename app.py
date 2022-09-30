@@ -28,6 +28,7 @@ from pptx.enum.dml import MSO_COLOR_TYPE
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.slide import Slide
 
+from pywintypes import com_error
 import win32com
 import win32com.client
 
@@ -86,6 +87,7 @@ def as_int(n):
     except ValueError:
         return n
 
+
 def console_col(col):
     print(col, end="")
 
@@ -126,9 +128,8 @@ def show_exception_and_exit(exc_type, exc_value, tb):
     throw()
 
 
-def hex_to_rgb(hex):
-    hex = hex.lstrip("#")
-    return tuple(int(hex[i:i + 2], 16) for i in (0, 2, 4))
+def hex_to_rgb(h):
+    return tuple(int(h.lstrip("#")[i:i + 2], 16) for i in (0, 2, 4))
 
 
 def _input(*args, **kwargs):
@@ -278,14 +279,12 @@ def get_avatar(id):
         avatar_mode = 0
         throw("Could not connect to Discord API. Please check your internet "
             "connection and try again.", err_type="warning")
-    else:
-        pass  # Skip all remaining errors
-
     return link
 
 
 # Section A: Fixing Command Prompt issues
 # Handle KeyboardInterrupt: automatically open the only link
+import contextlib
 signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 # Disable QuickEdit and Insert mode
@@ -302,11 +301,7 @@ init()
 cursor.hide()
 
 
-# Section B: Check if all files are present
-missing = [f for f in ["config.json", "data.xlsx", "template.pptm", "Module1.bas", "token.txt"]
-    if not os.path.isfile(f)]
-    
-if len(missing) > 0:
+if missing := [f for f in ["config.json", "data.xlsx", "template.pptm", "Module1.bas", "token.txt"] if not os.path.isfile(f)]:
     throw("The following files are missing. Please review the documentation for more "
         "information related to file requirements.", "\n".join(missing))
 
@@ -333,7 +328,7 @@ color_list = list(map(hex_to_rgb, color_list))
 status = ""
 url = ""
 
-try:
+with contextlib.suppress(requests.exceptions.ConnectionError):
     if config["update_check"]:
         response = requests.get("https://api.github.com/repos/"
             "berkeleyfx/mic-drop-results/releases/latest", timeout=3)
@@ -342,12 +337,12 @@ try:
         version, config_ver = [tuple(map(int, v.split("."))) for v in 
             [raw_ver, config["version"]]
         ]
-        
+
         if version > config_ver:
             console_col(Fore.YELLOW)
             print(f"Update {raw_ver}")
             print(response.json()["body"].partition("\n")[0])
-            
+
             url = "https://github.com/berkeleyfx/mic-drop-results/releases/latest/"
             print(url + "\n")
             webbrowser.open(url, new=2)
@@ -358,15 +353,12 @@ try:
             status = "beta"
         else:
             status = "latest"
-        
-        status = " [" + status + "]"
-except requests.exceptions.ConnectionError:
-    pass  # Ignore checking for updates without internet connection
 
+        status = f" [{status}]"
 print(f"Mic Drop Results (v{config['version']}){status}")
 console_col(Fore.RESET)
 
-if not "update available" in status:
+if "update available" not in status:
     url = "https://github.com/berkeleyfx/mic-drop-results"
     print(url)
 
@@ -395,7 +387,7 @@ for s in sheetnames_raw:
             break
 
         # Validate name
-        if not "name" in db.columns.values.tolist():
+        if "name" not in db.columns.values.tolist():
             throw("The 'name' column is missing from the contestant database.",
                 "Database merging will be skipped for now.", err_type="warning")
             db = None
@@ -412,7 +404,7 @@ for i, sheet in enumerate(sheetnames_raw):
         continue
 
     # Exclude sheets with first two columns where data types are not numeric
-    if sum([df.iloc[:, i].dtype.kind in "biufc" for i in range(2)]) < 2:
+    if sum(df.iloc[:, i].dtype.kind in "biufc" for i in range(2)) < 2:
         throw(f"Invalid data type. The following rows of {sheet} contain string "
             "instead of the supposed numeric data type within the first two columns. "
             "The sheet will be skipped for now.",
@@ -443,13 +435,13 @@ for i, sheet in enumerate(sheetnames_raw):
 
     # Merge contestant database
     clean_name = lambda x: x.str.lower().str.strip()
-    if not db is None:
+    if db is not None:
         df_cols = df.columns.values.tolist()
         db_cols = db.columns.values.tolist()
 
         # Use merge for non-existing columns
-        df = df.merge(db[["name"] + [i for i in db_cols if not i in df_cols]],
-            left_on=clean_name(df["name"]), right_on=clean_name(db["name"]), how="left")
+        df = df.merge(db[["name"] + [i for i in db_cols if i not in df_cols]], left_on=clean_name(df["name"]), right_on=clean_name(db["name"]), how="left")
+
         df.loc[:, "name"] = df["name_x"]
         df.drop(["key_0", "name_x", "name_y"], axis=1, inplace=True)
 
@@ -470,7 +462,7 @@ for i, sheet in enumerate(sheetnames_raw):
 
     data[sheetnames[i]] = df
 
-if len(data) < 1:
+if not data:
     throw(f"No valid sheet was found in {path}data.xlsx")
 
 for k, df in data.items():
@@ -518,10 +510,13 @@ for k, df in data.items():
 
     try:
         ppt.VBE.ActiveVBProject.VBComponents.Import(f"{path}Module1.bas")
-    except:
-        # Warns the user about trust access error
-        throw("Please open PowerPoint, look up Trust Center Settings, "
-            "and make sure Trust access to the VBA project object model is enabled.")
+    except com_error as e:
+        if e.hresult == -2147352567:
+            # Warns the user about trust access error
+            throw("Please open PowerPoint, look up Trust Center Settings, "
+                "and make sure Trust access to the VBA project object model is enabled.")
+        else:
+            raise e
 
     bar.add()
 
@@ -531,7 +526,7 @@ for k, df in data.items():
 
     # Duplicate slides
     for t in df.loc[:, "template"]:
-        if not as_int(t) in range(1, slides_count + 1):
+        if as_int(t) not in range(1, slides_count + 1):
             throw(f"Template {t} does not exist.",
                 f"Please exit the program and modify the 'template' column of data.xlsx ({k})")
 
