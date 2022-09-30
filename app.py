@@ -2,10 +2,10 @@ import contextlib
 from ctypes import windll
 from io import BytesIO
 from itertools import chain
-from json import load
+from json import load, dump
 from multiprocessing import Pool
 import numpy as np
-from os import path, makedirs, startfile, getcwd
+import os
 from PIL import Image
 import re
 import requests
@@ -306,9 +306,10 @@ if __name__ == "__main__":
     cursor.hide()
 
 
+    # Section B: Checking for Missing Files
     if missing := [f for f in [
             "config.json", "data.xlsx", "template.pptm", "Module1.bas", "token.txt"
-        ] if not path.isfile(f)]:
+        ] if not os.path.isfile(f)]:
         throw("The following files are missing. Please review the documentation for more "
             "information related to file requirements.", "\n".join(missing))
 
@@ -321,6 +322,7 @@ if __name__ == "__main__":
     color_list = config["format"]["colors"][::-1]
     starts = config["format"]["starts_with"]
     avatar_mode = config["avatars"]
+    last_clear = config["last_clear_avatar_cache"]
 
     with open("token.txt") as f:
         api_token = f.read().splitlines()[0].strip('"')
@@ -371,7 +373,7 @@ if __name__ == "__main__":
 
 
     # Section E: Data Cleaning
-    folder_path = getcwd() + "\\"
+    folder_path = os.getcwd() + "\\"
     outpath = folder_path + "output\\"
     avapath = folder_path + "avatars\\"
 
@@ -502,14 +504,24 @@ if __name__ == "__main__":
     run("TASKKILL /F /IM powerpnt.exe", stdout=DEVNULL, stderr=DEVNULL)
 
     # Open template presentation
-    makedirs(outpath, exist_ok=True)
-    makedirs(avapath, exist_ok=True)
+    os.makedirs(outpath, exist_ok=True)
+
+    # Clear cache
+    if time.time() - last_clear > 1800:
+        for f in os.scandir(avapath):
+            os.unlink(f)
+
+    os.makedirs(avapath, exist_ok=True)
+
+    with open("config.json", "w") as f:
+        config["last_clear_avatar_cache"] = int(time.time())
+        dump(config, f, indent=4)
 
     # Download avatars with parallel processing
     uid_list = []
     if avatar_mode:
         for df in data.values():
-            uid_list += [id for id in df["uid"] if not path.isfile(avapath + id.strip() + ".png")]
+            uid_list += [id for id in df["uid"] if not os.path.isfile(avapath + id.strip() + ".png")]
 
     if len(uid_list) > 0:
         pool = Pool(6)
@@ -590,4 +602,4 @@ if __name__ == "__main__":
     kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
 
     _input("Press Enter to open the output folder...")
-    startfile(outpath)
+    os.startfile(outpath)
