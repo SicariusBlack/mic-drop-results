@@ -1,7 +1,9 @@
+import contextlib
 from ctypes import windll
 from io import BytesIO
 from itertools import chain
 from json import load
+from multiprocessing import Pool
 import numpy as np
 from os import path, makedirs, startfile, getcwd
 from PIL import Image
@@ -247,7 +249,7 @@ def replace_text(slide: Slide, df, i) -> Slide:
     return slide
 
 
-def get_avatar(id):
+def get_avatar(id, api_token):
     header = {
         "Authorization": "Bot " + api_token
     }
@@ -262,7 +264,7 @@ def get_avatar(id):
         link = f"https://cdn.discordapp.com/avatars/{id}/{response.json()['avatar']}"
     except KeyError:
         if response.json()["message"] == "401: Unauthorized":
-            throw("Invalid token. Please provide a new token in config.json.",
+            throw("Invalid token. Please provide a new token in token.txt.",
                 response.json())
         else:
             throw(response.json(), err_type="warning")
@@ -274,292 +276,319 @@ def get_avatar(id):
     return link
 
 
-# Section A: Fixing Command Prompt issues
-# Handle KeyboardInterrupt: automatically open the only link
-import contextlib
-signal(SIGINT, SIG_IGN)
+def download_avatar(uid, avapath, api_token):
+    uid = "".join(re.findall(r"\d+", uid))
 
-# Disable QuickEdit and Insert mode
-kernel32 = windll.kernel32
-kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
+    img_path = avapath + "_" + uid + ".png"
 
-# Avoid exiting the program when an error is thrown
-sys.excepthook = show_exception_and_exit
+    if not path.isfile(img_path):
+        # Load image from link
+        avatar_url = get_avatar(uid, api_token)
 
-# Enable ANSI escape sequences
-init()
+        if avatar_url is None:
+            return None
 
-# Hide cursor
-cursor.hide()
+        avatar_url += ".png"
 
+        req = urlopen(Request(avatar_url, headers={"User-Agent": "Mozilla/5.0"}))
+        arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
+        img = cv2.imdecode(arr, -1)
 
-if missing := [f for f in [
-        "config.json", "data.xlsx", "template.pptm", "Module1.bas", "token.txt"
-    ] if not path.isfile(f)]:
-    throw("The following files are missing. Please review the documentation for more "
-        "information related to file requirements.", "\n".join(missing))
+        cv2.imwrite(img_path, img)
 
 
-# Section C: Loading config.json
-config = load(open("config.json"))
+if __name__ == "__main__":
+    # Section A: Fixing Command Prompt issues
+    # Handle KeyboardInterrupt: automatically open the only link
+    signal(SIGINT, SIG_IGN)
 
-# Variable shortcuts
-range_list = config["format"]["ranges"][::-1]
-color_list = config["format"]["colors"][::-1]
-starts = config["format"]["starts_with"]
-avatar_mode = config["avatars"]
+    # Disable QuickEdit and Insert mode
+    kernel32 = windll.kernel32
+    kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
 
-with open("token.txt") as f:
-    api_token = f.read().splitlines()[0].strip('"')
+    # Avoid exiting the program when an error is thrown
+    sys.excepthook = show_exception_and_exit
 
-if len(api_token) < 30 and avatar_mode:
-    throw("Please a valid bot token in token.txt or turn off avatar mode in config.json.")
+    # Enable ANSI escape sequences
+    init()
 
-color_list = list(map(hex_to_rgb, color_list))
-
-
-# Section D: Checking for Updates
-status, url = "", ""
-
-with contextlib.suppress(requests.exceptions.ConnectionError):
-    if config["update_check"]:
-        response = requests.get("https://api.github.com/repos/"
-            "berkeleyfx/mic-drop-results/releases/latest", timeout=3)
-
-        raw_ver = response.json()["tag_name"][1:]
-        version, config_ver = [tuple(map(int, v.split("."))) for v in 
-            [raw_ver, config["version"]]
-        ]
-
-        if version > config_ver:
-            console_col(Fore.YELLOW)
-            print(f"Update {raw_ver}")
-            print(response.json()["body"].partition("\n")[0])
-
-            url = "https://github.com/berkeleyfx/mic-drop-results/releases/latest/"
-            print(url + "\n")
-            webbrowser.open(url, new=2)
-            console_col(Fore.RESET)
-
-            status = "update available"
-        elif version < config_ver:
-            status = "beta"
-        else:
-            status = "latest"
-
-        status = f" [{status}]"
-
-print(f"Mic Drop Results (v{config['version']}){status}")
-console_col(Fore.RESET)
-
-if "update available" not in status:
-    url = "https://github.com/berkeleyfx/mic-drop-results"
-    print(url)
+    # Hide cursor
+    cursor.hide()
 
 
-# Section E: Data Cleaning
-folder_path = getcwd() + "\\"
-outpath = folder_path + "output\\"
-avapath = folder_path + "avatars\\"
+    if missing := [f for f in [
+            "config.json", "data.xlsx", "template.pptm", "Module1.bas", "token.txt"
+        ] if not path.isfile(f)]:
+        throw("The following files are missing. Please review the documentation for more "
+            "information related to file requirements.", "\n".join(missing))
 
-xls = pd.ExcelFile("data.xlsx")
 
-sheetnames_raw = xls.sheet_names
-sheetnames = [re.sub(r'[\\\/:"*?<>|]+', "", name) for name in sheetnames_raw]
-data = {}
+    # Section C: Loading config.json
+    config = load(open("config.json"))
 
-db = None
-for s in sheetnames_raw:
-    if s.lower() == "contestants":
-        db = pd.read_excel(xls, s)
+    # Variable shortcuts
+    range_list = config["format"]["ranges"][::-1]
+    color_list = config["format"]["colors"][::-1]
+    starts = config["format"]["starts_with"]
+    avatar_mode = config["avatars"]
+
+    with open("token.txt") as f:
+        api_token = f.read().splitlines()[0].strip('"')
+
+    if len(api_token) < 30 and avatar_mode:
+        throw("Please a valid bot token in token.txt or turn off avatar mode in config.json.")
+
+    color_list = list(map(hex_to_rgb, color_list))
+
+
+    # Section D: Checking for Updates
+    status, url = "", ""
+
+    with contextlib.suppress(requests.exceptions.ConnectionError):
+        if config["update_check"]:
+            response = requests.get("https://api.github.com/repos/"
+                "berkeleyfx/mic-drop-results/releases/latest", timeout=3)
+
+            raw_ver = response.json()["tag_name"][1:]
+            version, config_ver = [tuple(map(int, v.split("."))) for v in 
+                [raw_ver, config["version"]]
+            ]
+
+            if version > config_ver:
+                console_col(Fore.YELLOW)
+                print(f"Update {raw_ver}")
+                print(response.json()["body"].partition("\n")[0])
+
+                url = "https://github.com/berkeleyfx/mic-drop-results/releases/latest/"
+                print(url + "\n")
+                webbrowser.open(url, new=2)
+                console_col(Fore.RESET)
+
+                status = "update available"
+            elif version < config_ver:
+                status = "beta"
+            else:
+                status = "latest"
+
+            status = f" [{status}]"
+
+    print(f"Mic Drop Results (v{config['version']}){status}")
+    console_col(Fore.RESET)
+
+    if "update available" not in status:
+        url = "https://github.com/berkeleyfx/mic-drop-results"
+        print(url)
+
+
+    # Section E: Data Cleaning
+    folder_path = getcwd() + "\\"
+    outpath = folder_path + "output\\"
+    avapath = folder_path + "avatars\\"
+
+    xls = pd.ExcelFile("data.xlsx")
+
+    sheetnames_raw = xls.sheet_names
+    sheetnames = [re.sub(r'[\\\/:"*?<>|]+', "", name) for name in sheetnames_raw]
+    data = {}
+
+    db = None
+    for s in sheetnames_raw:
+        if s.lower() == "contestants":
+            db = pd.read_excel(xls, s)
+
+            # Validate shape
+            if db.empty or db.shape[0] < 1 or db.shape[1] < 2:
+                throw("Contestant database is empty or has an invalid shape.",
+                    "Profile pictures will be disabled for now.", err_type="warning")
+                db = None
+                break
+
+            # Validate name
+            if "name" not in db.columns.values.tolist():
+                throw("The 'name' column is missing from the contestant database.",
+                    "Database merging will be skipped for now.", err_type="warning")
+                db = None
+
+    for i, sheet in enumerate(sheetnames_raw):
+        df = pd.read_excel(xls, sheet)
 
         # Validate shape
-        if db.empty or db.shape[0] < 1 or db.shape[1] < 2:
-            throw("Contestant database is empty or has an invalid shape.",
-                "Profile pictures will be disabled for now.", err_type="warning")
-            db = None
-            break
+        if df.empty or df.shape < (1, 2):
+            continue
 
-        # Validate name
-        if "name" not in db.columns.values.tolist():
-            throw("The 'name' column is missing from the contestant database.",
-                "Database merging will be skipped for now.", err_type="warning")
-            db = None
+        # Exclude contestant database
+        if sheet.lower() == "contestants":
+            continue
 
-for i, sheet in enumerate(sheetnames_raw):
-    df = pd.read_excel(xls, sheet)
+        # Exclude sheets with first two columns where data types are not numeric
+        if sum(df.iloc[:, i].dtype.kind in "biufc" for i in range(2)) < 2:
+            throw(f"Invalid data type. The following rows of {sheet} contain string "
+                "instead of the supposed numeric data type within the first two columns. "
+                "The sheet will be skipped for now.",
 
-    # Validate shape
-    if df.empty or df.shape < (1, 2):
-        continue
+                df[~df.iloc[:, :2].applymap(np.isreal).all(1)],
 
-    # Exclude contestant database
-    if sheet.lower() == "contestants":
-        continue
+                err_type="warning"
+            )
 
-    # Exclude sheets with first two columns where data types are not numeric
-    if sum(df.iloc[:, i].dtype.kind in "biufc" for i in range(2)) < 2:
-        throw(f"Invalid data type. The following rows of {sheet} contain string "
-            "instead of the supposed numeric data type within the first two columns. "
-            "The sheet will be skipped for now.",
+            continue
 
-            df[~df.iloc[:, :2].applymap(np.isreal).all(1)],
+        # Replace NaN values within the first two columns with 0
+        if df.iloc[:, :2].isnull().values.any():
+            throw(f"The following rows of {sheet} contain empty values "
+                "within the first two columns.",
 
-            err_type="warning"
-        )
+                df[df.iloc[:, :2].isnull().any(axis=1)],
 
-        continue
+                "You may exit this program and modify the data or continue with "
+                "these values substituted with 0."
+                "\nNOTE: Please exit this program before modifying or "
+                "Microsoft Excel will throw a sharing violation error.",
 
-    # Replace NaN values within the first two columns with 0
-    if df.iloc[:, :2].isnull().values.any():
-        throw(f"The following rows of {sheet} contain empty values "
-            "within the first two columns.",
+                err_type="warning"
+            )
 
-            df[df.iloc[:, :2].isnull().any(axis=1)],
+            df.iloc[:, :2] = df.iloc[:, :2].fillna(0)
 
-            "You may exit this program and modify the data or continue with "
-            "these values substituted with 0."
-            "\nNOTE: Please exit this program before modifying or "
-            "Microsoft Excel will throw a sharing violation error.",
+        # Merge contestant database
+        clean_name = lambda x: x.str.lower().str.strip()
+        if db is not None:
+            df_cols = df.columns.values.tolist()
+            db_cols = db.columns.values.tolist()
 
-            err_type="warning"
-        )
+            # Use merge for non-existing columns
+            df = df.merge(db[["name"] + [i for i in db_cols if i not in df_cols]],
+                left_on=clean_name(df["name"]), right_on=clean_name(db["name"]), how="left")
 
-        df.iloc[:, :2] = df.iloc[:, :2].fillna(0)
+            df.loc[:, "name"] = df["name_x"]
+            df.drop(["key_0", "name_x", "name_y"], axis=1, inplace=True)
 
-    # Merge contestant database
-    clean_name = lambda x: x.str.lower().str.strip()
-    if db is not None:
-        df_cols = df.columns.values.tolist()
-        db_cols = db.columns.values.tolist()
+            # Use update for existing columns
+            df["update_index"] = clean_name(df["name"])
+            df = df.set_index("update_index")
 
-        # Use merge for non-existing columns
-        df = df.merge(db[["name"] + [i for i in db_cols if i not in df_cols]],
-            left_on=clean_name(df["name"]), right_on=clean_name(db["name"]), how="left")
+            db["update_index"] = clean_name(db["name"])
+            db = db.set_index("update_index")
+            db_cols.remove("name")
 
-        df.loc[:, "name"] = df["name_x"]
-        df.drop(["key_0", "name_x", "name_y"], axis=1, inplace=True)
+            update_cols = [i for i in db_cols if i in df_cols]
+            df.update(db[update_cols])
+            df.reset_index(drop=True, inplace=True)
 
-        # Use update for existing columns
-        df["update_index"] = clean_name(df["name"])
-        df = df.set_index("update_index")
+        # Fill in missing templates
+        df.loc[:, "template"] = df.loc[:, "template"].fillna(1)
 
-        db["update_index"] = clean_name(db["name"])
-        db = db.set_index("update_index")
-        db_cols.remove("name")
+        data[sheetnames[i]] = df
 
-        update_cols = [i for i in db_cols if i in df_cols]
-        df.update(db[update_cols])
-        df.reset_index(drop=True, inplace=True)
+    if not data:
+        throw(f"No valid sheet was found in {folder_path}data.xlsx")
 
-    # Fill in missing templates
-    df.loc[:, "template"] = df.loc[:, "template"].fillna(1)
+    for k, df in data.items():
+        # Check for cases where avg and std are the same (hold the same rank)
+        df["r"] = pd.DataFrame(zip(df.iloc[:, 0], df.iloc[:, 1] * -1)) \
+            .apply(tuple, axis=1).rank(method="min", ascending=False).astype(int)
 
-    data[sheetnames[i]] = df
+        # Sort the slides
+        df = df.sort_values(by="r", ascending=True)
 
-if not data:
-    throw(f"No valid sheet was found in {folder_path}data.xlsx")
+        # Remove .0 from whole numbers
+        format_number = lambda x: str(int(x)) if x % 1 == 0 else str(x)
+        df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_number)
 
-for k, df in data.items():
-    # Check for cases where avg and std are the same (hold the same rank)
-    df["r"] = pd.DataFrame(zip(df.iloc[:, 0], df.iloc[:, 1] * -1)) \
-        .apply(tuple, axis=1).rank(method="min", ascending=False).astype(int)
+        # Replace {sheet} with sheet name
+        df["sheet"] = k
 
-    # Sort the slides
-    df = df.sort_values(by="r", ascending=True)
-
-    # Remove .0 from whole numbers
-    format_number = lambda x: str(int(x)) if x % 1 == 0 else str(x)
-    df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_number)
-
-    # Replace {sheet} with sheet name
-    df["sheet"] = k
-
-    # Save df to data dictionary
-    data[k] = df
+        # Save df to data dictionary
+        data[k] = df
 
 
-# Section F: To PowerPoint
-print("\nGenerating slides...")
-print("Please do not click on any PowerPoint windows that may show up in the process.\n")
+    # Section F: To PowerPoint
+    print("\nGenerating slides...")
+    print("Please do not click on any PowerPoint windows that may show up in the process.\n")
 
-# Kill all PowerPoint instances
-run("TASKKILL /F /IM powerpnt.exe", stdout=DEVNULL, stderr=DEVNULL)
-
-# Open template presentation
-makedirs(outpath, exist_ok=True)
-makedirs(avapath, exist_ok=True)
-
-for k, df in data.items():
-    bar = Progress(8, 40, group=k, group_len=max(map(len, data.keys())))
+    # Kill all PowerPoint instances
+    run("TASKKILL /F /IM powerpnt.exe", stdout=DEVNULL, stderr=DEVNULL)
 
     # Open template presentation
-    bar.description("Opening template.pptm")
-    ppt = win32com.client.Dispatch("PowerPoint.Application")
-    ppt.Presentations.Open(f"{folder_path}template.pptm")
-    bar.add()
+    makedirs(outpath, exist_ok=True)
+    makedirs(avapath, exist_ok=True)
 
-    # Import macros
-    bar.description("Importing macros")
+    for k, df in data.items():
+        len_df = len(df.index)
+        pool = Pool(4)
+        pool.starmap(download_avatar, zip(df["uid"], [avapath] * len_df, [api_token] * len_df))
+        pool.close()
+        pool.join()
 
-    try:
-        ppt.VBE.ActiveVBProject.VBComponents.Import(f"{folder_path}Module1.bas")
-    except com_error as e:
-        if e.hresult == -2147352567:
-            # Warns the user about trust access error
-            throw("Please open PowerPoint, look up Trust Center Settings, "
-                "and make sure Trust access to the VBA project object model is enabled.")
-        else:
-            raise e
+        bar = Progress(8, 40, group=k, group_len=max(map(len, data.keys())))
 
-    bar.add()
+        # Open template presentation
+        bar.description("Opening template.pptm")
+        ppt = win32com.client.Dispatch("PowerPoint.Application")
+        ppt.Presentations.Open(f"{folder_path}template.pptm")
+        bar.add()
 
-    # Duplicate slides
-    bar.description("Duplicating slides")
-    slides_count = ppt.Run("Count")
+        # Import macros
+        bar.description("Importing macros")
 
-    # Duplicate slides
-    for t in df.loc[:, "template"]:
-        if as_int(t) not in range(1, slides_count + 1):
-            throw(f"Template {t} does not exist.",
-                f"Please exit the program and modify the 'template' column of data.xlsx ({k})")
+        try:
+            ppt.VBE.ActiveVBProject.VBComponents.Import(f"{folder_path}Module1.bas")
+        except com_error as e:
+            if e.hresult == -2147352567:
+                # Warns the user about trust access error
+                throw("Please open PowerPoint, look up Trust Center Settings, "
+                    "and make sure Trust access to the VBA project object model is enabled.")
+            else:
+                raise e
 
-        ppt.Run("Duplicate", t)
+        bar.add()
 
-    bar.add()
+        # Duplicate slides
+        bar.description("Duplicating slides")
+        slides_count = ppt.Run("Count")
 
-    # Delete template slides when done
-    ppt.Run("DelSlide", *range(1, slides_count + 1))
-    bar.add()
+        # Duplicate slides
+        for t in df.loc[:, "template"]:
+            if as_int(t) not in range(1, slides_count + 1):
+                throw(f"Template {t} does not exist.",
+                    f"Please exit the program and modify the 'template' column of data.xlsx ({k})")
 
-    # Save as output file
-    bar.description("Saving templates")
-    output_filename = f"{k}.pptx"
+            ppt.Run("Duplicate", t)
 
-    ppt.Run("SaveAs", f"{outpath}{output_filename}")
-    bar.add()
-    run("TASKKILL /F /IM powerpnt.exe", stdout=DEVNULL, stderr=DEVNULL)
-    bar.add()
+        bar.add()
 
-    # Replace text
-    bar.description("Downloading profile pictures and filling in judging data")
-    prs = Presentation(outpath + output_filename)
+        # Delete template slides when done
+        ppt.Run("DelSlide", *range(1, slides_count + 1))
+        bar.add()
 
-    for i, slide in enumerate(prs.slides):
-        replace_text(slide, df, i)
-    bar.add()
+        # Save as output file
+        bar.description("Saving templates")
+        output_filename = f"{k}.pptx"
 
-    # Save
-    bar.description(f"Saving as {outpath + output_filename}")
-    prs.save(outpath + output_filename)
-    bar.add()
+        ppt.Run("SaveAs", f"{outpath}{output_filename}")
+        bar.add()
+        run("TASKKILL /F /IM powerpnt.exe", stdout=DEVNULL, stderr=DEVNULL)
+        bar.add()
+
+        # Replace text
+        bar.description("Downloading profile pictures and filling in judging data")
+        prs = Presentation(outpath + output_filename)
+
+        for i, slide in enumerate(prs.slides):
+            replace_text(slide, df, i)
+        bar.add()
+
+        # Save
+        bar.description(f"Saving as {outpath + output_filename}")
+        prs.save(outpath + output_filename)
+        bar.add()
 
 
-# Section G: Launching the File
-print(f"\nExported to {outpath}")
+    # Section G: Launching the File
+    print(f"\nExported to {outpath}")
 
-# Enable QuickEdit
-kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
+    # Enable QuickEdit
+    kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
 
-_input("Press Enter to open the output folder...")
-startfile(outpath)
+    _input("Press Enter to open the output folder...")
+    startfile(outpath)
