@@ -507,7 +507,7 @@ if __name__ == "__main__":
     os.makedirs(outpath, exist_ok=True)
 
     # Clear cache
-    if time.time() - last_clear > 1800:
+    if time.time() - last_clear > 1800:  # Resets every 30 minutes
         for f in os.scandir(avapath):
             os.unlink(f)
 
