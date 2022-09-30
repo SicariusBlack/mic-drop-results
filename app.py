@@ -12,6 +12,7 @@ import requests
 from signal import signal, SIGINT, SIG_IGN
 from subprocess import run, DEVNULL
 import sys
+import time
 from traceback import print_exception
 from urllib.request import Request, urlopen
 import webbrowser
@@ -256,6 +257,9 @@ def get_avatar(id, api_token):
         if response.json()["message"] == "401: Unauthorized":
             throw("Invalid token. Please provide a new token in token.txt.",
                 response.json())
+        elif response.json()["message"] == "You are being rate limited.":
+            time.sleep(response.json()["retry_after"])
+            get_avatar(id, api_token)
         else:
             throw(response.json(), err_type="warning")
     except requests.exceptions.ConnectionError:
@@ -461,6 +465,8 @@ if __name__ == "__main__":
             df.update(db[update_cols])
             df.reset_index(drop=True, inplace=True)
 
+        if "uid" not in df.columns.values.tolist(): avatar_mode = 0
+
         # Fill in missing templates
         df.loc[:, "template"] = df.loc[:, "template"].fillna(1)
 
@@ -499,16 +505,20 @@ if __name__ == "__main__":
     makedirs(outpath, exist_ok=True)
     makedirs(avapath, exist_ok=True)
 
+    # Download avatars with parallel processing
+    uid_list = []
+    if avatar_mode:
+        for df in data.values():
+            uid_list += [id for id in df["uid"] if not path.isfile(avapath + id.strip() + ".png")]
+
+    if len(uid_list) > 0:
+        pool = Pool(6)
+        pool.starmap(download_avatar, zip(df["uid"],
+            [avapath] * len(uid_list), [api_token] * len(uid_list)))
+        pool.close()
+        pool.join()
+
     for k, df in data.items():
-        uid_list = [id for id in df["uid"] if not path.isfile(avapath + id.strip() + ".png")]
-        len_uid = len(uid_list)
-
-        if len_uid > 0:
-            pool = Pool(6)
-            pool.starmap(download_avatar, zip(df["uid"], [avapath] * len_uid, [api_token] * len_uid))
-            pool.close()
-            pool.join()
-
         bar = Progress(8, 40, group=k, group_len=max(map(len, data.keys())))
 
         # Open template presentation
