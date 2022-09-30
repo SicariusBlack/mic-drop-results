@@ -16,8 +16,7 @@ from urllib.request import Request, urlopen
 import webbrowser
 
 import cursor
-from colorama import init
-from colorama import Fore
+from colorama import init, Fore
 
 import cv2
 import pandas as pd
@@ -355,6 +354,7 @@ with contextlib.suppress(requests.exceptions.ConnectionError):
             status = "latest"
 
         status = f" [{status}]"
+
 print(f"Mic Drop Results (v{config['version']}){status}")
 console_col(Fore.RESET)
 
