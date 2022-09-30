@@ -166,27 +166,17 @@ def replace_text(slide: Slide, df, i) -> Slide:
                     effect = as_int(run.text.strip()[3:])
                     run.text = ""
 
-                    uid = "".join(re.findall(r"\d+", df["uid"].iloc[i]))
+                    uid = str(df["uid"].iloc[i]).strip().replace("_", "")
 
+                    og_path = avapath + "_" + str(uid) + ".png"
                     img_path = avapath + str(effect) + "_" + str(uid) + ".png"
 
-                    if not path.isfile(img_path):
-                        # Load image from link
-                        avatar_url = get_avatar(uid)
+                    img = cv2.imread(og_path)
+                    match effect:
+                        case 1:
+                            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-                        if avatar_url is None:
-                            continue
-
-                        avatar_url += ".png"
-
-                        req = urlopen(Request(avatar_url, headers={"User-Agent": "Mozilla/5.0"}))
-                        arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
-                        img = cv2.imdecode(arr, -1)
-
-                        match effect:
-                            case 1:
-                                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                        
+                    if is_number(effect):
                         cv2.imwrite(img_path, img)
 
                     new_shape = slide.shapes.add_picture(
@@ -269,32 +259,28 @@ def get_avatar(id, api_token):
         else:
             throw(response.json(), err_type="warning")
     except requests.exceptions.ConnectionError:
-        global avatar_mode
-        avatar_mode = 0
         throw("Could not connect to Discord API. Please check your internet "
             "connection and try again.", err_type="warning")
     return link
 
 
 def download_avatar(uid, avapath, api_token):
-    uid = "".join(re.findall(r"\d+", uid))
+    uid = uid.strip().replace("_", "")
+    img_path = avapath + "_" + uid.strip() + ".png"
 
-    img_path = avapath + "_" + uid + ".png"
+    # Load image from link
+    avatar_url = get_avatar(uid, api_token)
 
-    if not path.isfile(img_path):
-        # Load image from link
-        avatar_url = get_avatar(uid, api_token)
+    if not avatar_url:
+        return None
 
-        if avatar_url is None:
-            return None
+    avatar_url += ".png"
 
-        avatar_url += ".png"
+    req = urlopen(Request(avatar_url, headers={"User-Agent": "Mozilla/5.0"}))
+    arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
+    img = cv2.imdecode(arr, -1)
 
-        req = urlopen(Request(avatar_url, headers={"User-Agent": "Mozilla/5.0"}))
-        arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
-        img = cv2.imdecode(arr, -1)
-
-        cv2.imwrite(img_path, img)
+    cv2.imwrite(img_path, img)
 
 
 if __name__ == "__main__":
@@ -514,11 +500,14 @@ if __name__ == "__main__":
     makedirs(avapath, exist_ok=True)
 
     for k, df in data.items():
-        len_df = len(df.index)
-        pool = Pool(4)
-        pool.starmap(download_avatar, zip(df["uid"], [avapath] * len_df, [api_token] * len_df))
-        pool.close()
-        pool.join()
+        uid_list = [id for id in df["uid"] if not path.isfile(avapath + id.strip() + ".png")]
+        len_uid = len(uid_list)
+
+        if len_uid > 0:
+            pool = Pool(6)
+            pool.starmap(download_avatar, zip(df["uid"], [avapath] * len_uid, [api_token] * len_uid))
+            pool.close()
+            pool.join()
 
         bar = Progress(8, 40, group=k, group_len=max(map(len, data.keys())))
 
@@ -571,7 +560,7 @@ if __name__ == "__main__":
         bar.add()
 
         # Replace text
-        bar.description("Downloading profile pictures and filling in judging data")
+        bar.description("Filling in judging data")
         prs = Presentation(outpath + output_filename)
 
         for i, slide in enumerate(prs.slides):
