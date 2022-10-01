@@ -32,8 +32,6 @@ from pptx.slide import Slide
 from pywintypes import com_error
 import win32com.client
 
-import matplotlib.pyplot as plt
-plt.show()
 
 class Progress:
     def __init__(self, total, bar_len, group, group_len):
