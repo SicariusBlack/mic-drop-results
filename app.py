@@ -3,7 +3,6 @@ from ctypes import windll
 from io import BytesIO
 from itertools import chain
 from json import load, dump
-import json
 from multiprocessing import Pool, freeze_support
 import multiprocessing.popen_spawn_win32 as forking
 import numpy as np
@@ -166,7 +165,7 @@ def _input(*args, **kwargs):
     return i
 
 
-def replace_text(slide: Slide, df, i) -> Slide:
+def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
     """Replaces and formats text."""
     cols = df.columns.values.tolist() + ["p"]
 
@@ -199,12 +198,12 @@ def replace_text(slide: Slide, df, i) -> Slide:
                     og_path = avapath + "_" + str(uid) + ".png"
                     img_path = avapath + str(effect) + "_" + str(uid) + ".png"
 
-                    img = cv2.imread(og_path)
-                    match effect:
-                        case 1:
-                            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
                     if is_number(effect):
+                        img = cv2.imread(og_path)
+                        match effect:
+                            case 1:
+                                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
                         cv2.imwrite(img_path, img)
 
                     new_shape = slide.shapes.add_picture(
@@ -615,7 +614,7 @@ if __name__ == "__main__":
         prs = Presentation(outpath + output_filename)
 
         for i, slide in enumerate(prs.slides):
-            replace_text(slide, df, i)
+            replace_text(slide, df, i, avatar_mode)
         bar.add()
 
         # Save
