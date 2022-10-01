@@ -505,17 +505,17 @@ if __name__ == "__main__":
 
     # Open template presentation
     os.makedirs(outpath, exist_ok=True)
+    os.makedirs(avapath, exist_ok=True)
 
     # Clear cache
-    if time.time() - last_clear > 1800:  # Resets every 30 minutes
+    if time.time() - last_clear > 1800:  # Clears every hour
         for f in os.scandir(avapath):
             os.unlink(f)
 
-    os.makedirs(avapath, exist_ok=True)
-
-    with open("config.json", "w") as f:
-        config["last_clear_avatar_cache"] = int(time.time())
-        dump(config, f, indent=4)
+        # Update last clear time
+        with open("config.json", "w") as f:
+            config["last_clear_avatar_cache"] = int(time.time())
+            dump(config, f, indent=4)
 
     # Download avatars with parallel processing
     uid_list = []
@@ -525,7 +525,7 @@ if __name__ == "__main__":
 
     if len(uid_list) > 0:
         pool = Pool(6)
-        pool.starmap(download_avatar, zip(df["uid"],
+        pool.starmap_async(download_avatar, zip(df["uid"],
             [avapath] * len(uid_list), [api_token] * len(uid_list)))
         pool.close()
         pool.join()
