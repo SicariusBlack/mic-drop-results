@@ -1,0 +1,10 @@
+numpy
+cursor
+opencv-python
+pillow
+requests
+colorama
+pandas
+python-pptx
+pywin32
+openpyxl
