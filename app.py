@@ -3,7 +3,9 @@ from ctypes import windll
 from io import BytesIO
 from itertools import chain
 from json import load, dump
-from multiprocessing import Pool
+import json
+from multiprocessing import Pool, freeze_support
+import multiprocessing.popen_spawn_win32 as forking
 import numpy as np
 import os
 from PIL import Image
@@ -31,6 +33,31 @@ from pptx.slide import Slide
 
 from pywintypes import com_error
 import win32com.client
+
+
+# https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
+# First define a modified version of Popen.
+class _Popen(forking.Popen):
+    def __init__(self, *args, **kw):
+        if hasattr(sys, 'frozen'):
+            # We have to set original _MEIPASS2 value from sys._MEIPASS
+            # to get --onefile mode working.
+            os.putenv('_MEIPASS2', sys._MEIPASS)
+        try:
+            super(_Popen, self).__init__(*args, **kw)
+        finally:
+            if hasattr(sys, 'frozen'):
+                # On some platforms (e.g. AIX) 'os.unsetenv()' is not
+                # available. In those cases we cannot delete the variable
+                # but only set it to the empty string. The bootloader
+                # can handle this case.
+                if hasattr(os, 'unsetenv'):
+                    os.unsetenv('_MEIPASS2')
+                else:
+                    os.putenv('_MEIPASS2', '')
+
+# Second override 'Popen' class with our modified version.
+forking.Popen = _Popen
 
 
 class Progress:
@@ -94,13 +121,13 @@ def console_col(col):
 
 def throw(*messages, err_type: str = "error"):
     """Throws a handled error with additional guides and details."""
-    match err_type.lower():
-        case "error":
-            console_col(Fore.RED)
-        case _:
-            console_col(Fore.YELLOW)
-
     if len(messages) > 0:
+        match err_type.lower():
+            case "error":
+                console_col(Fore.RED)
+            case _:
+                console_col(Fore.YELLOW)
+
         messages = list(messages)
 
         print(f"\n\n{err_type.upper()}: {messages[0]}")
@@ -288,6 +315,8 @@ def download_avatar(uid, avapath, api_token):
 
 
 if __name__ == "__main__":
+    freeze_support()
+
     # Section A: Fixing Command Prompt issues
     # Handle KeyboardInterrupt: automatically open the only link
     signal(SIGINT, SIG_IGN)
@@ -336,7 +365,7 @@ if __name__ == "__main__":
     # Section D: Checking for Updates
     status, url = "", ""
 
-    with contextlib.suppress(requests.exceptions.ConnectionError):
+    with contextlib.suppress(requests.exceptions.ConnectionError, KeyError):
         if config["update_check"]:
             response = requests.get("https://api.github.com/repos/"
                 "berkeleyfx/mic-drop-results/releases/latest", timeout=3)

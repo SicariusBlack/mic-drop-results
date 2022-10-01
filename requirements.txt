@@ -7,4 +7,5 @@ colorama
 pandas
 python-pptx
 pywin32
+pywin32-ctypes
 openpyxl
