@@ -26,8 +26,10 @@ import pandas as pd
 
 from pptx import Presentation
 from pptx.dml.color import RGBColor
-from pptx.enum.dml import MSO_COLOR_TYPE
+from pptx.enum.dml import MSO_COLOR_TYPE, MSO_THEME_COLOR
 from pptx.enum.shapes import MSO_SHAPE
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+from pptx.oxml import parse_xml
 from pptx.slide import Slide
 
 from pywintypes import com_error
@@ -160,8 +162,12 @@ def hex_to_rgb(h):
 
 def _input(*args, **kwargs):
     cursor.show()
-    i = input(*args, **kwargs)
+    print(*args, **kwargs, end="")
+    sys.stdout = open(os.devnull, "w")
+
+    i = input()
     cursor.hide()
+    sys.stdout = sys.__stdout__
     return i
 
 
@@ -222,7 +228,12 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                 repl = str(df[search_str].iloc[i])
                 repl = repl if repl != "nan" else ""  # Replace missing values with blank
 
-                run.text = run.text.replace("{" + search_str + "}", repl)
+                run_text = run.text
+
+                if search_str.startswith(starts):
+                    run.text = repl
+                else:
+                    run.text = run.text.replace("{" + search_str + "}", repl)
 
                 # Replace image links
                 pattern = r"\<\<(.*?)\>\>"
@@ -251,17 +262,21 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                             err_type="warning")
 
                 # Conditional formatting for columns start with "score"
-                if not search_str.startswith(starts) or not run.font.color.type:
+                if not search_str.startswith(starts):
                     continue
 
+                # Check RGB
                 if run.font.color.type == MSO_COLOR_TYPE.RGB:
-                    if not run.font.color.rgb == RGBColor(255, 255, 255):
+                    if run.font.color.rgb not in [RGBColor(0, 0, 0), RGBColor(255, 255, 255)]:
                         continue
 
                 for ind, val in enumerate(range_list):
                     if is_number(repl):
                         if float(repl) >= val:
-                            run.font.color.rgb = RGBColor(*color_list[ind])
+                            if run_text.endswith("1"):
+                                run.font.color.rgb = RGBColor(*color_list_dark[ind])
+                            else:
+                                run.font.color.rgb = RGBColor(*color_list[ind])
                             break
     return slide
 
@@ -281,7 +296,8 @@ def get_avatar(id, api_token):
         link = f"https://cdn.discordapp.com/avatars/{id}/{response.json()['avatar']}"
     except KeyError:
         if response.json()["message"] == "401: Unauthorized":
-            throw("Invalid token. Please provide a new token in token.txt.",
+            throw("Invalid token. Please provide a new token in token.txt or "
+                "turn off avatar mode in config.json.",
                 response.json())
         elif response.json()["message"] == "You are being rate limited.":
             time.sleep(response.json()["retry_after"])
@@ -348,6 +364,7 @@ if __name__ == "__main__":
     # Variable shortcuts
     range_list = config["format"]["ranges"][::-1]
     color_list = config["format"]["colors"][::-1]
+    color_list_dark = config["format"]["colors_dark"][::-1]
     starts = config["format"]["starts_with"]
     avatar_mode = config["avatars"]
     last_clear = config["last_clear_avatar_cache"]
@@ -359,6 +376,7 @@ if __name__ == "__main__":
         throw("Please a valid bot token in token.txt or turn off avatar mode in config.json.")
 
     color_list = list(map(hex_to_rgb, color_list))
+    color_list_dark = list(map(hex_to_rgb, color_list_dark))
 
 
     # Section D: Checking for Updates
