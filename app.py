@@ -26,10 +26,8 @@ import pandas as pd
 
 from pptx import Presentation
 from pptx.dml.color import RGBColor
-from pptx.enum.dml import MSO_COLOR_TYPE, MSO_THEME_COLOR
+from pptx.enum.dml import MSO_COLOR_TYPE
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.opc.constants import RELATIONSHIP_TYPE as RT
-from pptx.oxml import parse_xml
 from pptx.slide import Slide
 
 from pywintypes import com_error
