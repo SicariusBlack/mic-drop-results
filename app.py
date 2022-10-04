@@ -1,7 +1,7 @@
 import contextlib
 from ctypes import windll
 from io import BytesIO
-from itertools import chain
+import itertools
 from json import load, dump
 from multiprocessing import Pool, freeze_support
 import multiprocessing.popen_spawn_win32 as forking
@@ -176,7 +176,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
         text_frame = shape.text_frame
 
-        for run in chain.from_iterable([p.runs for p in text_frame.paragraphs]):
+        for run in itertools.chain.from_iterable([p.runs for p in text_frame.paragraphs]):
             for search_str in set(re.findall(r"(?<={)(.*?)(?=})", run.text)).intersection(cols):
                 # Profile picture
                 if search_str == "p":
@@ -366,10 +366,11 @@ if __name__ == "__main__":
     last_clear = config["last_clear_avatar_cache"]
 
     with open("token.txt") as f:
-        api_token = f.read().splitlines()[0].strip('"')
+        token_list = f.read().splitlines()
+        token_list = [i.strip('"') for i in token_list if len(i) > 62]
 
-    if len(api_token) < 30 and avatar_mode:
-        throw("Please a valid bot token in token.txt or turn off avatar mode in config.json.")
+    if not token_list and avatar_mode:
+        throw("Please provide a valid bot token in token.txt or turn off avatar mode in config.json.")
 
     color_list = list(map(hex_to_rgb, color_list))
     color_list_dark = list(map(hex_to_rgb, color_list_dark))
@@ -582,10 +583,10 @@ if __name__ == "__main__":
                 err_type="warning")
 
         pool.starmap(download_avatar, zip(uid_list,
-            [avapath] * len(uid_list), [api_token] * len(uid_list)))
+            [avapath] * len(uid_list), itertools.islice(itertools.cycle(token_list), len(uid_list))))
 
         attempt += 1
-    
+
     pool.close()
     pool.join()
 
