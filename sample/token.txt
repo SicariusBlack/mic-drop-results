@@ -1,4 +1,9 @@
-"YOUR_TOKEN"
+"YOUR_TOKEN_1"
+"YOUR_TOKEN_2"
+
 
 Follow these steps to get your own token.
+You can insert multiple tokens to avoid getting rate-limited.
 https://mee6.xyz/tutorials/how-to-generate-a-custom-bot-token
+
+Remember to delete this guide when you are done reading.
