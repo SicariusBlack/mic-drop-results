@@ -161,11 +161,8 @@ def hex_to_rgb(h):
 def _input(*args, **kwargs):
     cursor.show()
     print(*args, **kwargs, end="")
-    sys.stdout = open(os.devnull, "w")
-
     i = input()
     cursor.hide()
-    sys.stdout = sys.__stdout__
     return i
 
 
@@ -188,6 +185,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                         continue
 
                     if pd.isnull(df["uid"].iloc[i]):
+                        run.text = ""
                         continue
 
                     # Extract effect index and remove {p}
@@ -198,6 +196,9 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
                     og_path = avapath + "_" + str(uid) + ".png"
                     img_path = avapath + str(effect) + "_" + str(uid) + ".png"
+
+                    if not os.path.isfile(og_path):
+                        continue
 
                     if is_number(effect):
                         img = cv2.imread(og_path)
@@ -559,21 +560,30 @@ if __name__ == "__main__":
             dump(config, f, indent=4)
 
     # Download avatars with parallel processing
-    uid_list = []
-    if avatar_mode:
-        if df["uid"].dtype.kind in "biufc":
-            throw("The 'uid' column has numeric data type instead of the supposed string data type.",
-                "Please exit the program and add an underscore before each user ID.", SHARING_VIOLATION)
+    attempt = 0
+    while attempt < 4:
+        uid_list = []
+        if avatar_mode:
+            if df["uid"].dtype.kind in "biufc":
+                throw("The 'uid' column has numeric data type instead of the supposed string data type.",
+                    "Please exit the program and add an underscore before each user ID.", SHARING_VIOLATION)
 
-        for df in data.values():
-            uid_list += [id for id in df["uid"] if not os.path.isfile(avapath + id.strip() + ".png")]
+            for df in data.values():
+                uid_list += [id for id in df["uid"] if not pd.isnull(id) and not os.path.isfile(avapath + id.strip() + ".png")]
 
-    if len(uid_list) > 0:
-        pool = Pool(6)
-        pool.starmap_async(download_avatar, zip(df["uid"],
+        if len(uid_list) == 0:
+            break
+
+        if attempt > 0:
+            print(f"Unable to download the profile pictures of the following users. Retrying {attempt}/3", uid_list, sep="\n", end="\n\n")
+
+        pool = Pool(3)
+        pool.starmap(download_avatar, zip(uid_list,
             [avapath] * len(uid_list), [api_token] * len(uid_list)))
         pool.close()
         pool.join()
+
+        attempt += 1
 
     for k, df in data.items():
         bar = Progress(8, 40, group=k, group_len=max(map(len, data.keys())))
@@ -606,8 +616,9 @@ if __name__ == "__main__":
         # Duplicate slides
         for t in df.loc[:, "template"]:
             if as_int(t) not in range(1, slides_count + 1):
-                throw(f"Template {t} does not exist.",
-                    f"Please exit the program and modify the 'template' column of data.xlsx ({k})")
+                throw(f"Template {t} does not exist. ({k})",
+                    "Please exit the program and modify the 'template' column of data.xlsx", SHARING_VIOLATION)
+
 
             ppt.Run("Duplicate", t)
 
