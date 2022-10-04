@@ -2,7 +2,7 @@
     "version": "2.1.1",
     "update_check": 1,
     "avatars": 1,
-    "last_clear_avatar_cache": 1664854257,
+    "last_clear_avatar_cache": 0,
     "format": {
         "starts_with": "score",
         "ranges": [

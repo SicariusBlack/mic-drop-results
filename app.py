@@ -561,29 +561,33 @@ if __name__ == "__main__":
 
     # Download avatars with parallel processing
     attempt = 0
-    while attempt < 4:
-        uid_list = []
-        if avatar_mode:
-            if df["uid"].dtype.kind in "biufc":
-                throw("The 'uid' column has numeric data type instead of the supposed string data type.",
-                    "Please exit the program and add an underscore before each user ID.", SHARING_VIOLATION)
+    pool = Pool(3)
 
-            for df in data.values():
-                uid_list += [id for id in df["uid"] if not pd.isnull(id) and not os.path.isfile(avapath + id.strip() + ".png")]
+    while avatar_mode:
+        uid_list = []
+        if df["uid"].dtype.kind in "biufc":
+            throw("The 'uid' column has numeric data type instead of the supposed string data type.",
+                "Please exit the program and add an underscore before each user ID.", SHARING_VIOLATION)
+
+        for df in data.values():
+            uid_list += [id for id in df["uid"] if not pd.isnull(id) and not os.path.isfile(avapath + id.strip() + ".png")]
 
         if len(uid_list) == 0:
             break
 
-        if attempt > 0:
+        if attempt > 0 and attempt <= 3:
             print(f"Unable to download the profile pictures of the following users. Retrying {attempt}/3", uid_list, sep="\n", end="\n\n")
+        elif attempt > 3:
+            throw("Failed to download the profile pictures of the following users. Please verify that their user IDs are correct.", uid_list,
+                err_type="warning")
 
-        pool = Pool(3)
         pool.starmap(download_avatar, zip(uid_list,
             [avapath] * len(uid_list), [api_token] * len(uid_list)))
-        pool.close()
-        pool.join()
 
         attempt += 1
+    
+    pool.close()
+    pool.join()
 
     for k, df in data.items():
         bar = Progress(8, 40, group=k, group_len=max(map(len, data.keys())))
