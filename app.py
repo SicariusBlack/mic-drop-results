@@ -187,9 +187,6 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                     if not "uid" in cols or not avatar_mode:
                         continue
 
-                    if df["uid"].dtype.kind in "biufc":
-                        continue
-
                     if pd.isnull(df["uid"].iloc[i]):
                         continue
 
@@ -445,6 +442,8 @@ if __name__ == "__main__":
                     "Database merging will be skipped for now.", err_type="warning")
                 db = None
 
+    SHARING_VIOLATION = "\033[33mNOTE: Please exit the program before modifying data.xlsx or " \
+        "Microsoft Excel will throw a Sharing Violation error.\033[39m"
     for i, sheet in enumerate(sheetnames_raw):
         df = pd.read_excel(xls, sheet)
 
@@ -477,9 +476,7 @@ if __name__ == "__main__":
                 df[df.iloc[:, :2].isnull().any(axis=1)],
 
                 "You may exit this program and modify the data or continue with "
-                "these values substituted with 0."
-                "\nNOTE: Please exit this program before modifying or "
-                "Microsoft Excel will throw a sharing violation error.",
+                "these values substituted with 0.", SHARING_VIOLATION,
 
                 err_type="warning"
             )
@@ -564,6 +561,10 @@ if __name__ == "__main__":
     # Download avatars with parallel processing
     uid_list = []
     if avatar_mode:
+        if df["uid"].dtype.kind in "biufc":
+            throw("The 'uid' column has numeric data type instead of the supposed string data type.",
+                "Please exit the program and add an underscore before each user ID.", SHARING_VIOLATION)
+
         for df in data.values():
             uid_list += [id for id in df["uid"] if not os.path.isfile(avapath + id.strip() + ".png")]
 
