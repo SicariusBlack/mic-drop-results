@@ -9,3 +9,6 @@
 
 - Tokens are used to access Discord API to download profile pictures
 - You can have more than one token in **token.txt** to avoid getting rate-limited
+- You can follow these steps to get your own tokens<br>https://mee6.xyz/tutorials/how-to-generate-a-custom-bot-token
+- You do not have to invite the bot to your server to get it working
+- Because an application can only have one bot, you need to create multiple applications to create multiple bots, and therefore, multiple tokens.
