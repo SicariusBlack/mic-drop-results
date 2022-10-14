@@ -12,3 +12,11 @@
 - You can follow these steps to get your own tokens<br>https://mee6.xyz/tutorials/how-to-generate-a-custom-bot-token
 - You do not have to invite the bot to your server to get it working
 - Because an application can only have one bot, you need to create multiple applications to create multiple bots, and therefore, multiple tokens.
+
+## Customizing your templates
+
+- Every slide in **template.pptm** is called a template
+- You can assign a template to a contestant through the `template` column of **data.xlsx**
+- More advanced customization at the last section (helpful for the designing process at the beginning of a season or for special rounds)
+
+
