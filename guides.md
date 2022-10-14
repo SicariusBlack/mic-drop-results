@@ -1,3 +1,5 @@
+# Section A: Installation
+
 ## Installation
 
 - Download **mic-drop-results.zip** file of the latest version from the following page<br>https://github.com/berkeleyfx/mic-drop-results/releases
@@ -13,10 +15,11 @@
 - You do not have to invite the bot to your server to get it working
 - Because an application can only have one bot, you need to create multiple applications to create multiple bots, and therefore, multiple tokens.
 
+# Section B: Get the Program Running
+
 ## Customizing your templates
 
 - Every slide in **template.pptm** is called a template
 - You can assign a template to a contestant through the `template` column of **data.xlsx**
-- More advanced customization at the last section (helpful for the designing process at the beginning of a season or for special rounds)
-
-
+- More advanced customization at the final section (helpful for the designing process at the beginning of a season or for special rounds)
+- There is also a contestant database, which stores the user IDs of all the contestants, at the final section. Collecting user IDs only needs to be done once every season.
