@@ -30,7 +30,7 @@
 ### Running the program
 
 - Simply run **app.exe**
-- If you encounter any bugs, please do the following:
+- If you encounter any bugs, please follow these steps:
   > 1. Check your **data.xlsx** very carefully. Make sure none of the columns are blank and there are no unnecessary sheets at the bottom.
   > 2. Scroll down and delete any rows that do not belong to the data
 
