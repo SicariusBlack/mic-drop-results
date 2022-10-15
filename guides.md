@@ -32,5 +32,5 @@
 - Simply run **app.exe**
 - If you encounter any bugs, please do the following:
   > 1. Check your **data.xlsx** very carefully. Make sure none of the columns are blank and there are no unnecessary sheets at the bottom.
-  > 2. Scroll down and delete any rows that do not belong to the data. For example:<br>![image](https://user-images.githubusercontent.com/106049382/195760414-257921f9-348a-48ab-b62f-26887759f189.png)
+  > 2. Scroll down and delete any rows that do not belong to the data
 
