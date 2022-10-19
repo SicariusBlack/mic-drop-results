@@ -1,3 +1,6 @@
+> **Warning**<br>
+> This documentation is a work in progress.
+
 ### Table of Contents
 &emsp;&emsp;[A. Installation](#section-a-installation)
 
@@ -31,6 +34,7 @@
 
 - Simply run **app.exe**
 - If you encounter any bugs, please follow these steps:
-  > 1. Check your **data.xlsx** very carefully. Make sure none of the columns are blank and there are no unnecessary sheets at the bottom.
-  > 2. Scroll down and delete any rows that do not belong to the data
 
+  > 1. Check **data.xlsx** very carefully. Make sure none of the columns are blank and there is no unnecessary sheet in the workbook.
+  > 2. Scroll down and delete any rows that do not belong to the data
+  > 3. If the problem still persists, please report the bug to me on Discord. [(view profile)](https://discord.com/users/1010885414850154587)
