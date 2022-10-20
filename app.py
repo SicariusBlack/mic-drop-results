@@ -29,12 +29,13 @@ from pptx.dml.color import RGBColor
 from pptx.enum.dml import MSO_COLOR_TYPE
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.slide import Slide
+from pptx.util import Inches
 
 from pywintypes import com_error
 import win32com.client
 
 
-# https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
+# Source: https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
 # First define a modified version of Popen.
 class _Popen(forking.Popen):
     def __init__(self, *args, **kw):
@@ -242,13 +243,14 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
                         im_width = shape.height / pil.height * pil.width
                         new_shape = slide.shapes.add_picture(
-                            img, (shape.width - im_width) / 2, shape.top,
+                            img, shape.left + (shape.width - im_width) / 2, shape.top,
                             im_width, shape.height
                         )
 
                         old = shape._element.addnext(new_shape._element)
 
-                        run.text = ""
+                        run.text = re.sub(pattern, "", run.text)
+                        text_frame.margin_left = Inches(5.2)
                     except:
                         throw("Could not load the following image "
                            f"(Slide {i + 1}, {df['sheet'].iloc[0]}).\n{img_link[0]}",
@@ -270,7 +272,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                     if is_number(repl):
                         if float(repl) >= val:
                             if run_text.endswith("1"):
-                                run.font.color.rgb = RGBColor(*color_list_dark[ind])
+                                run.font.color.rgb = RGBColor(*color_list_light[ind])
                             else:
                                 run.font.color.rgb = RGBColor(*color_list[ind])
                             break
@@ -360,7 +362,7 @@ if __name__ == "__main__":
     # Variable shortcuts
     range_list = config["format"]["ranges"][::-1]
     color_list = config["format"]["colors"][::-1]
-    color_list_dark = config["format"]["colors_dark"][::-1]
+    color_list_light = config["format"]["colors_light"][::-1]
     starts = config["format"]["starts_with"]
     avatar_mode = config["avatars"]
     last_clear = config["last_clear_avatar_cache"]
@@ -373,7 +375,7 @@ if __name__ == "__main__":
         throw("Please provide a valid bot token in token.txt or turn off avatar mode in config.json.")
 
     color_list = list(map(hex_to_rgb, color_list))
-    color_list_dark = list(map(hex_to_rgb, color_list_dark))
+    color_list_light = list(map(hex_to_rgb, color_list_light))
 
 
     # Section D: Checking for Updates
@@ -426,26 +428,20 @@ if __name__ == "__main__":
     sheetnames = [re.sub(r'[\\\/:"*?<>|]+', "", name) for name in sheetnames_raw]
     data = {}
 
-    db = None
-    for s in sheetnames_raw:
-        if s.lower() == "contestants":
-            db = pd.read_excel(xls, s)
+    db_list = []
+    for sheet in sheetnames_raw:
+        if sheet.startswith("_"):
+            df = pd.read_excel(xls, sheet)
 
             # Validate shape
-            if db.empty or db.shape[0] < 1 or db.shape[1] < 2:
-                throw("Contestant database is empty or has an invalid shape.",
-                    "Profile pictures will be disabled for now.", err_type="warning")
-                db = None
-                break
+            if df.empty or df.shape < (1, 2):
+                continue
 
-            # Validate name
-            if "name" not in db.columns.values.tolist():
-                throw("The 'name' column is missing from the contestant database.",
-                    "Database merging will be skipped for now.", err_type="warning")
-                db = None
+            db_list.append(df)
 
     SHARING_VIOLATION = "\033[33mNOTE: Please exit the program before modifying data.xlsx or " \
         "Microsoft Excel will throw a Sharing Violation error.\033[39m"
+
     for i, sheet in enumerate(sheetnames_raw):
         df = pd.read_excel(xls, sheet)
 
@@ -453,8 +449,8 @@ if __name__ == "__main__":
         if df.empty or df.shape < (1, 2):
             continue
 
-        # Exclude contestant database
-        if sheet.lower() == "contestants":
+        # Exclude database sheets
+        if sheet.startswith("_"):
             continue
 
         # Exclude sheets with first two columns where data types are not numeric
@@ -485,42 +481,6 @@ if __name__ == "__main__":
 
             df.iloc[:, :2] = df.iloc[:, :2].fillna(0)
 
-        # Merge contestant database
-        clean_name = lambda x: x.str.lower().str.strip()
-        if db is not None:
-            df_cols = df.columns.values.tolist()
-            db_cols = db.columns.values.tolist()
-
-            # Use merge for non-existing columns
-            df = df.merge(db[["name"] + [i for i in db_cols if i not in df_cols]],
-                left_on=clean_name(df["name"]), right_on=clean_name(db["name"]), how="left")
-
-            df.loc[:, "name"] = df["name_x"]
-            df.drop(["key_0", "name_x", "name_y"], axis=1, inplace=True)
-
-            # Use update for existing columns
-            df["update_index"] = clean_name(df["name"])
-            df = df.set_index("update_index")
-
-            db["update_index"] = clean_name(db["name"])
-            db = db.set_index("update_index")
-            db_cols.remove("name")
-
-            update_cols = [i for i in db_cols if i in df_cols]
-            df.update(db[update_cols])
-            df.reset_index(drop=True, inplace=True)
-
-        if "uid" not in df.columns.values.tolist(): avatar_mode = 0
-
-        # Fill in missing templates
-        df.loc[:, "template"] = df.loc[:, "template"].fillna(1)
-
-        data[sheetnames[i]] = df
-
-    if not data:
-        throw(f"No valid sheet was found in {folder_path}data.xlsx")
-
-    for k, df in data.items():
         # Check for cases where avg and std are the same (hold the same rank)
         df["r"] = pd.DataFrame(zip(df.iloc[:, 0], df.iloc[:, 1] * -1)) \
             .apply(tuple, axis=1).rank(method="min", ascending=False).astype(int)
@@ -533,10 +493,44 @@ if __name__ == "__main__":
         df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_number)
 
         # Replace {sheet} with sheet name
-        df["sheet"] = k
+        df["sheet"] = sheet
 
-        # Save df to data dictionary
-        data[k] = df
+        # Merge contestant database
+        clean_name = lambda x: x.str.lower().str.strip() if(x.dtype.kind == "O") else x
+        if db_list:
+            for db in db_list:
+                df_cols = df.columns.values.tolist()
+                db_cols = db.columns.values.tolist()
+                merge_col = db_cols[0]
+
+                # Use merge for non-existing columns
+                df = df.merge(db[[merge_col] + [i for i in db_cols if i not in df_cols]],
+                    left_on=clean_name(df[merge_col]), right_on=clean_name(db[merge_col]), how="left")
+
+                df.loc[:, merge_col] = df[merge_col + "_x"]
+                df.drop(["key_0", merge_col + "_x", merge_col + "_y"], axis=1, inplace=True)
+
+                # Use update for existing columns
+                df["update_index"] = clean_name(df[merge_col])
+                df = df.set_index("update_index")
+
+                db["update_index"] = clean_name(db[merge_col])
+                db = db.set_index("update_index")
+                db_cols.remove(merge_col)
+
+                update_cols = [i for i in db_cols if i in df_cols]
+                df.update(db[update_cols])
+                df.reset_index(drop=True, inplace=True)
+
+        if "uid" not in df.columns.values.tolist(): avatar_mode = 0
+
+        # Fill in missing templates
+        df["template"].fillna(1, inplace=True)
+
+        data[sheetnames[i]] = df
+
+    if not data:
+        throw(f"No valid sheet was found in {folder_path}data.xlsx")
 
 
     # Section F: To PowerPoint
@@ -566,11 +560,12 @@ if __name__ == "__main__":
 
     while avatar_mode:
         uid_list = []
-        if df["uid"].dtype.kind in "biufc":
-            throw("The 'uid' column has numeric data type instead of the supposed string data type.",
-                "Please exit the program and add an underscore before each user ID.", SHARING_VIOLATION)
 
         for df in data.values():
+            if df["uid"].dtype.kind in "biufc":
+                throw("The 'uid' column has numeric data type instead of the supposed string data type.",
+                    "Please exit the program and add an underscore before each user ID.", SHARING_VIOLATION)
+
             uid_list += [id for id in df["uid"] if not pd.isnull(id) and not os.path.isfile(avapath + id.strip() + ".png")]
 
         if len(uid_list) == 0:

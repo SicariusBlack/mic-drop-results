@@ -1,8 +1,8 @@
 {
-    "version": "2.1.1",
+    "version": "2.2",
     "update_check": 1,
     "avatars": 1,
-    "last_clear_avatar_cache": 0,
+    "last_clear_avatar_cache": 1666237085,
     "format": {
         "starts_with": "score",
         "ranges": [
@@ -17,7 +17,7 @@
             "#93C47D",
             "#FFD966"
         ],
-        "colors_dark": [
+        "colors_light": [
             "#DF4141",
             "#000000",
             "#0A700A",
