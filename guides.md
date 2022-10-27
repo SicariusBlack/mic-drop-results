@@ -31,7 +31,7 @@
 - Simply run **app.exe**
 
 ### Debugging methods
-A complete guide to track down any bugs or errors while running the program.
+A complete guide to tracking down any bugs or errors while running the program.
 
 > **Note**<br>
 > You may have been redirected here as you encountered an error while running the program.<br><br>
