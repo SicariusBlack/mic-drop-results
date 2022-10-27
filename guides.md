@@ -34,9 +34,8 @@
 A complete guide to tracking down any bugs or errors while running the program.
 
 > **Note**<br>
-> You may have been redirected here as you encountered an error while running the program.<br><br>
-> You can disable this feature in **settings.json** by setting `debug_methods` to 0.<br>
-> Setting this to 1 will only disable redirecting for soft-handled error.
+> You may have been redirected here as you encountered an error while running the program.<br>
+> You can disable this feature in **settings.json** by setting `debug_methods` to 0, or 1 to disable redirecting only for soft-handled errors.
 
 - If you encounter any errors, please follow these steps:
 
@@ -47,6 +46,6 @@ A complete guide to tracking down any bugs or errors while running the program.
 
   2. Check **token.txt** and make sure you have provided valid tokens with each token on a different line. Make sure the tokens are still valid because Discord may scan across the internet and disable all breached tokens. Do not share your tokens online, not because other people will have access to your bots, but because of Discord's security check feature.
   3. If the problem still persists, please report the error to me on Discord. [(Banz#6175)](https://discord.com/users/1010885414850154587)
-  4. If you believe an error should be soft-handled (automatically fill N/A values, output a more friendly error message, or whatever workaround you have to resolve the error swiftly), please also send me your feedback.
+  4. If you believe an error should be soft-handled (automatically fill N/A values, output a more friendly error message, or whatever workaround you have to resolve the error swiftly), please send me your feedback.
 
 - If you believe the program does not behave the way it should (this is a bug instead of an error), please also report it to me.
