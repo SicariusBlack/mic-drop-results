@@ -31,16 +31,22 @@
 - Simply run **app.exe**
 
 ### Debugging methods
+A complete guide to track down any bugs or errors while running the program.
+
 > **Note**<br>
 > You may have been redirected here as you encountered an error while running the program.<br><br>
 > You can disable this feature in **settings.json** by setting `debug_methods` to 0.<br>
 > Setting this to 1 will only disable redirecting for soft-handled error.
 
-- If you encounter any bugs, please follow these steps:
+- If you encounter any errors, please follow these steps:
 
   1. Check **data.xlsx** very carefully. Make sure:
       - none of the columns are blank 
       - there is no unnecessary sheet in the workbook
       - all cells around the data regions are blank **(this is a common mistake)**
-  2. If the problem still persists, please report the bug to me on Discord. [(Banz#6175)](https://discord.com/users/1010885414850154587)
-  3. If you believe an error should be soft-handled (automatically fill N/A values
+
+  2. Check **token.txt** and make sure you have provided valid tokens with each token on a different line. Make sure the tokens are still valid because Discord may scan across the internet and disable all breached tokens. Do not share your tokens online, not because other people will have access to your bots, but because of Discord's security check feature.
+  3. If the problem still persists, please report the error to me on Discord. [(Banz#6175)](https://discord.com/users/1010885414850154587)
+  4. If you believe an error should be soft-handled (automatically fill N/A values, output a more friendly error message, or whatever workaround you have to resolve the error swiftly), please also send me your feedback.
+
+- If you believe the program does not behave the way it should (this is a bug instead of an error), please also report it to me.
