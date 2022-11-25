@@ -19,7 +19,6 @@ To install, please visit the [latest release](https://github.com/berkeleyfx/mic-
   <a href="https://raw.githubusercontent.com/berkeleyfx/mic-drop-results/main/.github/assets/showcase/3.png"><img src=".github/assets/showcase/3.png" width=430></a>
   <a href="https://raw.githubusercontent.com/berkeleyfx/mic-drop-results/main/.github/assets/showcase/4.png"><img src=".github/assets/showcase/4.png" width=430></a>
   <a href="https://raw.githubusercontent.com/berkeleyfx/mic-drop-results/main/.github/assets/showcase/5.png"><img src=".github/assets/showcase/5.png" width=430></a>
-  <a href="https://raw.githubusercontent.com/berkeleyfx/mic-drop-results/main/.github/assets/showcase/6.png"><img src=".github/assets/showcase/6.png" width=430></a>
 </p>
 
 
