@@ -121,7 +121,7 @@ def console_col(col):
 
 def throw(*messages, err_type: str = "error"):
     """Throws a handled error with additional guides and details."""
-    if len(messages) > 0:
+    if messages:
         match err_type.lower():
             case "error":
                 console_col(Fore.RED)
@@ -134,9 +134,9 @@ def throw(*messages, err_type: str = "error"):
         console_col(Fore.RESET)
         messages.pop(0)
 
-        if len(messages) > 0:
-            print()
-            print(*messages, sep="\n\n")
+    if len(messages) > 0:
+        print()
+        print(*messages, sep="\n\n")
 
     match err_type.lower():
         case "error":
@@ -172,7 +172,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
     cols = df.columns.values.tolist() + ["p"]
 
     for shape in slide.shapes:
-        if not shape.has_text_frame or not "{" in shape.text:
+        if not shape.has_text_frame or "{" not in shape.text:
             continue
 
         text_frame = shape.text_frame
@@ -182,7 +182,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                 # Profile picture
                 if search_str == "p":
                     # Test cases
-                    if not "uid" in cols or not avatar_mode:
+                    if "uid" not in cols or not avatar_mode:
                         continue
 
                     if pd.isnull(df["uid"].iloc[i]):
@@ -195,8 +195,8 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
                     uid = str(df["uid"].iloc[i]).strip().replace("_", "")
 
-                    og_path = avapath + "_" + str(uid) + ".png"
-                    img_path = avapath + str(effect) + "_" + str(uid) + ".png"
+                    og_path = avapath + "_" + uid + ".png"
+                    img_path = avapath + str(effect) + "_" + uid + ".png"
 
                     if not os.path.isfile(og_path):
                         continue
@@ -251,7 +251,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
                         run.text = re.sub(pattern, "", run.text)
                         text_frame.margin_left = Inches(5.2)
-                    except:
+                    except Exception:
                         throw("Could not load the following image "
                            f"(Slide {i + 1}, {df['sheet'].iloc[0]}).\n{img_link[0]}",
                             "Please check your internet connection and verify that "
@@ -264,18 +264,17 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                     continue
 
                 # Check RGB
-                if run.font.color.type == MSO_COLOR_TYPE.RGB:
-                    if run.font.color.rgb not in [RGBColor(0, 0, 0), RGBColor(255, 255, 255)]:
-                        continue
+                if run.font.color.type == MSO_COLOR_TYPE.RGB and \
+                    run.font.color.rgb not in [RGBColor(0, 0, 0), RGBColor(255, 255, 255)]:
+                    continue
 
                 for ind, val in enumerate(range_list):
-                    if is_number(repl):
-                        if float(repl) >= val:
-                            if run_text.endswith("1"):
-                                run.font.color.rgb = RGBColor(*color_list_light[ind])
-                            else:
-                                run.font.color.rgb = RGBColor(*color_list[ind])
-                            break
+                    if is_number(repl) and float(repl) >= val:
+                        if run_text.endswith("1"):
+                            run.font.color.rgb = RGBColor(*color_list_light[ind])
+                        else:
+                            run.font.color.rgb = RGBColor(*color_list[ind])
+                        break
     return slide
 
 
