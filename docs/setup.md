@@ -1,7 +1,7 @@
-<h1 align="center">User Manual</h1>
+<h1 align="center">Setup Guide</h1>
 
 <p align="center">
-  This manual contains everything you, as someone who is responsible for generating slides, need to know.<br>
+  This manual contains everything you need to know to get the program running for the first time.<br>
   To understand more about advanced template customization for rounds with a special twist, please visit advanced.md
 </p>
 
