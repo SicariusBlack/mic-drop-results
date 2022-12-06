@@ -81,8 +81,8 @@ class ProgressBar:
                          f'|{bar}| {self.progress}/{self.total} [{percents}%]{self.desc}')
 
 
-        # Preview:   Group 1 |███████████████         | 5/8 [63%]
-        #            Filling in judging data
+        #  Preview:      Group 1 |███████████████         | 5/8 [63%]
+        #                Filling in judging data
 
 
         if self.progress >= self.total:
