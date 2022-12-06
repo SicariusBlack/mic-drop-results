@@ -3,7 +3,7 @@ name: Report a bug
 about: Contact Banz#6175 on Discord for a faster response
 title: ''
 labels: bug
-assignees: berkeleyfx
+assignees: banz04
 
 ---
 

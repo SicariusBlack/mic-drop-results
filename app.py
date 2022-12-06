@@ -383,7 +383,7 @@ if __name__ == "__main__":
     with contextlib.suppress(requests.exceptions.ConnectionError, KeyError):
         if config["update_check"]:
             response = requests.get("https://api.github.com/repos/"
-                "berkeleyfx/mic-drop-results/releases/latest", timeout=3)
+                "banz04/mic-drop-results/releases/latest", timeout=3)
 
             raw_ver = response.json()["tag_name"][1:]
             version, config_ver = [tuple(map(int, v.split("."))) for v in 
@@ -395,7 +395,7 @@ if __name__ == "__main__":
                 print(f"Update {raw_ver}")
                 print(response.json()["body"].partition("\n")[0])
 
-                url = "https://github.com/berkeleyfx/mic-drop-results/releases/latest/"
+                url = "https://github.com/banz04/mic-drop-results/releases/latest/"
                 print(url + "\n")
                 webbrowser.open(url, new=2)
                 console_col(Fore.RESET)
@@ -412,7 +412,7 @@ if __name__ == "__main__":
     console_col(Fore.RESET)
 
     if "update available" not in status:
-        url = "https://github.com/berkeleyfx/mic-drop-results"
+        url = "https://github.com/banz04/mic-drop-results"
         print(url)
 
 
