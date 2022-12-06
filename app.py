@@ -398,7 +398,7 @@ if __name__ == '__main__':
 
             status = f' [{status}]'
 
-    # Print the program header
+    # Print a header containing information about the program
 
     #  Preview:      Mic Drop Results (v3.0) [latest]
     #                https://github.com/banz04/mic-drop-results
