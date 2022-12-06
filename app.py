@@ -55,12 +55,12 @@ forking.Popen = _Popen
 
 
 class ProgressBar:
-    def __init__(self, total, bar_length, group, group_length):
+    def __init__(self, total, bar_length, title, max_title_length):
         self.progress = 0
         self.total = total
         self.bar_length = bar_length
-        self.group = group
-        self.group_length = group_length
+        self.title = title
+        self.max_title_length = max_title_length
         self.desc = ''
 
     def add(self, incr=1):
@@ -77,8 +77,13 @@ class ProgressBar:
             sys.stdout.write('\033[2K\033[A\r')  # Delete line, move cursor up, and to beginning of the line
             sys.stdout.flush()
 
-        sys.stdout.write(f'{self.group}{" " * (self.group_length - len(self.group))} '
+        sys.stdout.write(f'{self.title}{" " * (self.max_title_length - len(self.title))} '
                          f'|{bar}| {self.progress}/{self.total} [{percents}%]{self.desc}')
+
+
+        # Preview:   Group 1 |███████████████         | 5/8 [63%]
+        #            Filling in judging data
+
 
         if self.progress >= self.total:
             sys.stdout.write('\033[2K\r')        # Delete line and move cursor to beginning of line
@@ -105,8 +110,8 @@ def as_int(a):
         return a
 
 
-def set_console_color(col):
-    print(col, end='')
+def set_console_color(color=Fore.RESET):
+    print(color, end='')
 
 
 def throw_error(*messages, err_type: str = 'error'):
@@ -117,15 +122,12 @@ def throw_error(*messages, err_type: str = 'error'):
         else:
             set_console_color(Fore.YELLOW)  # For warnings
 
-        messages = list(messages)
-
         print(f'\n\n{err_type.upper()}: {messages[0]}')
-        set_console_color(Fore.RESET)
-        messages.pop(0)
+        set_console_color()
 
-    if len(messages) > 0:
+    if len(messages) > 1:
         print()
-        print(*messages, sep='\n\n')
+        print(*messages[1:], sep='\n\n')
 
     if err_type == 'error':
         _input('\nPress Enter to exit the program...')  # For errors
@@ -136,22 +138,26 @@ def throw_error(*messages, err_type: str = 'error'):
 
 def print_exception_and_exit(exc_type, exc_value, tb):
     print_exception(exc_type, exc_value, tb)
-
-    # Enable QuickEdit, thus allowing the user to copy the error message
-    kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
-
     throw_error()
 
 
 def hex_to_rgb(hexcode):
-    return tuple(int(hexcode.lstrip('#')[i:i + 2], 16) for i in (0, 2, 4))
+    return tuple(int(hexcode.lstrip('#')[i : i+2], 16) for i in (0, 2, 4))
 
 
 def _input(*args, **kwargs):
+    # Enable QuickEdit, thus allowing the user to copy the error message
+    kernel32 = windll.kernel32
+    kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
     cursor.show()
+
     print(*args, **kwargs, end='')
     i = input()
+
+    # Disable QuickEdit and Insert mode
+    kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
     cursor.hide()
+
     return i
 
 
@@ -377,7 +383,7 @@ if __name__ == '__main__':
                 url = 'https://github.com/banz04/mic-drop-results/releases/latest/'
                 print(url + '\n')
                 webbrowser.open(url, new=2)
-                set_console_color(Fore.RESET)
+                set_console_color()
 
                 status = 'update available'
             elif version < config_ver:
@@ -388,7 +394,7 @@ if __name__ == '__main__':
             status = f' [{status}]'
 
     print(f'Mic Drop Results (v{config["version"]}){status}')
-    set_console_color(Fore.RESET)
+    set_console_color()
 
     if 'update available' not in status:
         url = 'https://github.com/banz04/mic-drop-results'
