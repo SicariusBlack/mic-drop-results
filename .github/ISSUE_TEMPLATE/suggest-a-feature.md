@@ -3,7 +3,7 @@ name: Suggest a feature
 about: Propose an idea for a feature
 title: ''
 labels: feature
-assignees: berkeleyfx
+assignees: banz04
 
 ---
 
