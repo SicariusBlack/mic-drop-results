@@ -37,8 +37,10 @@ import win32com.client
 
 
 class _Popen(forking.Popen):
-    """https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing"""
     def __init__(self, *args, **kw):
+        """Makes multiprocessing compatible with pyinstaller.
+        Source: https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
+        """
         if hasattr(sys, 'frozen'):
             os.putenv('_MEIPASS2', sys._MEIPASS)
         try:
@@ -54,7 +56,7 @@ forking.Popen = _Popen
 
 class ProgressBar:
     def __init__(self, total, bar_length, group, group_length):
-        self.count = 0
+        self.progress = 0
         self.total = total
         self.bar_length = bar_length
         self.group = group
@@ -62,31 +64,28 @@ class ProgressBar:
         self.desc = ''
 
     def add(self, incr=1):
-        self.count += incr
+        self.progress += incr
         self.refresh()
 
     def refresh(self):
-        filled_length = int(round(self.bar_length * self.count / float(self.total)))
+        filled_length = int(round(self.bar_length * self.progress / float(self.total)))
 
-        percents = round(100 * self.count / float(self.total), 1)
+        percents = round(100 * self.progress / float(self.total), 1)
         bar = '█' * filled_length + ' ' * (self.bar_length - filled_length)
 
-        if self.count > 0:
-            self.remove()
+        if self.progress > 0:
+            sys.stdout.write('\033[2K\033[A\r')  # Delete line, move cursor up, and to beginning of the line
+            sys.stdout.flush()
 
         sys.stdout.write(f'{self.group}{" " * (self.group_length - len(self.group))} '
-            f'|{bar}| {self.count}/{self.total} [{percents}%]{self.desc}')
+                         f'|{bar}| {self.progress}/{self.total} [{percents}%]{self.desc}')
 
-        if self.count >= self.total:
-            sys.stdout.write('\033[2K\r')    # Delete line and move cursor to beginning
+        if self.progress >= self.total:
+            sys.stdout.write('\033[2K\r')        # Delete line and move cursor to beginning of line
 
         sys.stdout.flush()
-
-    def remove(self):
-        sys.stdout.write('\033[2K\033[A\r')  # Delete line, move cursor up, and to beginning of the line
-        sys.stdout.flush()
-
-    def description(self, text):
+        
+    def set_description(self, text):
         self.desc = '\n' + text
         self.refresh()
 
@@ -568,13 +567,13 @@ if __name__ == '__main__':
         bar = ProgressBar(8, 40, group=k, group_len=max(map(len, data.keys())))
 
         # Open template presentation
-        bar.description('Opening template.pptm')
+        bar.set_description('Opening template.pptm')
         ppt = win32com.client.Dispatch('PowerPoint.Application')
         ppt.Presentations.Open(f'{folder_path}template.pptm')
         bar.add()
 
         # Import macros
-        bar.description('Importing macros')
+        bar.set_description('Importing macros')
 
         try:
             ppt.VBE.ActiveVBProject.VBComponents.Import(f'{folder_path}Module1.bas')
@@ -589,7 +588,7 @@ if __name__ == '__main__':
         bar.add()
 
         # Duplicate slides
-        bar.description('Duplicating slides')
+        bar.set_description('Duplicating slides')
         slides_count = ppt.Run('Count')
 
         # Duplicate slides
@@ -608,7 +607,7 @@ if __name__ == '__main__':
         bar.add()
 
         # Save as output file
-        bar.description('Saving templates')
+        bar.set_description('Saving templates')
         output_filename = f'{k}.pptx'
 
         ppt.Run('SaveAs', f'{outpath}{output_filename}')
@@ -617,7 +616,7 @@ if __name__ == '__main__':
         bar.add()
 
         # Replace text
-        bar.description('Filling in judging data')
+        bar.set_description('Filling in judging data')
         prs = Presentation(outpath + output_filename)
 
         for i, slide in enumerate(prs.slides):
@@ -625,7 +624,7 @@ if __name__ == '__main__':
         bar.add()
 
         # Save
-        bar.description(f'Saving as {outpath + output_filename}')
+        bar.set_description(f'Saving as {outpath + output_filename}')
         prs.save(outpath + output_filename)
         bar.add()
 
