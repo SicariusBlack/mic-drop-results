@@ -9,4 +9,5 @@
   Installation
 </h2>
 
+### Step 1: Installing the Program
 To install, please visit the [latest release](https://github.com/berkeleyfx/mic-drop-results/releases/), download, and extract [**mic-drop-results.zip**](https://github.com/berkeleyfx/mic-drop-results/releases/latest/download/mic-drop-results.zip).
