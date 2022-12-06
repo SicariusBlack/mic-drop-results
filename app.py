@@ -1,3 +1,4 @@
+import configparser
 import contextlib
 from ctypes import windll
 from io import BytesIO
@@ -294,7 +295,7 @@ def get_avatar(id, api_token):
     except KeyError:
         if response.json()["message"] == "401: Unauthorized":
             throw("Invalid token. Please provide a new token in token.txt or "
-                "turn off avatar mode in config.json.",
+                "turn off avatar mode in config.cfg.",
                 response.json())
         elif response.json()["message"] == "You are being rate limited.":
             time.sleep(response.json()["retry_after"])
@@ -349,13 +350,13 @@ if __name__ == "__main__":
 
     # Section B: Checking for Missing Files
     if missing := [f for f in [
-            "config.json", "data.xlsx", "template.pptm", "Module1.bas", "token.txt"
+            "config.cfg", "data.xlsx", "template.pptm", "Module1.bas", "token.txt"
         ] if not os.path.isfile(f)]:
         throw("The following files are missing. Please review the documentation for more "
             "information related to file requirements.", "\n".join(missing))
 
 
-    # Section C: Loading config.json
+    # Section C: Loading config.cfg
     config = load(open("config.json"))
 
     # Variable shortcuts
