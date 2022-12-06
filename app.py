@@ -189,8 +189,8 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
                     uid = str(df['uid'].iloc[i]).strip().replace('_', '')
 
-                    og_path = avapath + '_' + uid + '.png'
-                    img_path = avapath + str(effect) + '_' + uid + '.png'
+                    og_path = avatar_path + '_' + uid + '.png'
+                    img_path = avatar_path + str(effect) + '_' + uid + '.png'
 
                     if not os.path.isfile(og_path):
                         continue
@@ -258,8 +258,8 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                     continue
 
                 # Check RGB
-                if run.font.color.type == MSO_COLOR_TYPE.RGB and \
-                    run.font.color.rgb not in [RGBColor(0, 0, 0), RGBColor(255, 255, 255)]:
+                if (run.font.color.type == MSO_COLOR_TYPE.RGB and
+                    run.font.color.rgb not in [RGBColor(0, 0, 0), RGBColor(255, 255, 255)]):
                     continue
 
                 for ind, val in enumerate(range_list):
@@ -289,20 +289,23 @@ def get_avatar(id, api_token):
         if response.json()['message'] == '401: Unauthorized':
             throw_error('Invalid token. Please provide a new token in token.txt or '
                         'turn off avatar_mode in config.cfg.', response.json())
-        elif response.json()['message'] == 'You are being rate limited.':
+
+        elif response.json()['message'] == 'You are being rate-limited by the API.':
             time.sleep(response.json()['retry_after'])
             get_avatar(id, api_token)
+
         else:
             throw_error(response.json(), err_type='warning')
+
     except requests.exceptions.ConnectionError:
-        throw_error('Unable to connect with Discord API. Please check your internet '
-                    'connection and try again.', err_type='warning')
+        throw_error('Unable to connect with the Discord API. Please check your '
+                    'internet connection and try again.', err_type='warning')
     return link
 
 
-def download_avatar(uid, avapath, api_token):
+def download_avatar(uid, avatar_path, api_token):
     uid = uid.strip().replace('_', '')
-    img_path = avapath + '_' + uid.strip() + '.png'
+    img_path = avatar_path + '_' + uid.strip() + '.png'
 
     # Load image from link
     avatar_url = get_avatar(uid, api_token)
@@ -334,11 +337,13 @@ if __name__ == '__main__':
 
 
     # Section B: Check for missing files
-    if missing := [f for f in [
+    if missing := [f for f in (
+
             'config.cfg', 'data.xlsx', 'template.pptm', 'Module1.bas', 'token.txt'
-        ] if not os.path.isfile(f)]:
+
+        ) if not os.path.isfile(f)]:
         throw_error('The following files are missing. Please review the documentation for more '
-            'information related to file requirements.', '\n'.join(missing))
+                    'information regarding file requirements.', '\n'.join(missing))
 
 
     # Section C: Load config.cfg
@@ -371,13 +376,13 @@ if __name__ == '__main__':
             response = requests.get('https://api.github.com/repos/banz04/mic-drop-results/releases/latest', timeout=3)
 
             raw_ver = response.json()['tag_name'][1:]
-            version, config_ver = [tuple(map(int, v.split('.'))) for v in 
-                [raw_ver, config['version']]
-            ]
+            version, config_ver = [tuple(map(int, v.split('.'))) for v in (
+                raw_ver, config['version']
+            )]
 
             if version > config_ver:
                 set_console_color(Fore.YELLOW)
-                print(f'Update {raw_ver}')
+                print(f'Update v{raw_ver}')
                 print(response.json()['body'].partition('\n')[0])
 
                 url = 'https://github.com/banz04/mic-drop-results/releases/latest/'
@@ -393,6 +398,19 @@ if __name__ == '__main__':
 
             status = f' [{status}]'
 
+    # Print the program header
+
+    #  Preview:      Mic Drop Results (v3.0) [latest]
+    #                https://github.com/banz04/mic-drop-results
+
+
+    #  Update available:      Update v3.0
+    #                         A summary of the update will appear in this line.
+    #                         https://github.com/banz04/mic-drop-results/releases/latest/
+    #
+    #                         Mic Drop Results (v2.2) [update available]
+
+
     print(f'Mic Drop Results (v{config["version"]}){status}')
     set_console_color()
 
@@ -403,13 +421,15 @@ if __name__ == '__main__':
 
     # Section E: Process the data
     folder_path = os.getcwd() + '\\'
-    outpath = folder_path + 'output\\'
-    avapath = folder_path + 'avatars\\'
+    output_path = folder_path + 'output\\'
+    avatar_path = folder_path + 'avatars\\'
 
     xls = pd.ExcelFile('data.xlsx')
 
     sheetnames_raw = xls.sheet_names
-    sheetnames = [re.sub(r'[\\\/:"*?<>|]+', '', name) for name in sheetnames_raw]
+    sheetnames = [re.sub(r'[\\\/:"*?<>|]+',  # Exclude forbidden characters in file names
+        '', sheet) for sheet in sheetnames_raw]
+
     data = {}
 
     db_list = []
@@ -424,7 +444,7 @@ if __name__ == '__main__':
             db_list.append(df)
 
     SHARING_VIOLATION = '\033[33mNOTE: Please exit the program before modifying data.xlsx or ' \
-        'Microsoft Excel will throw a Sharing Violation error.\033[39m'
+                        'Microsoft Excel will throw a Sharing Violation error.\033[39m'
 
     for i, sheet in enumerate(sheetnames_raw):
         df = pd.read_excel(xls, sheet)
@@ -440,8 +460,8 @@ if __name__ == '__main__':
         # Exclude sheets with first two columns where data types are not numeric
         if sum(df.iloc[:, i].dtype.kind in 'biufc' for i in range(2)) < 2:
             throw_error(f'Invalid data type. The following rows of {sheet} contain strings '
-                'instead of the supposed numeric data type within the first two columns. '
-                'The sheet will be excluded if you proceed on.',
+                         'instead of the supposed numeric data type within the first two columns. '
+                         'The sheet will be excluded if you proceed on.',
 
                 df[~df.iloc[:, :2].applymap(np.isreal).all(1)],
 
@@ -467,7 +487,7 @@ if __name__ == '__main__':
 
         # Check for cases where avg and std are the same (hold the same rank)
         df['r'] = pd.DataFrame(zip(df.iloc[:, 0], df.iloc[:, 1] * -1)) \
-            .apply(tuple, axis=1).rank(method='min', ascending=False).astype(int)
+                    .apply(tuple, axis=1).rank(method='min', ascending=False).astype(int)
 
         # Sort the slides
         df = df.sort_values(by='r', ascending=True)
@@ -525,12 +545,12 @@ if __name__ == '__main__':
     run('TASKKILL /F /IM powerpnt.exe', stdout=DEVNULL, stderr=DEVNULL)
 
     # Open template presentation
-    os.makedirs(outpath, exist_ok=True)
-    os.makedirs(avapath, exist_ok=True)
+    os.makedirs(output_path, exist_ok=True)
+    os.makedirs(avatar_path, exist_ok=True)
 
     # Clear cache
     if time.time() - last_clear > 1800:  # Clears every hour
-        for f in os.scandir(avapath):
+        for f in os.scandir(avatar_path):
             os.unlink(f)
 
         # Update last clear time
@@ -547,22 +567,23 @@ if __name__ == '__main__':
 
         for df in data.values():
             if df['uid'].dtype.kind in 'biufc':
-                throw_error('The \'uid\' column has numeric data type instead of the supposed string data type.',
-                    'Please exit the program and add an underscore before each user ID.', SHARING_VIOLATION)
+                throw_error('The \'uid\' column has a numeric data type instead of the supposed string data type.',
+                            'Please exit the program and add an underscore before every user ID.', SHARING_VIOLATION)
 
-            uid_list += [id for id in df['uid'] if not pd.isnull(id) and not os.path.isfile(avapath + id.strip() + '.png')]
+            uid_list += [id for id in df['uid'] if not pd.isnull(id) and not os.path.isfile(avatar_path + id.strip() + '.png')]
 
         if len(uid_list) == 0:
             break
 
         if attempt > 0 and attempt <= 3:
-            print(f'Unable to download the profile pictures of the following users. Retrying {attempt}/3', uid_list, sep='\n', end='\n\n')
+            print(f'Unable to download the profile pictures of the following users. Retrying {attempt}/3',
+                    uid_list, sep='\n', end='\n\n')
         elif attempt > 3:
-            throw_error('Failed to download the profile pictures of the following users. Please verify that their user IDs are correct.', uid_list,
-                err_type='warning')
+            throw_error('Failed to download the profile pictures of the following users. Please verify that their user IDs are correct.',
+                    uid_list, err_type='warning')
 
         pool.starmap(download_avatar, zip(uid_list,
-            [avapath] * len(uid_list), itertools.islice(itertools.cycle(token_list), len(uid_list))))
+            [avatar_path] * len(uid_list), itertools.islice(itertools.cycle(token_list), len(uid_list))))
 
         attempt += 1
 
@@ -570,7 +591,7 @@ if __name__ == '__main__':
     pool.join()
 
     for k, df in data.items():
-        bar = ProgressBar(8, 40, group=k, group_len=max(map(len, data.keys())))
+        bar = ProgressBar(8, bar_length=40, title=k, max_title_length=max(map(len, data.keys())))
 
         # Open template presentation
         bar.set_description('Opening template.pptm')
@@ -600,9 +621,8 @@ if __name__ == '__main__':
         # Duplicate slides
         for t in df.loc[:, 'template']:
             if as_int(t) not in range(1, slides_count + 1):
-                throw_error(f'Template {t} does not exist. ({k})',
-                    'Please exit the program and modify the \'template\' column of data.xlsx', SHARING_VIOLATION)
-
+                throw_error(f'Template {t} does not exist (error originated from the following sheet: {k}).',
+                            f'Please exit the program and modify the \'template\' column of {k}.', SHARING_VIOLATION)
 
             ppt.Run('Duplicate', t)
 
@@ -616,30 +636,31 @@ if __name__ == '__main__':
         bar.set_description('Saving templates')
         output_filename = f'{k}.pptx'
 
-        ppt.Run('SaveAs', f'{outpath}{output_filename}')
+        ppt.Run('SaveAs', f'{output_path}{output_filename}')
         bar.add()
+
         run('TASKKILL /F /IM powerpnt.exe', stdout=DEVNULL, stderr=DEVNULL)
         bar.add()
 
         # Replace text
         bar.set_description('Filling in judging data')
-        prs = Presentation(outpath + output_filename)
+        prs = Presentation(output_path + output_filename)
 
         for i, slide in enumerate(prs.slides):
             replace_text(slide, df, i, avatar_mode)
         bar.add()
 
         # Save
-        bar.set_description(f'Saving as {outpath + output_filename}')
-        prs.save(outpath + output_filename)
+        bar.set_description(f'Saving as {output_path + output_filename}')
+        prs.save(output_path + output_filename)
         bar.add()
 
 
     # Section G: Launch the file
-    print(f'\nExported to {outpath}')
+    print(f'\nExported to {output_path}')
 
     # Enable QuickEdit
     kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
 
     _input('Press Enter to open the output folder...')
-    os.startfile(outpath)
+    os.startfile(output_path)
