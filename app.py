@@ -81,7 +81,7 @@ class ProgressBar:
                          f'|{bar}| {self.progress}/{self.total} [{percents}%]{self.desc}')
 
 
-        #  Preview:      Group 1 |███████████████         | 5/8 [63%]
+        # Preview:       Group 1 |███████████████         | 5/8 [63%]
         #                Filling in judging data
 
 
@@ -400,11 +400,11 @@ if __name__ == '__main__':
 
     # Print a header containing information about the program
 
-    #  Preview:      Mic Drop Results (v3.0) [latest]
+    # Preview:       Mic Drop Results (v3.0) [latest]
     #                https://github.com/banz04/mic-drop-results
 
 
-    #  Update available:      Update v3.0
+    # Update available:       Update v3.0
     #                         A summary of the update will appear in this line.
     #                         https://github.com/banz04/mic-drop-results/releases/latest/
     #
