@@ -81,8 +81,8 @@ class ProgressBar:
                          f'|{bar}| {self.progress}/{self.total} [{percents}%]{self.desc}')
 
 
-        # Preview:       Group 1 |███████████████         | 5/8 [63%]
-        #                Filling in judging data
+        # Preview:      Group 1 |███████████████         | 5/8 [63%]
+        #               Filling in judging data
 
 
         if self.progress >= self.total:
@@ -359,7 +359,7 @@ if __name__ == '__main__':
 
     with open('token.txt') as f:
         token_list = f.read().splitlines()
-        token_list = [i.strip('"') for i in token_list if len(i) > 62]
+        token_list = [i.strip() for i in token_list if len(i) > 62]
 
     if not token_list and avatar_mode:
         throw_error('Please provide a valid bot token in token.txt or turn off avatar mode in config.json.')
@@ -400,15 +400,15 @@ if __name__ == '__main__':
 
     # Print a header containing information about the program
 
-    # Preview:       Mic Drop Results (v3.0) [latest]
-    #                https://github.com/banz04/mic-drop-results
+    # Preview:      Mic Drop Results (v3.0) [latest]
+    #               https://github.com/banz04/mic-drop-results
 
 
-    # Update available:       Update v3.0
-    #                         A summary of the update will appear in this line.
-    #                         https://github.com/banz04/mic-drop-results/releases/latest/
+    # Update available:     Update v3.0
+    #                       A summary of the update will appear in this line.
+    #                       https://github.com/banz04/mic-drop-results/releases/latest/
     #
-    #                         Mic Drop Results (v2.2) [update available]
+    #                       Mic Drop Results (v2.2) [update available]
 
 
     print(f'Mic Drop Results (v{config["version"]}){status}')
