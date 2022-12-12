@@ -188,14 +188,16 @@ def hex_to_rgb(hexcode):
 def _input(*args, **kwargs):
     # Enable QuickEdit, thus allowing the user to copy the error message
     kernel32 = windll.kernel32
-    kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
+    kernel32.SetConsoleMode(
+        kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
     cursor.show()
 
     print(*args, **kwargs, end='')
     i = input()
 
     # Disable QuickEdit and Insert mode
-    kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
+    kernel32.SetConsoleMode(
+        kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
     cursor.hide()
 
     return i
@@ -211,8 +213,12 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
         text_frame = shape.text_frame
 
-        for run in itertools.chain.from_iterable([p.runs for p in text_frame.paragraphs]):
-            for search_str in set(re.findall(r'(?<={)(.*?)(?=})', run.text)).intersection(cols):
+        for run in itertools.chain.from_iterable(
+            [p.runs for p in text_frame.paragraphs]):
+
+            for search_str in (set(re.findall(r'(?<={)(.*?)(?=})', run.text))
+                               .intersection(cols)):
+
                 # Profile picture
                 if search_str == 'p':
                     # Test cases
@@ -257,7 +263,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
                 # Actual text
                 repl = str(df[search_str].iloc[i])
-                repl = repl if repl != 'nan' else ''  # Replace missing values with blank
+                repl = repl if repl != 'nan' else ''  # Replace nan with empty
 
                 run_text = run.text
 
@@ -267,7 +273,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                     run.text = run.text.replace('{' + search_str + '}', repl)
 
                 # Replace image links
-                pattern = r'\<\<(.*?)\>\>'  # Regex pattern to look for <<image_links.png>>
+                pattern = r'\<\<(.*?)\>\>'  # Look for <<image_links.{ext}>>
                 img_link = re.findall(pattern, run.text)
 
                 if len(img_link) > 0:
@@ -299,7 +305,8 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
                 # Check RGB
                 if (run.font.color.type == MSO_COLOR_TYPE.RGB and
-                    run.font.color.rgb not in [RGBColor(0, 0, 0), RGBColor(255, 255, 255)]):
+                    run.font.color.rgb not in [
+                        RGBColor(0, 0, 0), RGBColor(255, 255, 255)]):
                     continue
 
                 for ind, val in enumerate(range_list):
@@ -323,7 +330,8 @@ def get_avatar(id, api_token):
     link = None
 
     try:
-        response = requests.get(f'https://discord.com/api/v9/users/{id}', headers=header)
+        response = requests.get(
+            f'https://discord.com/api/v9/users/{id}', headers=header)
         link = f'https://cdn.discordapp.com/avatars/{id}/{response.json()["avatar"]}'
     except KeyError:
         if response.json()['message'] == '401: Unauthorized':
