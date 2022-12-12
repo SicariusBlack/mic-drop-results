@@ -55,17 +55,22 @@ forking.Popen = _Popen
 
 
 class ProgressBar:
-    def __init__(self, total, bar_length, title, max_title_length):
+    """Creates and prints a progress bar.
+
+    Attributes:
+        progress, total: the number of work done (progress) out of the total number of work to do.
+        title: the title shown to the left of the progress bar.
+        max_title_length: length of the longest title to ensure left alignment of the progress bars when there are more than one bar.
+        bar_length: the length of the progress bar in characters.
+        desc: the description of the task in progress shown below the progress bar.
+    """
+    def __init__(self, total, title, max_title_length, bar_length=40):
         self.progress = 0
         self.total = total
-        self.bar_length = bar_length
         self.title = title
         self.max_title_length = max_title_length
+        self.bar_length = bar_length
         self.desc = ''
-
-    def add(self, incr=1):
-        self.progress += incr
-        self.refresh()
 
     def refresh(self):
         filled_length = int(round(self.bar_length * self.progress / float(self.total)))
@@ -92,6 +97,10 @@ class ProgressBar:
         
     def set_description(self, text):
         self.desc = '\n' + text
+        self.refresh()
+
+    def add(self, incr=1):
+        self.progress += incr
         self.refresh()
 
 
@@ -591,7 +600,7 @@ if __name__ == '__main__':
     pool.join()
 
     for k, df in data.items():
-        bar = ProgressBar(8, bar_length=40, title=k, max_title_length=max(map(len, data.keys())))
+        bar = ProgressBar(8, title=k, max_title_length=max(map(len, data.keys())))
 
         # Open template presentation
         bar.set_description('Opening template.pptm')
