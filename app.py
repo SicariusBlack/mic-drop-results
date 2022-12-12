@@ -39,6 +39,7 @@ import win32com.client
 class _Popen(forking.Popen):
     def __init__(self, *args, **kw):
         """Makes multiprocessing compatible with pyinstaller.
+
         Source: https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
         """
         if hasattr(sys, 'frozen'):
@@ -58,49 +59,54 @@ class ProgressBar:
     """Creates and prints a progress bar.
 
     Attributes:
-        progress, total: the number of work done (progress) out of the total number of work to do.
-        title: the title shown to the left of the progress bar.
-        max_title_length: length of the longest title to ensure left alignment of the progress bars when there are more than one bar.
-        bar_length: the length of the progress bar in characters.
-        desc: the description of the task in progress shown below the progress bar.
+        total (int): number of work to perform.
+        title (str): title shown to the left of the progress bar.
+        max_title_length (int): length of the longest title to ensure
+            left alignment of the progress bars when there are more than
+            one bar.
+        bar_length (int): length of the progress bar in characters.
+        _progress (int): number of work done. Updates via the
+            add() method.
+        _desc (str): description of the task in progress shown below the
+            progress bar. Updates via the set_description() method.
     """
     def __init__(self, total, title, max_title_length, bar_length=40):
-        self.progress = 0
         self.total = total
         self.title = title
         self.max_title_length = max_title_length
         self.bar_length = bar_length
-        self.desc = ''
+        self._progress = 0
+        self._desc = ''
 
     def refresh(self):
-        filled_length = int(round(self.bar_length * self.progress / float(self.total)))
+        filled_length = round(self.bar_length * self._progress / self.total)
 
-        percents = round(100 * self.progress / float(self.total), 1)
+        percents = round(100 * self._progress / self.total, 1)
         bar = '█' * filled_length + ' ' * (self.bar_length - filled_length)
 
-        if self.progress > 0:
+        if self._progress > 0:
             sys.stdout.write('\033[2K\033[A\r')  # Delete line, move cursor up, and to beginning of the line
             sys.stdout.flush()
 
         sys.stdout.write(f'{self.title}{" " * (self.max_title_length - len(self.title))} '
-                         f'|{bar}| {self.progress}/{self.total} [{percents}%]{self.desc}')
+                         f'|{bar}| {self._progress}/{self.total} [{percents}%]{self._desc}')
 
 
         # Preview:      Group 1 |███████████████         | 5/8 [63%]
         #               Filling in judging data
 
 
-        if self.progress >= self.total:
+        if self._progress >= self.total:
             sys.stdout.write('\033[2K\r')        # Delete line and move cursor to beginning of line
 
         sys.stdout.flush()
         
     def set_description(self, text):
-        self.desc = '\n' + text
+        self._desc = '\n' + text
         self.refresh()
 
     def add(self, incr=1):
-        self.progress += incr
+        self._progress += incr
         self.refresh()
 
 
