@@ -448,15 +448,15 @@ if __name__ == '__main__':
 
     # Print a header containing information about the program
 
-    # Preview:      Mic Drop Results (v3.0) [latest]
+    # Preview:      Mic Drop Results (vX.1) [latest]
     #               https://github.com/banz04/mic-drop-results
 
 
-    # Update available:     Update v3.0
-    #                       A summary of the update will appear in this line.
-    #                       https://github.com/banz04/mic-drop-results/releases/latest/
+    # With update:  Update vX.1
+    #               A summary of the update will appear in this line.
+    #               https://github.com/banz04/mic-drop-results/releases/latest/
     #
-    #                       Mic Drop Results (v2.2) [update available]
+    #               Mic Drop Results (vX.0) [update available]
 
 
     print(f'Mic Drop Results (v{config["version"]}){status}')
@@ -475,7 +475,7 @@ if __name__ == '__main__':
     xls = pd.ExcelFile('data.xlsx')
 
     sheetnames_raw = xls.sheet_names
-    sheetnames = [re.sub(r'[\\\/:"*?<>|]+',  # Exclude forbidden characters in file names
+    sheetnames = [re.sub(r'[\\\/:"*?<>|]+',  # Forbidden file name characters
         '', sheet) for sheet in sheetnames_raw]
 
     data = {}
@@ -505,7 +505,7 @@ if __name__ == '__main__':
         if sheet.startswith('_'):
             continue
 
-        # Exclude sheets with first two columns where data types are not numeric
+        # Exclude sheets with first two columns where data is not numeric
         if sum(df.iloc[:, i].dtype.kind in 'biufc' for i in range(2)) < 2:
             throw_error(f'Invalid data type. The following rows of {sheet} contain strings '
                          'instead of the supposed numeric data type within the first two columns. '
@@ -708,7 +708,8 @@ if __name__ == '__main__':
     print(f'\nExported to {output_path}')
 
     # Enable QuickEdit
-    kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
+    kernel32.SetConsoleMode(
+        kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
 
     _input('Press Enter to open the output folder...')
     os.startfile(output_path)
