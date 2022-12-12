@@ -37,11 +37,13 @@ import win32com.client
 
 
 class _Popen(forking.Popen):
-    def __init__(self, *args, **kw):
-        """Makes multiprocessing compatible with pyinstaller.
+    """Makes multiprocessing compatible with pyinstaller.
 
-        Source: https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
-        """
+    Source:
+    https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
+    """
+
+    def __init__(self, *args, **kw):
         if hasattr(sys, 'frozen'):
             os.putenv('_MEIPASS2', sys._MEIPASS)
         try:
@@ -70,6 +72,7 @@ class ProgressBar:
         _desc (str): description of the task in progress shown below the
             progress bar. Updates via the set_description() method.
     """
+
     def __init__(self, total, title, max_title_length, bar_length=40):
         self.total = total
         self.title = title
@@ -79,38 +82,51 @@ class ProgressBar:
         self._desc = ''
 
     def refresh(self):
+        """Reprints the progress bar with the updated parameters."""
         filled_length = round(self.bar_length * self._progress / self.total)
 
         percents = round(100 * self._progress / self.total, 1)
         bar = '█' * filled_length + ' ' * (self.bar_length - filled_length)
 
         if self._progress > 0:
-            sys.stdout.write('\033[2K\033[A\r')  # Delete line, move cursor up, and to beginning of the line
+            sys.stdout.write('\033[2K\033[A\r')  # Delete line, move cursor up,
+                                                 # and to beginning of the line
             sys.stdout.flush()
 
-        sys.stdout.write(f'{self.title}{" " * (self.max_title_length - len(self.title))} '
-                         f'|{bar}| {self._progress}/{self.total} [{percents}%]{self._desc}')
+        title_right_padding = self.max_title_length - len(self.title) + 1
+        sys.stdout.write(f'{self.title}{" " * title_right_padding}'
+                         f'|{bar}| {self._progress}/{self.total} [{percents}%]'
+                         f'{self._desc}')
 
 
-        # Preview:      Group 1 |███████████████         | 5/8 [63%]
+        # Preview:      Merge   |████████████████████████| 7/7 [100%]
+        #               Group 1 |███████████████         | 5/8 [63%]
         #               Filling in judging data
 
 
-        if self._progress >= self.total:
-            sys.stdout.write('\033[2K\r')        # Delete line and move cursor to beginning of line
+        if self._progress == self.total:
+            sys.stdout.write('\033[2K\r')        # Delete line and move cursor
+                                                 # to beginning of line
 
         sys.stdout.flush()
         
-    def set_description(self, text):
-        self._desc = '\n' + text
+    def set_description(self, description):
+        """Sets the description shown below the progress bar."""
+        self._desc = '\n' + description
         self.refresh()
 
-    def add(self, incr=1):
-        self._progress += incr
+    def add(self, increment=1):
+        """Updates the progress by the specified increment."""
+        self._progress += increment
+
+        if self._progress > self.total:
+            self._progress = self.total
+
         self.refresh()
 
 
 def is_number(a):
+    """Checks if value is a number."""
     try:
         float(a)
         return True
@@ -119,6 +135,7 @@ def is_number(a):
 
 
 def as_int(a):
+    """Returns value as integer if possible, otherwise returns value as is."""
     try:
         return int(a)
     except ValueError:
@@ -126,11 +143,19 @@ def as_int(a):
 
 
 def set_console_color(color=Fore.RESET):
+    """Sets the color in which the next line of the console is printed.
+    
+    Args:
+        color (optional): must come from the Fore, Back, or Style class
+            of the colorama package. Defaults to Fore.RESET.
+            Visit the source code for more info:
+            https://github.com/tartley/colorama/blob/master/colorama/ansi.py
+    """
     print(color, end='')
 
 
 def throw_error(*messages, err_type: str = 'error'):
-    """Handles and throws an error with additional guides and details."""
+    """Handles and prints an error with additional guides and details."""
     if messages:
         if err_type == 'error':
             set_console_color(Fore.RED)     # For errors
