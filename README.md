@@ -24,7 +24,7 @@ To install, please visit the [latest release](https://github.com/banz04/mic-drop
 
 <h2 align="center">Contributing</h2>
 
-All contributions are appreciated. Make sure you follow this [Python Style Guide](https://peps.python.org/pep-0008/) for consistency when making changes to the code.
+All contributions are appreciated. Make sure you follow [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html) for consistency when making changes to the code.
 
 #### Additional contributions
 - Report a bug or suggest a feature [(here)](https://github.com/banz04/mic-drop-results/issues/new/choose)
