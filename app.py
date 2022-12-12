@@ -54,6 +54,8 @@ class _Popen(forking.Popen):
                     os.unsetenv('_MEIPASS2')
                 else:
                     os.putenv('_MEIPASS2', '')
+
+
 forking.Popen = _Popen
 
 
