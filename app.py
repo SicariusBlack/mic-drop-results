@@ -15,12 +15,13 @@ from signal import signal, SIGINT, SIG_IGN
 from subprocess import run, DEVNULL
 import sys
 import time
+from typing import Any
 from traceback import print_exception
 from urllib.request import Request, urlopen
 import webbrowser
 
 import cursor
-from colorama import init, Fore
+from colorama import init, Fore, Back
 
 import cv2
 import pandas as pd
@@ -28,7 +29,7 @@ import pandas as pd
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.dml import MSO_COLOR_TYPE
-from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.shapes import MSO_SHAPE  # type: ignore
 from pptx.slide import Slide
 from pptx.util import Inches
 
@@ -124,7 +125,7 @@ class ProgressBar:
         self.refresh()
 
 
-def is_number(a: object) -> bool:
+def is_number(a: Any) -> bool:
     """Checks if value is a number."""
     try:
         float(a)
@@ -133,7 +134,7 @@ def is_number(a: object) -> bool:
         return False
 
 
-def as_int(a: object) -> int | object:
+def as_int(a: Any) -> int | Any:
     """If possible, returns value as integer, otherwise returns value as is."""
     try:
         return int(a)
@@ -141,52 +142,65 @@ def as_int(a: object) -> int | object:
         return a
 
 
-def set_console_color(color: Fore = Fore.RESET) -> None:
-    """Sets the color in which the next line is printed.
+def console_style(style: str = Fore.RESET + Back.RESET + '\033[1m') -> None:
+    """Sets the color and style in which the next line is printed.
     
     Args:
-        color (colorama.Fore, optional): Defaults to Fore.RESET.
+        color (optional): Defaults to resetting all formatting.
 
     Examples:
-        >>> set_console_color(Fore.RED)
-        >>> set_console_color(Fore.YELLOW)
+        >>> console_style(Fore.RED)
+        >>> console_style(Back.YELLOW)
 
         To reset the color to default:
 
-        >>> set_console_color()
+        >>> console_style()
     """
-    print(color, end='')
+    print(style, end='')
 
 
-def throw_error(*paragraphs: str, err_type: str = 'error') -> None:
+class ErrorType:
+    """Contains the string constants of error types for throw_error() function.
+    
+    Consts:
+        E: 'ERROR', W: 'WARNING', I: 'INFO'
+    """
+    E = 'ERROR'
+    W = 'WARNING'
+    I = 'INFO'
+
+
+def throw_error(*paragraphs: str, err_type: ErrorType = ErrorType.E) -> None:
     """Handles and reprints an error with additional guides and details.
     
-    Prints an error message with paragraphs of text separated by single
-    blank lines (double-spaced between). The first paragraph will be
-    shown beside the error type and in red if it is an error, otherwise,
-    in case of a warning for example, would be printed in yellow.
+    Prints an error message with paragraphs of extra details separated
+    by single blank lines (double-spaced between). The first paragraph
+    will be shown beside the err_type and will inherit the color red
+    if it is an error, otherwise, in case of a warning for example,
+    would be printed in yellow.
 
     Args:
         *paragraphs (str): 
     """
     if paragraphs:
-        if err_type == 'error':
-            set_console_color(Fore.RED)     # For errors
-        else:
-            set_console_color(Fore.YELLOW)  # For warnings
+        if err_type == ErrorType.E:
+            console_style(Fore.RED)
+            console_style(Back.YELLOW)
+        elif err_type == ErrorType.W:
+            console_style(Fore.YELLOW)
 
-        print(f'\n\n{err_type.upper()}: {paragraphs[0]}')
-        set_console_color()
+        print(f'\n\n{err_type}: {paragraphs[0]}')
+        console_style()
 
     if len(paragraphs) > 1:
         print()
         print(*paragraphs[1:], sep='\n\n')
 
-    if err_type == 'error':
-        input_('\nPress Enter to exit the program...')  # For errors
+    if err_type == ErrorType.E:
+        input_('\nPress Enter to exit the program...')
         sys.exit(1)
     else:
-        input_('\nPress Enter to continue...')          # For warnings
+        input_('\nPress Enter to continue...')
 
 
 def print_exception_and_exit(exc_type, exc_value, tb) -> None:
@@ -220,7 +234,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
     """Replaces and formats text."""
     cols = df.columns.values.tolist() + ['p']
 
-    for shape in slide.shapes:
+    for shape in slide.shapes:  # type: ignore
         if not shape.has_text_frame or '{' not in shape.text:
             continue
 
@@ -262,7 +276,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
                         cv2.imwrite(img_path, img)
 
-                    new_shape = slide.shapes.add_picture(
+                    new_shape = slide.shapes.add_picture(  # type: ignore
                         img_path, shape.left, shape.top,
                         shape.width, shape.height
                     )
@@ -295,7 +309,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                         pil = Image.open(img)
 
                         im_width = shape.height / pil.height * pil.width
-                        new_shape = slide.shapes.add_picture(
+                        new_shape = slide.shapes.add_picture(  # type: ignore
                             img, shape.left + (shape.width - im_width)/2,
                             shape.top, im_width, shape.height
                         )
@@ -311,14 +325,14 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                             'Please check your internet connection and verify that '
                             'the link leads to an image file. '
                             'It should end with an image extension like .png in most cases.',
-                            err_type='warning')
+                            err_type='WARNING')
 
                 # Color formatting
                 if not search_str.startswith(starts):
                     continue
 
                 # Check RGB
-                if (run.font.color.type == MSO_COLOR_TYPE.RGB and
+                if (run.font.color.type == MSO_COLOR_TYPE.RGB and  # type: ignore
                     run.font.color.rgb not in [
                         RGBColor(0, 0, 0), RGBColor(255, 255, 255)]):
                     continue
@@ -357,11 +371,11 @@ def get_avatar(id, api_token):
             get_avatar(id, api_token)
 
         else:
-            throw_error(response.json(), err_type='warning')
+            throw_error(response.json(), err_type='WARNING')
 
     except requests.exceptions.ConnectionError:
         throw_error('Unable to connect with the Discord API. Please check your '
-                    'internet connection and try again.', err_type='warning')
+                    'internet connection and try again.', err_type='WARNING')
     return link
 
 
@@ -443,14 +457,14 @@ if __name__ == '__main__':
             )]
 
             if version > config_ver:
-                set_console_color(Fore.YELLOW)
+                console_style(Fore.YELLOW)
                 print(f'Update v{raw_ver}')
                 print(response.json()['body'].partition('\n')[0])
 
                 url = 'https://github.com/banz04/mic-drop-results/releases/latest/'
                 print(url + '\n')
                 webbrowser.open(url, new=2)
-                set_console_color()
+                console_style()
 
                 status = 'update available'
             elif version < config_ver:
@@ -474,7 +488,7 @@ if __name__ == '__main__':
 
 
     print(f'Mic Drop Results (v{config["version"]}){status}')
-    set_console_color()
+    console_style()
 
     if 'update available' not in status:
         url = 'https://github.com/banz04/mic-drop-results'
@@ -642,7 +656,7 @@ if __name__ == '__main__':
                     uid_list, sep='\n', end='\n\n')
         elif attempt > 3:
             throw_error('Failed to download the profile pictures of the following users. Please verify that their user IDs are correct.',
-                    uid_list, err_type='warning')
+                    str(uid_list), err_type='warning')
 
         pool.starmap(download_avatar, zip(uid_list,
             [avatar_path] * len(uid_list), itertools.islice(itertools.cycle(token_list), len(uid_list))))
@@ -667,7 +681,7 @@ if __name__ == '__main__':
         try:
             ppt.VBE.ActiveVBProject.VBComponents.Import(f'{folder_path}Module1.bas')
         except com_error as e:
-            if e.hresult == -2147352567:
+            if e.hresult == -2147352567:  # type: ignore
                 # Warns the user about trust access error
                 throw_error('Please open PowerPoint, look up Trust Center Settings, '
                             'and make sure Trust access to the VBA project object model is enabled.')
