@@ -63,29 +63,28 @@ class ProgressBar:
     """Creates and prints a progress bar.
 
     Attributes:
-        progress (int): number of work done. Updates via the
-            add() method.
-        total (int): number of work to perform.
-        title (str): title shown to the left of the progress bar.
-        max_title_length (int): length of the longest title to ensure
-            left alignment of the progress bars when there are more than
+        progress: number of work done. Updates via the add() method.
+        total: number of work to perform.
+        title: title shown to the left of the progress bar.
+        max_title_length: length of the longest title to ensure left
+            alignment of the progress bars when there are more than
             one bar.
-        bar_length (int): length of the progress bar in characters.
-        desc (str): description of the task in progress shown below the
+        bar_length: length of the progress bar in characters.
+        desc: description of the task in progress shown below the
             progress bar. Updates via the set_description() method.
     """
 
     def __init__(self, total: int, title: str, max_title_length: int,
-                 bar_length: int = 40):
-        self.progress = 0
+                 bar_length: int = 40) -> None:
+        self.progress: int = 0
         self.total = total
         self.title = title
         self.max_title_length = max_title_length
         self.bar_length = bar_length
-        self.desc = ''
+        self.desc: str = ''
 
-    def refresh(self):
-        """Reprints the progress bar with the updated parameters."""
+    def refresh(self) -> None:
+        """Reprints the progress bar with updated parameters."""
         filled_length = round(self.bar_length * self.progress / self.total)
 
         percents = round(100 * self.progress / self.total, 1)
@@ -113,19 +112,19 @@ class ProgressBar:
 
         sys.stdout.flush()
         
-    def set_description(self, desc: str):
+    def set_description(self, desc: str = '') -> None:
         """Sets the description shown below the progress bar."""
         self.desc = '\n' + desc
         self.refresh()
 
-    def add(self, increment: int = 1):
+    def add(self, increment: int = 1) -> None:
         """Updates the progress by a specified increment."""
         self.progress += increment
         self.progress = min(self.progress, self.total)
         self.refresh()
 
 
-def is_number(a):
+def is_number(a: object) -> bool:
     """Checks if value is a number."""
     try:
         float(a)
@@ -134,7 +133,7 @@ def is_number(a):
         return False
 
 
-def as_int(a):
+def as_int(a: object) -> int | object:
     """If possible, returns value as integer, otherwise returns value as is."""
     try:
         return int(a)
@@ -142,7 +141,7 @@ def as_int(a):
         return a
 
 
-def set_console_color(color: Fore = Fore.RESET):
+def set_console_color(color: Fore = Fore.RESET) -> None:
     """Sets the color in which the next line is printed.
     
     Args:
@@ -159,7 +158,7 @@ def set_console_color(color: Fore = Fore.RESET):
     print(color, end='')
 
 
-def throw_error(*paragraphs: str, err_type: str = 'error'):
+def throw_error(*paragraphs: str, err_type: str = 'error') -> None:
     """Handles and reprints an error with additional guides and details.
     
     Prints an error message with paragraphs of text separated by single
@@ -184,22 +183,22 @@ def throw_error(*paragraphs: str, err_type: str = 'error'):
         print(*paragraphs[1:], sep='\n\n')
 
     if err_type == 'error':
-        _input('\nPress Enter to exit the program...')  # For errors
+        input_('\nPress Enter to exit the program...')  # For errors
         sys.exit(1)
     else:
-        _input('\nPress Enter to continue...')          # For warnings
+        input_('\nPress Enter to continue...')          # For warnings
 
 
-def print_exception_and_exit(exc_type, exc_value, tb):
+def print_exception_and_exit(exc_type, exc_value, tb) -> None:
     print_exception(exc_type, exc_value, tb)
     throw_error()
 
 
-def hex_to_rgb(hexcode):
-    return tuple(int(hexcode.lstrip('#')[i : i+2], 16) for i in (0, 2, 4))
+def hex_to_rgb(hex_val: str) -> tuple[int, int, int]:
+    return tuple(int(hex_val.lstrip('#')[i : i+2], 16) for i in (0, 2, 4))
 
 
-def _input(*args, **kwargs):
+def input_(*args, **kwargs):
     # Enable QuickEdit, thus allowing the user to copy the error message
     kernel32 = windll.kernel32
     kernel32.SetConsoleMode(
@@ -726,5 +725,5 @@ if __name__ == '__main__':
     kernel32.SetConsoleMode(
         kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
 
-    _input('Press Enter to open the output folder...')
+    input_('Press Enter to open the output folder...')
     os.startfile(output_path)
