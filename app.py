@@ -63,42 +63,43 @@ class ProgressBar:
     """Creates and prints a progress bar.
 
     Attributes:
+        progress (int): number of work done. Updates via the
+            add() method.
         total (int): number of work to perform.
         title (str): title shown to the left of the progress bar.
         max_title_length (int): length of the longest title to ensure
             left alignment of the progress bars when there are more than
             one bar.
         bar_length (int): length of the progress bar in characters.
-        _progress (int): number of work done. Updates via the
-            add() method.
-        _desc (str): description of the task in progress shown below the
+        desc (str): description of the task in progress shown below the
             progress bar. Updates via the set_description() method.
     """
 
-    def __init__(self, total, title, max_title_length, bar_length=40):
+    def __init__(self, total: int, title: str, max_title_length: int,
+                 bar_length: int = 40):
+        self.progress = 0
         self.total = total
         self.title = title
         self.max_title_length = max_title_length
         self.bar_length = bar_length
-        self._progress = 0
-        self._desc = ''
+        self.desc = ''
 
     def refresh(self):
         """Reprints the progress bar with the updated parameters."""
-        filled_length = round(self.bar_length * self._progress / self.total)
+        filled_length = round(self.bar_length * self.progress / self.total)
 
-        percents = round(100 * self._progress / self.total, 1)
+        percents = round(100 * self.progress / self.total, 1)
         bar = '█' * filled_length + ' ' * (self.bar_length - filled_length)
 
-        if self._progress > 0:
+        if self.progress > 0:
             sys.stdout.write('\033[2K\033[A\r')  # Delete line, move cursor up,
                                                  # and to beginning of the line
             sys.stdout.flush()
 
         title_right_padding = self.max_title_length - len(self.title) + 1
         sys.stdout.write(f'{self.title}{" " * title_right_padding}'
-                         f'|{bar}| {self._progress}/{self.total} [{percents}%]'
-                         f'{self._desc}')
+                         f'|{bar}| {self.progress}/{self.total} [{percents}%]'
+                         f'{self.desc}')
 
 
         # Preview:      Merge   |████████████████████████| 7/7 [100%]
@@ -106,24 +107,21 @@ class ProgressBar:
         #               Filling in judging data
 
 
-        if self._progress == self.total:
+        if self.progress == self.total:
             sys.stdout.write('\033[2K\r')        # Delete line and move cursor
                                                  # to beginning of line
 
         sys.stdout.flush()
         
-    def set_description(self, description):
+    def set_description(self, desc: str):
         """Sets the description shown below the progress bar."""
-        self._desc = '\n' + description
+        self.desc = '\n' + desc
         self.refresh()
 
-    def add(self, increment=1):
-        """Updates the progress by the specified increment."""
-        self._progress += increment
-
-        if self._progress > self.total:
-            self._progress = self.total
-
+    def add(self, increment: int = 1):
+        """Updates the progress by a specified increment."""
+        self.progress += increment
+        self.progress = min(self.progress, self.total)
         self.refresh()
 
 
@@ -137,39 +135,53 @@ def is_number(a):
 
 
 def as_int(a):
-    """Returns value as integer if possible, otherwise returns value as is."""
+    """If possible, returns value as integer, otherwise returns value as is."""
     try:
         return int(a)
     except ValueError:
         return a
 
 
-def set_console_color(color=Fore.RESET):
-    """Sets the color in which the next line of the console is printed.
+def set_console_color(color: Fore = Fore.RESET):
+    """Sets the color in which the next line is printed.
     
     Args:
-        color (optional): must come from the Fore, Back, or Style class
-            of the colorama package. Defaults to Fore.RESET.
-            Visit the source code for more info:
-            https://github.com/tartley/colorama/blob/master/colorama/ansi.py
+        color (colorama.Fore, optional): Defaults to Fore.RESET.
+
+    Examples:
+        >>> set_console_color(Fore.RED)
+        >>> set_console_color(Fore.YELLOW)
+
+        To reset the color to default:
+
+        >>> set_console_color()
     """
     print(color, end='')
 
 
-def throw_error(*messages, err_type: str = 'error'):
-    """Handles and prints an error with additional guides and details."""
-    if messages:
+def throw_error(*paragraphs: str, err_type: str = 'error'):
+    """Handles and reprints an error with additional guides and details.
+    
+    Prints an error message with paragraphs of text separated by single
+    blank lines (double-spaced between). The first paragraph will be
+    shown beside the error type and in red if it is an error, otherwise,
+    in case of a warning for example, would be printed in yellow.
+
+    Args:
+        *paragraphs (str): 
+    """
+    if paragraphs:
         if err_type == 'error':
             set_console_color(Fore.RED)     # For errors
         else:
             set_console_color(Fore.YELLOW)  # For warnings
 
-        print(f'\n\n{err_type.upper()}: {messages[0]}')
+        print(f'\n\n{err_type.upper()}: {paragraphs[0]}')
         set_console_color()
 
-    if len(messages) > 1:
+    if len(paragraphs) > 1:
         print()
-        print(*messages[1:], sep='\n\n')
+        print(*paragraphs[1:], sep='\n\n')
 
     if err_type == 'error':
         _input('\nPress Enter to exit the program...')  # For errors
@@ -285,8 +297,8 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
                         im_width = shape.height / pil.height * pil.width
                         new_shape = slide.shapes.add_picture(
-                            img, shape.left + (shape.width - im_width) / 2, shape.top,
-                            im_width, shape.height
+                            img, shape.left + (shape.width - im_width)/2,
+                            shape.top, im_width, shape.height
                         )
 
                         old = shape._element.addnext(new_shape._element)
@@ -294,7 +306,8 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                         run.text = re.sub(pattern, '', run.text)
                         text_frame.margin_left = Inches(5.2)
                     except Exception:
-                        throw_error('Could not load the following image '
+                        throw_error(
+                            'Could not load the following image '
                            f'(Slide {i + 1}, {df["sheet"].iloc[0]}).\n{img_link[0]}',
                             'Please check your internet connection and verify that '
                             'the link leads to an image file. '
