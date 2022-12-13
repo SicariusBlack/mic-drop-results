@@ -21,7 +21,7 @@ from urllib.request import Request, urlopen
 import webbrowser
 
 import cursor
-from colorama import init, Fore, Back
+from colorama import init, Fore, Back, Style
 
 import cv2
 import pandas as pd
@@ -46,7 +46,7 @@ class _Popen(forking.Popen):
 
     def __init__(self, *args, **kw):
         if hasattr(sys, 'frozen'):
-            os.putenv('_MEIPASS2', sys._MEIPASS)
+            os.putenv('_MEIPASS2', sys._MEIPASS)  # type: ignore
         try:
             super(_Popen, self).__init__(*args, **kw)
         finally:
@@ -142,50 +142,66 @@ def as_int(a: Any) -> int | Any:
         return a
 
 
-def console_style(style: str = Fore.RESET + Back.RESET + '\033[1m') -> None:
+def console_style(style: str = Style.RESET_ALL) -> None:
     """Sets the color and style in which the next line is printed.
     
     Args:
-        color (optional): Defaults to resetting all formatting.
+        color (optional): an ANSI sequence from the Fore, Back, or Style
+            class of the colorama package.
+
+        Pass no argument to reset all formatting.
 
     Examples:
         >>> console_style(Fore.RED)
-        >>> console_style(Back.YELLOW)
+        >>> console_style(Style.BRIGHT)
 
-        To reset the color to default:
+        To reset the style to default:
 
         >>> console_style()
     """
     print(style, end='')
 
-
 class ErrorType:
-    """Contains the string constants of error types for throw_error()."""
+    """Contains the error type constants for throw_error()."""
     ERROR = 'ERROR'
     WARNING = 'WARNING'
     INFO = 'INFO'
 
 
-def throw_error(*paragraphs: str, err_type: str = ErrorType.ERROR) -> None:
+def throw_error(
+        *paragraphs: str, err_type: str = ErrorType.ERROR,
+        code: str | None = None
+    ) -> None:
     """Handles and reprints an error with additional guides and details.
     
     Prints an error message with paragraphs of extra details separated
     by single blank lines (double-spaced between). The first paragraph
-    will be shown beside the err_type and will inherit the color red
+    will be shown beside the error type and will inherit the color red
     if it is an error, otherwise, in case of a warning for example,
-    would be printed in yellow.
+    will be printed in yellow.
 
     Args:
-        *paragraphs: 
+        *paragraphs: the first paragraph should summarize the error in
+            one sentence. The rest of the paragraphs will explain what
+            causes and how to resolve the error.
+        err_type (optional): the error type taken from the ErrorType
+            class. Defaults to ErrorType.ERROR.
+        code (optional): the hexadecimal value of the error code,
+            starting from 100 counting up when labeling. Represented as
+            string.
+            Example form: '0xB342'
+        
+        Pass no argument to prompt the user to exit the program.
     """
     if paragraphs:
+        console_style(Style.BRIGHT)  # Make the error type stand out
+
         if err_type == ErrorType.ERROR:
             console_style(Fore.RED)
-            console_style(Back.YELLOW)
         elif err_type == ErrorType.WARNING:
             console_style(Fore.YELLOW)
 
-        print(f'\n\n{err_type}: {paragraphs[0]}')
+        print(f'\n\n{err_type}:{Style.NORMAL} {paragraphs[0]}')
         console_style()
 
     if len(paragraphs) > 1:
