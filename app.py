@@ -160,17 +160,13 @@ def console_style(style: str = Fore.RESET + Back.RESET + '\033[1m') -> None:
 
 
 class ErrorType:
-    """Contains the string constants of error types for throw_error().
-    
-    Consts:
-        E: 'ERROR', W: 'WARNING', I: 'INFO'
-    """
-    E = 'ERROR'
-    W = 'WARNING'
-    I = 'INFO'
+    """Contains the string constants of error types for throw_error()."""
+    ERROR = 'ERROR'
+    WARNING = 'WARNING'
+    INFO = 'INFO'
 
 
-def throw_error(*paragraphs: str, err_type: str = ErrorType.E) -> None:
+def throw_error(*paragraphs: str, err_type: str = ErrorType.ERROR) -> None:
     """Handles and reprints an error with additional guides and details.
     
     Prints an error message with paragraphs of extra details separated
@@ -183,10 +179,10 @@ def throw_error(*paragraphs: str, err_type: str = ErrorType.E) -> None:
         *paragraphs: 
     """
     if paragraphs:
-        if err_type == ErrorType.E:
+        if err_type == ErrorType.ERROR:
             console_style(Fore.RED)
             console_style(Back.YELLOW)
-        elif err_type == ErrorType.W:
+        elif err_type == ErrorType.WARNING:
             console_style(Fore.YELLOW)
 
         print(f'\n\n{err_type}: {paragraphs[0]}')
@@ -196,7 +192,7 @@ def throw_error(*paragraphs: str, err_type: str = ErrorType.E) -> None:
         print()
         print(*paragraphs[1:], sep='\n\n')
 
-    if err_type == ErrorType.E:
+    if err_type == ErrorType.ERROR:
         input_('\nPress Enter to exit the program...')
         sys.exit(1)
     else:
@@ -326,7 +322,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                             'Please check your internet connection and verify '
                             'that the link directs to an image file, which '
                             'usually ends in an image extension like .png.',
-                            err_type=ErrorType.W)
+                            err_type=ErrorType.WARNING)
 
                 # Color formatting
                 if not search_str.startswith(starts):
@@ -361,7 +357,7 @@ def get_avatar(id: str, api_token: str) -> str | None:
     except requests.exceptions.ConnectionError:
         throw_error('Unable to connect to Discord API. Please check your '
                     'internet connection and try again or disable avatar_mode '
-                    'in settings.ini.', err_type=ErrorType.W)
+                    'in settings.ini.', err_type=ErrorType.WARNING)
         return None
 
     # Try extracting the hash and return the complete link if succeed
@@ -385,7 +381,7 @@ def get_avatar(id: str, api_token: str) -> str | None:
 
         # Unknown error
         else:
-            throw_error(response.json(), err_type=ErrorType.W)
+            throw_error(response.json(), err_type=ErrorType.WARNING)
 
 
 def download_avatar(uid, avatar_path, api_token):
@@ -550,7 +546,7 @@ if __name__ == '__main__':
 
                 df[~df.iloc[:, :2].applymap(np.isreal).all(1)],
 
-                err_type=ErrorType.W
+                err_type=ErrorType.WARNING
             )
 
             continue
@@ -565,7 +561,7 @@ if __name__ == '__main__':
                 'You may exit this program and modify your data or proceed on with '
                 'these empty values substituted with 0.', SHARING_VIOLATION,
 
-                err_type=ErrorType.W
+                err_type=ErrorType.WARNING
             )
 
             df.iloc[:, :2] = df.iloc[:, :2].fillna(0)
@@ -665,7 +661,7 @@ if __name__ == '__main__':
                     uid_list, sep='\n', end='\n\n')
         elif attempt > 3:
             throw_error('Failed to download the profile pictures of the following users. Please verify that their user IDs are correct.',
-                    str(uid_list), err_type=ErrorType.W)
+                    str(uid_list), err_type=ErrorType.WARNING)
 
         pool.starmap(download_avatar, zip(uid_list,
             [avatar_path] * len(uid_list), itertools.islice(itertools.cycle(token_list), len(uid_list))))
