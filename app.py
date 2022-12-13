@@ -160,7 +160,7 @@ def console_style(style: str = Fore.RESET + Back.RESET + '\033[1m') -> None:
 
 
 class ErrorType:
-    """Contains the string constants of error types for throw_error() function.
+    """Contains the string constants of error types for throw_error().
     
     Consts:
         E: 'ERROR', W: 'WARNING', I: 'INFO'
@@ -170,7 +170,7 @@ class ErrorType:
     I = 'INFO'
 
 
-def throw_error(*paragraphs: str, err_type: ErrorType = ErrorType.E) -> None:
+def throw_error(*paragraphs: str, err_type: str = ErrorType.E) -> None:
     """Handles and reprints an error with additional guides and details.
     
     Prints an error message with paragraphs of extra details separated
@@ -180,7 +180,7 @@ def throw_error(*paragraphs: str, err_type: ErrorType = ErrorType.E) -> None:
     would be printed in yellow.
 
     Args:
-        *paragraphs (str): 
+        *paragraphs: 
     """
     if paragraphs:
         if err_type == ErrorType.E:
@@ -320,12 +320,13 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                         text_frame.margin_left = Inches(5.2)
                     except Exception:
                         throw_error(
-                            'Could not load the following image '
-                           f'(Slide {i + 1}, {df["sheet"].iloc[0]}).\n{img_link[0]}',
-                            'Please check your internet connection and verify that '
-                            'the link leads to an image file. '
-                            'It should end with an image extension like .png in most cases.',
-                            err_type='WARNING')
+                            'Could not load the following image from '
+                           f'slide {i + 1}, sheet {df["sheet"].iloc[0]}.',
+                           f'{img_link[0]}',
+                            'Please check your internet connection and verify '
+                            'that the link directs to an image file, which '
+                            'usually ends in an image extension like .png.',
+                            err_type=ErrorType.W)
 
                 # Color formatting
                 if not search_str.startswith(starts):
@@ -340,43 +341,51 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                 for ind, val in enumerate(range_list):
                     if is_number(repl) and float(repl) >= val:
                         if run_text.endswith('1'):
-                            run.font.color.rgb = RGBColor(*color_list_light[ind])
+                            run.font.color.rgb = RGBColor(*scheme_alt[ind])
                         else:
-                            run.font.color.rgb = RGBColor(*color_list[ind])
+                            run.font.color.rgb = RGBColor(*scheme[ind])
                         break
     return slide
 
 
-def get_avatar(id, api_token):
-    header = {
-        'Authorization': 'Bot ' + api_token
-    }
-
+def get_avatar(id: str, api_token: str) -> str | None:
     if not is_number(id):
         return None
 
-    link = None
-
+    # Try sending out a request to the API for the avatar's hash
     try:
+        header = {'Authorization': f'Bot {api_token}'}
         response = requests.get(
-            f'https://discord.com/api/v9/users/{id}', headers=header)
-        link = f'https://cdn.discordapp.com/avatars/{id}/{response.json()["avatar"]}'
-    except KeyError:
-        if response.json()['message'] == '401: Unauthorized':
-            throw_error('Invalid token. Please provide a new token in token.txt or '
-                        'turn off avatar_mode in config.cfg.', response.json())
+            f'https://discord.com/api/v9/users/{id}', headers=header
+        )
+    except requests.exceptions.ConnectionError:
+        throw_error('Unable to connect to Discord API. Please check your '
+                    'internet connection and try again or disable avatar_mode '
+                    'in settings.ini.', err_type=ErrorType.W)
+        return None
 
-        elif response.json()['message'] == 'You are being rate-limited by the API.':
+    # Try extracting the hash and return the complete link if succeed
+    try:
+        return 'https://cdn.discordapp.com/avatars/{}/{}' \
+               % (id, response.json()['avatar'])
+    except KeyError:
+        # Invalid token or a user account has been deleted (hypothesis)
+        if response.json()['message'] == '401: Unauthorized':
+
+            throw_error('Invalid token. Please provide a new token in '
+                        'token.txt or disable avatar_mode '
+                        'in settings.ini.', response.json())
+
+        # Retry after cooldown without throwing any errors
+        elif (response.json()['message'] ==
+            'You are being rate-limited by the API.'):
+
             time.sleep(response.json()['retry_after'])
             get_avatar(id, api_token)
 
+        # Unknown error
         else:
-            throw_error(response.json(), err_type='WARNING')
-
-    except requests.exceptions.ConnectionError:
-        throw_error('Unable to connect with the Discord API. Please check your '
-                    'internet connection and try again.', err_type='WARNING')
-    return link
+            throw_error(response.json(), err_type=ErrorType.W)
 
 
 def download_avatar(uid, avatar_path, api_token):
@@ -415,20 +424,20 @@ if __name__ == '__main__':
     # Section B: Check for missing files
     if missing := [f for f in (
 
-            'config.cfg', 'data.xlsx', 'template.pptm', 'Module1.bas', 'token.txt'
+            'settings.ini', 'data.xlsx', 'template.pptm', 'Module1.bas', 'token.txt'
 
         ) if not os.path.isfile(f)]:
         throw_error('The following files are missing. Please review the documentation for more '
                     'information regarding file requirements.', '\n'.join(missing))
 
 
-    # Section C: Load config.cfg
-    config = load(open('config.json'))
+    # Section C: Load settings.ini
+    config = load(open('settings.ini'))
 
     # Store config variables as local variables
     range_list = config['format']['ranges'][::-1]
-    color_list = config['format']['colors'][::-1]
-    color_list_light = config['format']['colors_light'][::-1]
+    scheme = config['format']['colors'][::-1]
+    scheme_alt = config['format']['colors_light'][::-1]
     starts = config['format']['starts_with']
     avatar_mode = config['avatars']
     last_clear = config['last_clear_avatar_cache']
@@ -440,8 +449,8 @@ if __name__ == '__main__':
     if not token_list and avatar_mode:
         throw_error('Please provide a valid bot token in token.txt or turn off avatar mode in config.json.')
 
-    color_list = list(map(hex_to_rgb, color_list))
-    color_list_light = list(map(hex_to_rgb, color_list_light))
+    scheme = list(map(hex_to_rgb, scheme))
+    scheme_alt = list(map(hex_to_rgb, scheme_alt))
 
 
     # Section D: Check for updates
@@ -541,7 +550,7 @@ if __name__ == '__main__':
 
                 df[~df.iloc[:, :2].applymap(np.isreal).all(1)],
 
-                err_type='warning'
+                err_type=ErrorType.W
             )
 
             continue
@@ -556,7 +565,7 @@ if __name__ == '__main__':
                 'You may exit this program and modify your data or proceed on with '
                 'these empty values substituted with 0.', SHARING_VIOLATION,
 
-                err_type='warning'
+                err_type=ErrorType.W
             )
 
             df.iloc[:, :2] = df.iloc[:, :2].fillna(0)
@@ -656,7 +665,7 @@ if __name__ == '__main__':
                     uid_list, sep='\n', end='\n\n')
         elif attempt > 3:
             throw_error('Failed to download the profile pictures of the following users. Please verify that their user IDs are correct.',
-                    str(uid_list), err_type='warning')
+                    str(uid_list), err_type=ErrorType.W)
 
         pool.starmap(download_avatar, zip(uid_list,
             [avatar_path] * len(uid_list), itertools.islice(itertools.cycle(token_list), len(uid_list))))
