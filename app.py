@@ -161,63 +161,87 @@ def console_style(style: str = Style.RESET_ALL) -> None:
     """
     print(style, end='')
 
+
 class ErrorType:
-    """Contains the error type constants for throw_error()."""
+    """Contains the error type constants."""
     ERROR = 'ERROR'
     WARNING = 'WARNING'
     INFO = 'INFO'
 
 
-def throw_error(
-        *paragraphs: str, err_type: str = ErrorType.ERROR,
-        code: str | None = None
-    ) -> None:
-    """Handles and reprints an error with additional guides and details.
+err_lookup = {
+    1: ['The following files are missing.',
+        'Please review the documentation for more information '
+        'regarding file requirements.'],
+}
+
+
+class Error:
+    def __init__(self, code: int, *details: str):
+        self.code = code
+        self.response: list[str] = err_lookup[code] + [*details]
     
-    Prints an error message with paragraphs of extra details separated
-    by single blank lines (double-spaced between). The first paragraph
-    will be shown beside the error type and will inherit the color red
-    if it is an error, otherwise, in case of a warning for example,
-    will be printed in yellow.
+    def throw(self):
+        self._print(*self.response, err_type=ErrorType.ERROR, code=self.code)
 
-    Args:
-        *paragraphs: the first paragraph should summarize the error in
-            one sentence. The rest of the paragraphs will explain what
-            causes and how to resolve the error.
-        err_type (optional): the error type taken from the ErrorType
-            class. Defaults to ErrorType.ERROR.
-        code (optional): the hexadecimal value of the error code,
-            starting from 100 counting up when labeling. Represented as
-            string.
-            Example form: '0xB342'
-        
-        Pass no argument to prompt the user to exit the program.
-    """
-    if paragraphs:
-        console_style(Style.BRIGHT)  # Make the error type stand out
-
-        if err_type == ErrorType.ERROR:
-            console_style(Fore.RED)
-        elif err_type == ErrorType.WARNING:
-            console_style(Fore.YELLOW)
-
-        print(f'\n\n{err_type}:{Style.NORMAL} {paragraphs[0]}')
-        console_style()
-
-    if len(paragraphs) > 1:
-        print()
-        print(*paragraphs[1:], sep='\n\n')
-
-    if err_type == ErrorType.ERROR:
+    def exit(self):
         input_('\nPress Enter to exit the program...')
         sys.exit(1)
-    else:
+    
+    def pause(self):
         input_('\nPress Enter to continue...')
+
+    def _print(
+            self, *paragraphs: str, err_type: str = ErrorType.ERROR,
+            code: int | None = None
+        ) -> None:
+        """Handles and reprints an error with additional guides and details.
+        
+        Prints an error message with paragraphs of extra details separated
+        by single blank lines (double-spaced between). The first paragraph
+        will be shown beside the error type and will inherit the color red
+        if it is an error, otherwise, in case of a warning for example,
+        will be printed in yellow.
+
+        Args:
+            *paragraphs: the first paragraph should summarize the error in
+                one sentence. The rest of the paragraphs will explain what
+                causes and how to resolve the error.
+            err_type (optional): the error type taken from the ErrorType
+                class. Defaults to ErrorType.ERROR.
+            code (optional): the hexadecimal value of the error code,
+                starting from 100 counting up when labeling. Represented as
+                string.
+                Example form: '0xB342'
+            
+            Pass no argument to prompt the user to exit the program.
+        """
+        code_str = f'(Traceback code: E00{code})' if code else ''
+
+        if paragraphs:
+            console_style(Style.BRIGHT)  # Make the error type stand out
+
+            if err_type == ErrorType.ERROR:
+                console_style(Fore.RED)
+            elif err_type == ErrorType.WARNING:
+                console_style(Fore.YELLOW)
+
+            print(f'\n\n{err_type}:{Style.NORMAL} {paragraphs[0]} {code_str}')
+            console_style()
+
+        if len(paragraphs) > 1:
+            print()
+            print(*paragraphs[1:], sep='\n\n')
+
+        if err_type == ErrorType.ERROR:
+            self.exit()
+        else:
+            self.pause()
 
 
 def print_exception_and_exit(exc_type, exc_value, tb) -> None:
     print_exception(exc_type, exc_value, tb)
-    throw_error()
+    Error().exit()
 
 
 def hex_to_rgb(hex_val: str) -> tuple[int, int, int]:
@@ -331,14 +355,14 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                         run.text = re.sub(pattern, '', run.text)
                         text_frame.margin_left = Inches(5.2)
                     except Exception:
-                        throw_error(
+                        Error(
                             'Could not load the following image from '
                            f'slide {i + 1}, sheet {df["sheet"].iloc[0]}.',
                            f'{img_link[0]}',
                             'Please check your internet connection and verify '
                             'that the link directs to an image file, which '
                             'usually ends in an image extension like .png.',
-                            err_type=ErrorType.WARNING)
+                            err_type=ErrorType.WARNING).throw()
 
                 # Color formatting
                 if not search_str.startswith(starts):
@@ -371,9 +395,9 @@ def get_avatar(id: str, api_token: str) -> str | None:
             f'https://discord.com/api/v9/users/{id}', headers=header
         )
     except requests.exceptions.ConnectionError:
-        throw_error('Unable to connect to Discord API. Please check your '
-                    'internet connection and try again or disable avatar_mode '
-                    'in settings.ini.', err_type=ErrorType.WARNING)
+        Error('Unable to connect to Discord API. Please check your '
+              'internet connection and try again or disable avatar_mode '
+              'in settings.ini.', err_type=ErrorType.WARNING).throw()
         return None
 
     # Try extracting the hash and return the complete link if succeed
@@ -384,9 +408,9 @@ def get_avatar(id: str, api_token: str) -> str | None:
         # Invalid token or a user account has been deleted (hypothesis)
         if response.json()['message'] == '401: Unauthorized':
 
-            throw_error('Invalid token. Please provide a new token in '
-                        'token.txt or disable avatar_mode '
-                        'in settings.ini.', response.json())
+            Error('Invalid token. Please provide a new token in '
+                  'token.txt or disable avatar_mode '
+                  'in settings.ini.', response.json()).throw()
 
         # Retry after cooldown without throwing any errors
         elif (response.json()['message'] ==
@@ -397,7 +421,7 @@ def get_avatar(id: str, api_token: str) -> str | None:
 
         # Unknown error
         else:
-            throw_error(response.json(), err_type=ErrorType.WARNING)
+            Error(response.json(), err_type=ErrorType.WARNING).throw()
 
 
 def download_avatar(uid, avatar_path, api_token):
@@ -439,8 +463,7 @@ if __name__ == '__main__':
             'settings.ini', 'data.xlsx', 'template.pptm', 'Module1.bas', 'token.txt'
 
         ) if not os.path.isfile(f)]:
-        throw_error('The following files are missing. Please review the documentation for more '
-                    'information regarding file requirements.', '\n'.join(missing))
+        Error(1, '\n'.join(missing)).throw()
 
 
     # Section C: Load settings.ini
@@ -459,7 +482,7 @@ if __name__ == '__main__':
         token_list = [i.strip() for i in token_list if len(i) > 62]
 
     if not token_list and avatar_mode:
-        throw_error('Please provide a valid bot token in token.txt or turn off avatar mode in config.json.')
+        Error('Please provide a valid bot token in token.txt or turn off avatar_mode in settings.ini.').throw()
 
     scheme = list(map(hex_to_rgb, scheme))
     scheme_alt = list(map(hex_to_rgb, scheme_alt))
@@ -556,20 +579,20 @@ if __name__ == '__main__':
 
         # Exclude sheets with first two columns where data is not numeric
         if sum(df.iloc[:, i].dtype.kind in 'biufc' for i in range(2)) < 2:
-            throw_error(f'Invalid data type. The following rows of {sheet} contain strings '
-                         'instead of the supposed numeric data type within the first two columns. '
-                         'The sheet will be excluded if you proceed on.',
+            Error(f'Invalid data type. The following rows of {sheet} contain strings '
+                   'instead of the supposed numeric data type within the first two columns. '
+                   'The sheet will be excluded if you proceed on.',
 
                 df[~df.iloc[:, :2].applymap(np.isreal).all(1)],
 
                 err_type=ErrorType.WARNING
-            )
+            ).throw()
 
             continue
 
         # Replace NaN values within the first two columns with 0
         if df.iloc[:, :2].isnull().values.any():
-            throw_error(f'The following rows of {sheet} contain empty values '
+            Error(f'The following rows of {sheet} contain empty values '
                 'within the first two columns.',
 
                 df[df.iloc[:, :2].isnull().any(axis=1)],
@@ -578,7 +601,7 @@ if __name__ == '__main__':
                 'these empty values substituted with 0.', SHARING_VIOLATION,
 
                 err_type=ErrorType.WARNING
-            )
+            ).throw()
 
             df.iloc[:, :2] = df.iloc[:, :2].fillna(0)
 
@@ -631,7 +654,7 @@ if __name__ == '__main__':
         data[sheetnames[i]] = df
 
     if not data:
-        throw_error(f'No valid sheet found in {folder_path}data.xlsx')
+        Error(f'No valid sheet found in {folder_path}data.xlsx').throw()
 
 
     # Section F: Generate PowerPoint slides
@@ -664,8 +687,8 @@ if __name__ == '__main__':
 
         for df in data.values():
             if df['uid'].dtype.kind in 'biufc':
-                throw_error('The \'uid\' column has a numeric data type instead of the supposed string data type.',
-                            'Please exit the program and add an underscore before every user ID.', SHARING_VIOLATION)
+                Error('The \'uid\' column has a numeric data type instead of the supposed string data type.',
+                      'Please exit the program and add an underscore before every user ID.', SHARING_VIOLATION).throw()
 
             uid_list += [id for id in df['uid'] if not pd.isnull(id) and not os.path.isfile(avatar_path + id.strip() + '.png')]
 
@@ -676,8 +699,8 @@ if __name__ == '__main__':
             print(f'Unable to download the profile pictures of the following users. Retrying {attempt}/3',
                     uid_list, sep='\n', end='\n\n')
         elif attempt > 3:
-            throw_error('Failed to download the profile pictures of the following users. Please verify that their user IDs are correct.',
-                    str(uid_list), err_type=ErrorType.WARNING)
+            Error('Failed to download the profile pictures of the following users. Please verify that their user IDs are correct.',
+                    str(uid_list), err_type=ErrorType.WARNING).throw()
 
         pool.starmap(download_avatar, zip(uid_list,
             [avatar_path] * len(uid_list), itertools.islice(itertools.cycle(token_list), len(uid_list))))
@@ -704,8 +727,8 @@ if __name__ == '__main__':
         except com_error as e:
             if e.hresult == -2147352567:  # type: ignore
                 # Warns the user about trust access error
-                throw_error('Please open PowerPoint, look up Trust Center Settings, '
-                            'and make sure Trust access to the VBA project object model is enabled.')
+                Error('Please open PowerPoint, look up Trust Center Settings, '
+                      'and make sure Trust access to the VBA project object model is enabled.').throw()
             else:
                 raise e
 
@@ -718,8 +741,8 @@ if __name__ == '__main__':
         # Duplicate slides
         for t in df.loc[:, 'template']:
             if as_int(t) not in range(1, slides_count + 1):
-                throw_error(f'Template {t} does not exist (error originated from the following sheet: {k}).',
-                            f'Please exit the program and modify the \'template\' column of {k}.', SHARING_VIOLATION)
+                Error(f'Template {t} does not exist (error originated from the following sheet: {k}).',
+                      f'Please exit the program and modify the \'template\' column of {k}.', SHARING_VIOLATION).throw()
 
             ppt.Run('Duplicate', t)
 
