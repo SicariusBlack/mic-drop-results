@@ -5,12 +5,9 @@ from enum import Enum
 from io import BytesIO
 import itertools
 from json import load, dump
-import math
 from multiprocessing import Pool, freeze_support
 import multiprocessing.popen_spawn_win32 as forking
-import numpy as np
 import os
-from PIL import Image
 import re
 import requests
 from signal import signal, SIGINT, SIG_IGN
@@ -24,9 +21,12 @@ import webbrowser
 
 import cursor
 from colorama import init, Fore, Style
-
 import cv2
+import numpy as np
 import pandas as pd
+from PIL import Image
+from pywintypes import com_error
+import win32com.client
 
 from pptx import Presentation
 from pptx.dml.color import RGBColor
@@ -34,9 +34,6 @@ from pptx.enum.dml import MSO_COLOR_TYPE
 from pptx.enum.shapes import MSO_SHAPE  # type: ignore
 from pptx.slide import Slide
 from pptx.util import Inches
-
-from pywintypes import com_error
-import win32com.client
 
 
 class _Popen(forking.Popen):
@@ -165,9 +162,9 @@ def console_style(style: str = Style.RESET_ALL) -> None:
 
 
 class ErrorType(Enum):
-    ERROR = 'ERROR'
-    WARNING = 'WARNING'
-    INFO = 'INFO'
+    ERROR = 1
+    WARNING = 2
+    INFO = 3
 
 
 class Traceback:
@@ -239,42 +236,45 @@ class Error(Traceback):
         self.tb = tb
         self.tb_code = self.get_code()
 
-        self.body: list[str] = super().lookup(tb)
+        # Look up content with traceback ID
+        self.content: list[str] = super().lookup(tb)
 
     def get_code(self) -> str:
-        # Limitation: Traceback ID variations can only be from 0 up to 99.
-        # No multiple of 10 allowed (10, 20, 30, and so on).
-        decimal, whole = [round(a, 2) for a in math.modf(self.tb)]
+        whole, decimal = int(self.tb), round(self.tb%1, 7)
 
-        whole = str(int(whole)).zfill(3)
-        return (f'E{whole}' if decimal == 0 else
-                f'E{whole}.{str(decimal).split(".")[1]}')
+        whole = str(whole).zfill(3)
+        decimal = str(decimal).replace('.', '')
+
+        return (f'E{whole}' if int(decimal) == 0 else
+                f'E{whole}.{decimal}')
 
     def throw(
             self, *details: str, err_type: ErrorType = ErrorType.ERROR
         ) -> None:
-        self.body += [*details]
-        self._print(*self.body, err_type=err_type)
+        self.content += [*details]
+        self._print(*self.content, err_type=err_type)
 
     def _print(
-            self, *paragraphs: str,  err_type: ErrorType = ErrorType.ERROR
+            self, *content: str,  err_type: ErrorType = ErrorType.ERROR
         ) -> None:
         """Handles and reprints an error with human-readable details.
 
-        Prints an error message with paragraphs explaining the error in
-        detail separated by single blank lines (double-spaced between).
+        Prints an error message with paragraphs explaining the error
+        and double-spaced between paragraphs.
+
         The first paragraph will be shown beside the error type and will
-        inherit the color red if it is an error, otherwise, in case of a
-        warning for example, will be printed in yellow.
+        inherit the color red if it is an error, the color yellow if it
+        is a warning, and the default color if it is an info message.
 
         Args:
-            *paragraphs: the first paragraph should summarize the error
+            *content: every argument makes a paragraph of the error
+                message. The first paragraph should summarize the error
                 in one sentence. The rest of the paragraphs will explain
                 what causes and how to resolve the error.
             err_type (optional): the error type taken from the ErrorType
                 class. Defaults to ErrorType.ERROR.
         """
-        if paragraphs:
+        if content:
             console_style(Style.BRIGHT)  # Make the error type stand out
 
             if err_type == ErrorType.ERROR:
@@ -282,13 +282,13 @@ class Error(Traceback):
             elif err_type == ErrorType.WARNING:
                 console_style(Fore.YELLOW)
 
-            print(f'\n\n{err_type}:{Style.NORMAL} {paragraphs[0]} '
+            print(f'\n\n{err_type.name}:{Style.NORMAL} {content[0]} '
                   f'(Traceback code: {self.tb_code})')
             console_style()
 
-        if len(paragraphs) > 1:
+        if len(content) > 1:
             print()
-            print(*paragraphs[1:], sep='\n\n')
+            print(*content[1:], sep='\n\n')
 
         if err_type == ErrorType.ERROR:
             input_('\nPress Enter to exit the program...')
@@ -363,7 +363,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
                     if is_number(effect):
                         img = cv2.imread(og_path)
-                        match effect:
+                        match effect:  # TODO: Add more effects in the future
                             case 1:
                                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -461,6 +461,7 @@ def get_avatar(id: str, api_token: str) -> str | None:
                % (id, response.json()['avatar'])
     except KeyError:
         # Invalid token or a user account has been deleted (hypothesis)
+        # TODO: Test out the hypothesis
         if response.json()['message'].lower().contains('unauthorized'):
             Error(21.1).throw(api_token, response.json())
 
@@ -775,7 +776,7 @@ if __name__ == '__main__':
             ppt.VBE.ActiveVBProject.VBComponents.Import(f'{folder_path}Module1.bas')
         except com_error as e:
             if e.hresult == -2147352567:  # type: ignore
-                # Notify user to enable trust access settings
+            # Trust access settings not yet enabled
                 Error(41).throw()
             else:
                 raise e
