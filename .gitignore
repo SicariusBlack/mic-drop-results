@@ -3,10 +3,9 @@ __pycache__/
 *$py.class
 
 build/
-sample/
+templates/
 output/
 avatars/
-releases/
 *.xlsx
 *.pptm
 token.txt
