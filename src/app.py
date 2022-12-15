@@ -141,6 +141,24 @@ def as_int(a: Any) -> int | Any:
         return a
 
 
+def input_(*args, **kwargs):  # TODO: Add docstring and optimize code
+    # Enable QuickEdit, thus allowing the user to copy the error message
+    kernel32 = windll.kernel32
+    kernel32.SetConsoleMode(
+        kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
+    cursor.show()
+
+    print(*args, **kwargs, end='')
+    i = input()
+
+    # Disable QuickEdit and Insert mode
+    kernel32.SetConsoleMode(
+        kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
+    cursor.hide()
+
+    return i
+
+
 def console_style(style: str = Style.RESET_ALL) -> None:
     """Sets the color and style in which the next line is printed.
     
@@ -212,10 +230,11 @@ class Traceback:
             'regarding file requirements.'
         ],
         41: [
-            'Failed to import VBA module due to trust access settings.',
-            'Please open PowerPoint, look up Trust Center Settings, '
-            'and make sure "Trust access to the VBA project object '
-            'model" is enabled.'
+            'Failed to import VBA macro due to trust access settings.',
+            'Please open PowerPoint, navigate to:\n'
+            'File > Options > Trust Center > Trust Center Settings '
+            '> Macro Settings, and make sure "Trust access to the VBA '
+            'project object model" is enabled.'
         ],
     }
 
@@ -245,8 +264,9 @@ class Error(Traceback):
         whole = str(whole).zfill(3)
         decimal = str(decimal).replace('.', '')
 
-        return (f'E{whole}' if int(decimal) == 0 else
-                f'E{whole}.{decimal}')
+        code = (whole if int(decimal) == 0 else
+                '{}.{}'.format(whole, int(decimal)))
+        return f'E-{code}'
 
     def throw(
             self, *details: str, err_type: ErrorType = ErrorType.ERROR
@@ -303,24 +323,6 @@ def print_exception_and_exit(exc_type, exc_value, tb) -> None:
 
 def hex_to_rgb(hex_val: str) -> tuple[int, int, int]:
     return tuple(int(hex_val.lstrip('#')[i : i+2], 16) for i in (0, 2, 4))
-
-
-def input_(*args, **kwargs):
-    # Enable QuickEdit, thus allowing the user to copy the error message
-    kernel32 = windll.kernel32
-    kernel32.SetConsoleMode(
-        kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
-    cursor.show()
-
-    print(*args, **kwargs, end='')
-    i = input()
-
-    # Disable QuickEdit and Insert mode
-    kernel32.SetConsoleMode(
-        kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
-    cursor.hide()
-
-    return i
 
 
 def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
@@ -459,20 +461,18 @@ def get_avatar(id: str, api_token: str) -> str | None:
     try:
         return 'https://cdn.discordapp.com/avatars/{}/{}' \
                % (id, response.json()['avatar'])
-    except KeyError:
+    except KeyError as e:
         # Invalid token or a user account has been deleted (hypothesis)
         # TODO: Test out the hypothesis
         if response.json()['message'].lower().contains('unauthorized'):
             Error(21.1).throw(api_token, response.json())
 
-        # Retry after cooldown without throwing any errors
         elif (response.json()['message'].lower().contains('rate-limit')):
             time.sleep(response.json()['retry_after'])
             get_avatar(id, api_token)
 
-        # Unknown error
         else:
-            Error(22).throw(response.json())
+            raise response.json() from e
 
 
 def download_avatar(uid, avatar_path, api_token):
