@@ -1,10 +1,11 @@
 # Setup Guides for Developers
 
-## Interpreter
-Python: 3.11.1
+## System information [not a requisite]
+- Python version: 3.11.1
+- OS: Windows 11 (64-bit operating system, x64-based processor)
 
 ## Setting up virtual environment
-[Please skip to the *Too complicated?* section if you do not want to go into details.](#too-complicated)
+[Please skip to the this section if you do not want to go into details.](#too-complicated)
 
 ### Creating venv
 Open terminal in your preferred location to set up a virtual environment and run the following commands:
@@ -19,7 +20,7 @@ python -m venv <venv_name>
 We will call the `<venv_name>` **mic-drop-results** from now on, since we are creating a venv for this program.
 
 ### Installing dependencies
-Then, navigate to `.\mic-drop-results\Scripts` and paste **requirements.txt** here. Make sure you are now in the `Scripts` folder, run the following command to switch to venv and install all dependencies:
+Then, navigate to `.\mic-drop-results\Scripts` and paste the [**requirements.txt**](requirements.txt) file here. Make sure you are now in the `Scripts` folder, run the following command to switch to venv and install all dependencies:
 
 ```
 .\activate
