@@ -4,6 +4,7 @@ from ctypes import windll
 from io import BytesIO
 import itertools
 from json import load, dump
+import math
 from multiprocessing import Pool, freeze_support
 import multiprocessing.popen_spawn_win32 as forking
 import numpy as np
@@ -16,12 +17,12 @@ from subprocess import run, DEVNULL
 import sys
 import time
 from typing import Any
-from traceback import print_exception
+from traceback import format_exception
 from urllib.request import Request, urlopen
 import webbrowser
 
 import cursor
-from colorama import init, Fore, Back, Style
+from colorama import init, Fore, Style
 
 import cv2
 import pandas as pd
@@ -163,85 +164,136 @@ def console_style(style: str = Style.RESET_ALL) -> None:
 
 
 class ErrorType:
-    """Contains the error type constants."""
     ERROR = 'ERROR'
     WARNING = 'WARNING'
     INFO = 'INFO'
 
+    _err_lookup = {
+        # 0 – 19: Dev-only errors
+        0: [
+            'Unhandled error.',
+            'Please take a screenshot of everything displayed below '
+            'when filling out a bug report. Thank you for your '
+            'patience in getting the issue resolved.'
+        ],
+        1: [
+            'Traceback ID lookup error.',
+            'Failed to fetch info from the following traceback ID.'
+        ],
 
-err_lookup = {
-    1: ['The following files are missing.',
-        'Please review the documentation for more information '
-        'regarding file requirements.'],
-}
+        # 20 – 39: API errors
+        20: [
+            'Failed to communicate with the Discord API.',
+            'We are unable to download profile pictures at the moment. '
+            'Please check your internet connection and try again.'
+        ],
+        21: [
+            'No valid API token found.',
+            'Please add a bot token in token.txt or disable '
+            'avatar_mode in settings.ini.'
+        ],
+        21.1: [
+            'Unable to fetch data using the following API token.',
+            'Please replace this bot token with a new valid one in '
+            'token.txt or disable avatar_mode in settings.ini.'
+        ],
+        22: [
+            'Unknown API error.'
+        ],
+        23: [
+            'Failed to download profile pictures of the following IDs.',
+            'Please check if these user IDs are valid.'
+        ],
+
+        # 40 and above: Program errors
+        40: [
+            'The following files are missing.',
+            'Please review the documentation for more information '
+            'regarding file requirements.'
+        ],
+        41: [
+            'Failed to import VBA module due to trust access settings.',
+            'Please open PowerPoint, look up Trust Center Settings, '
+            'and make sure "Trust access to the VBA project object '
+            'model" is enabled.'
+        ],
+    }
+
+    def lookup(self, tb: float) -> list[str]:
+        try:
+            return self._err_lookup[tb]
+        except KeyError:
+            tb_list = [i for i in self._err_lookup if abs(tb - i) < 2]
+            Error(1).throw(
+                str(tb),
+                f'Perhaps you are looking for: {tb_list}',
+            )
+            return []
 
 
-class Error:
-    def __init__(self, code: int, *details: str):
-        self.code = code
-        self.response: list[str] = err_lookup[code] + [*details]
-    
-    def throw(self):
-        self._print(*self.response, err_type=ErrorType.ERROR, code=self.code)
+class Error(ErrorType):
+    def __init__(self, tb: float):
+        self.tb = tb
+        self.tb_code = self.get_code()
 
-    def exit(self):
-        input_('\nPress Enter to exit the program...')
-        sys.exit(1)
-    
-    def pause(self):
-        input_('\nPress Enter to continue...')
+        self.body: list[str] = super().lookup(tb)
+
+    def get_code(self) -> str:
+        # Limitation: Traceback ID variations can only be from 0 up to 99.
+        # No multiple of 10 allowed (10, 20, 30, and so on).
+        decimal, whole = [round(a, 2) for a in math.modf(self.tb)]
+
+        whole = str(int(whole)).zfill(3)
+        return (f'E{whole}' if decimal == 0 else
+                f'E{whole}.{str(decimal).split(".")[1]}')
+
+    def throw(self, *details: str, err_type: str = ErrorType.ERROR) -> None:  # TODO: Find a way to put self inside param list
+        self.body += [*details]
+        self._print(*self.body, err_type=err_type)
 
     def _print(
-            self, *paragraphs: str, err_type: str = ErrorType.ERROR,
-            code: int | None = None
+            self, *paragraphs: str,  err_type: str = ErrorType.ERROR  # TODO: Find a way to put self inside param list
         ) -> None:
-        """Handles and reprints an error with additional guides and details.
-        
-        Prints an error message with paragraphs of extra details separated
-        by single blank lines (double-spaced between). The first paragraph
-        will be shown beside the error type and will inherit the color red
-        if it is an error, otherwise, in case of a warning for example,
-        will be printed in yellow.
+        """Handles and reprints an error with human-readable details.
+
+        Prints an error message with paragraphs explaining the error in
+        detail separated by single blank lines (double-spaced between).
+        The first paragraph will be shown beside the error type and will
+        inherit the color red if it is an error, otherwise, in case of a
+        warning for example, will be printed in yellow.
 
         Args:
-            *paragraphs: the first paragraph should summarize the error in
-                one sentence. The rest of the paragraphs will explain what
-                causes and how to resolve the error.
+            *paragraphs: the first paragraph should summarize the error
+                in one sentence. The rest of the paragraphs will explain
+                what causes and how to resolve the error.
             err_type (optional): the error type taken from the ErrorType
                 class. Defaults to ErrorType.ERROR.
-            code (optional): the hexadecimal value of the error code,
-                starting from 100 counting up when labeling. Represented as
-                string.
-                Example form: '0xB342'
-            
-            Pass no argument to prompt the user to exit the program.
         """
-        code_str = f'(Traceback code: E00{code})' if code else ''
-
         if paragraphs:
             console_style(Style.BRIGHT)  # Make the error type stand out
 
-            if err_type == ErrorType.ERROR:
+            if err_type == super().ERROR:
                 console_style(Fore.RED)
-            elif err_type == ErrorType.WARNING:
+            elif err_type == super().WARNING:
                 console_style(Fore.YELLOW)
 
-            print(f'\n\n{err_type}:{Style.NORMAL} {paragraphs[0]} {code_str}')
+            print(f'\n\n{err_type}:{Style.NORMAL} {paragraphs[0]} '
+                  f'(Traceback code: {self.tb_code})')
             console_style()
 
         if len(paragraphs) > 1:
             print()
             print(*paragraphs[1:], sep='\n\n')
 
-        if err_type == ErrorType.ERROR:
-            self.exit()
+        if err_type == super().ERROR:
+            input_('\nPress Enter to exit the program...')
+            sys.exit(1)
         else:
-            self.pause()
+            input_('\nPress Enter to continue...')
 
 
 def print_exception_and_exit(exc_type, exc_value, tb) -> None:
-    print_exception(exc_type, exc_value, tb)
-    Error().exit()
+    Error(0).throw(''.join(format_exception(exc_type, exc_value, tb))[:-1])
 
 
 def hex_to_rgb(hex_val: str) -> tuple[int, int, int]:
@@ -395,9 +447,7 @@ def get_avatar(id: str, api_token: str) -> str | None:
             f'https://discord.com/api/v9/users/{id}', headers=header
         )
     except requests.exceptions.ConnectionError:
-        Error('Unable to connect to Discord API. Please check your '
-              'internet connection and try again or disable avatar_mode '
-              'in settings.ini.', err_type=ErrorType.WARNING).throw()
+        Error(20).throw(err_type=ErrorType.WARNING)
         return None
 
     # Try extracting the hash and return the complete link if succeed
@@ -406,22 +456,17 @@ def get_avatar(id: str, api_token: str) -> str | None:
                % (id, response.json()['avatar'])
     except KeyError:
         # Invalid token or a user account has been deleted (hypothesis)
-        if response.json()['message'] == '401: Unauthorized':
-
-            Error('Invalid token. Please provide a new token in '
-                  'token.txt or disable avatar_mode '
-                  'in settings.ini.', response.json()).throw()
+        if response.json()['message'].lower().contains('unauthorized'):
+            Error(21.1).throw(api_token, response.json())
 
         # Retry after cooldown without throwing any errors
-        elif (response.json()['message'] ==
-            'You are being rate-limited by the API.'):
-
+        elif (response.json()['message'].lower().contains('rate-limit')):
             time.sleep(response.json()['retry_after'])
             get_avatar(id, api_token)
 
         # Unknown error
         else:
-            Error(response.json(), err_type=ErrorType.WARNING).throw()
+            Error(22).throw(response.json())
 
 
 def download_avatar(uid, avatar_path, api_token):
@@ -463,7 +508,7 @@ if __name__ == '__main__':
             'settings.ini', 'data.xlsx', 'template.pptm', 'Module1.bas', 'token.txt'
 
         ) if not os.path.isfile(f)]:
-        Error(1, '\n'.join(missing)).throw()
+        Error(40).throw('\n'.join(missing))
 
 
     # Section C: Load settings.ini
@@ -482,7 +527,7 @@ if __name__ == '__main__':
         token_list = [i.strip() for i in token_list if len(i) > 62]
 
     if not token_list and avatar_mode:
-        Error('Please provide a valid bot token in token.txt or turn off avatar_mode in settings.ini.').throw()
+        Error(21).throw()
 
     scheme = list(map(hex_to_rgb, scheme))
     scheme_alt = list(map(hex_to_rgb, scheme_alt))
@@ -699,8 +744,7 @@ if __name__ == '__main__':
             print(f'Unable to download the profile pictures of the following users. Retrying {attempt}/3',
                     uid_list, sep='\n', end='\n\n')
         elif attempt > 3:
-            Error('Failed to download the profile pictures of the following users. Please verify that their user IDs are correct.',
-                    str(uid_list), err_type=ErrorType.WARNING).throw()
+            Error(23).throw(str(uid_list), err_type=ErrorType.WARNING)
 
         pool.starmap(download_avatar, zip(uid_list,
             [avatar_path] * len(uid_list), itertools.islice(itertools.cycle(token_list), len(uid_list))))
@@ -726,9 +770,8 @@ if __name__ == '__main__':
             ppt.VBE.ActiveVBProject.VBComponents.Import(f'{folder_path}Module1.bas')
         except com_error as e:
             if e.hresult == -2147352567:  # type: ignore
-                # Warns the user about trust access error
-                Error('Please open PowerPoint, look up Trust Center Settings, '
-                      'and make sure Trust access to the VBA project object model is enabled.').throw()
+                # Notify user to enable trust access settings
+                Error(41).throw()
             else:
                 raise e
 
