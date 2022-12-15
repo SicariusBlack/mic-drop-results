@@ -5,7 +5,7 @@
 - OS: Windows 11 (64-bit operating system, x64-based processor)
 
 ## Setting up virtual environment
-[Please skip to the this section if you do not want to go into details.](#too-complicated)
+[Please skip to the **Too complicated?** section if you do not want to go into details.](#too-complicated)
 
 ### Creating venv
 Open terminal in your preferred location to set up a virtual environment and run the following commands:
