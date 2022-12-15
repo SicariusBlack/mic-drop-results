@@ -1,6 +1,7 @@
 import configparser
 import contextlib
 from ctypes import windll
+from enum import Enum
 from io import BytesIO
 import itertools
 from json import load, dump
@@ -163,13 +164,15 @@ def console_style(style: str = Style.RESET_ALL) -> None:
     print(style, end='')
 
 
-class ErrorType:
+class ErrorType(Enum):
     ERROR = 'ERROR'
     WARNING = 'WARNING'
     INFO = 'INFO'
 
+
+class Traceback:
     _err_lookup = {
-        # 0 – 19: Dev-only errors
+    # 0 – 19: Dev-only errors
         0: [
             'Unhandled error.',
             'Please take a screenshot of everything displayed below '
@@ -181,7 +184,7 @@ class ErrorType:
             'Failed to fetch info from the following traceback ID.'
         ],
 
-        # 20 – 39: API errors
+    # 20 – 39: API errors
         20: [
             'Failed to communicate with the Discord API.',
             'We are unable to download profile pictures at the moment. '
@@ -205,7 +208,7 @@ class ErrorType:
             'Please check if these user IDs are valid.'
         ],
 
-        # 40 and above: Program errors
+    # 40 and above: Program errors
         40: [
             'The following files are missing.',
             'Please review the documentation for more information '
@@ -231,7 +234,7 @@ class ErrorType:
             return []
 
 
-class Error(ErrorType):
+class Error(Traceback):
     def __init__(self, tb: float):
         self.tb = tb
         self.tb_code = self.get_code()
@@ -247,12 +250,14 @@ class Error(ErrorType):
         return (f'E{whole}' if decimal == 0 else
                 f'E{whole}.{str(decimal).split(".")[1]}')
 
-    def throw(self, *details: str, err_type: str = ErrorType.ERROR) -> None:  # TODO: Find a way to put self inside param list
+    def throw(
+            self, *details: str, err_type: ErrorType = ErrorType.ERROR
+        ) -> None:
         self.body += [*details]
         self._print(*self.body, err_type=err_type)
 
     def _print(
-            self, *paragraphs: str,  err_type: str = ErrorType.ERROR  # TODO: Find a way to put self inside param list
+            self, *paragraphs: str,  err_type: ErrorType = ErrorType.ERROR
         ) -> None:
         """Handles and reprints an error with human-readable details.
 
@@ -272,9 +277,9 @@ class Error(ErrorType):
         if paragraphs:
             console_style(Style.BRIGHT)  # Make the error type stand out
 
-            if err_type == super().ERROR:
+            if err_type == ErrorType.ERROR:
                 console_style(Fore.RED)
-            elif err_type == super().WARNING:
+            elif err_type == ErrorType.WARNING:
                 console_style(Fore.YELLOW)
 
             print(f'\n\n{err_type}:{Style.NORMAL} {paragraphs[0]} '
@@ -285,7 +290,7 @@ class Error(ErrorType):
             print()
             print(*paragraphs[1:], sep='\n\n')
 
-        if err_type == super().ERROR:
+        if err_type == ErrorType.ERROR:
             input_('\nPress Enter to exit the program...')
             sys.exit(1)
         else:
