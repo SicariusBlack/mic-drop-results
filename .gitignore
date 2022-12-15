@@ -1,9 +1,7 @@
-# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Repo-exclusive
 build/
 sample/
 output/
@@ -11,6 +9,4 @@ avatars/
 releases/
 *.xlsx
 *.pptm
-response.json
-markdown.py
 token.txt
