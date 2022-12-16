@@ -8,17 +8,17 @@
 
 <h2 align="center">Installation</h2>
 
-To install, please visit the [latest release](https://github.com/banz04/mic-drop-results/releases/), download, and extract [**mic-drop-results.zip**](https://github.com/banz04/mic-drop-results/releases/latest/download/mic-drop-results.zip). Round-dependent files are included in [`/sample`](./sample)
+To install, please visit the [latest release](https://github.com/banz04/mic-drop-results/releases/), download, and extract [**mic-drop-results.zip**](https://github.com/banz04/mic-drop-results/releases/latest/download/mic-drop-results.zip).
 
 
 <h2 align="center">Showcase</h2>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/assets/showcase/1.png"><img src=".github/assets/showcase/1.png" width=380></a>
-  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/assets/showcase/2.png"><img src=".github/assets/showcase/2.png" width=380></a>
-  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/assets/showcase/3.png"><img src=".github/assets/showcase/3.png" width=380></a>
-  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/assets/showcase/4.png"><img src=".github/assets/showcase/4.png" width=380></a>
-  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/assets/showcase/5.png"><img src=".github/assets/showcase/5.png" width=380></a>
+  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/README/assets/1.png"><img src=".github/README/assets/1.png" width=380></a>
+  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/README/assets/2.png"><img src=".github/README/assets/2.png" width=380></a>
+  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/README/assets/3.png"><img src=".github/README/assets/3.png" width=380></a>
+  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/README/assets/4.png"><img src=".github/README/assets/4.png" width=380></a>
+  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/README/assets/5.png"><img src=".github/README/assets/5.png" width=380></a>
 </p>
 
 
