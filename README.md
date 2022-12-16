@@ -8,6 +8,9 @@
 
 <h2 align="center">Installation</h2>
 
+> **Note**<br>
+> This section is solely a placeholder for the time being. More instructions will be added later.
+
 To install, please visit the [latest release](https://github.com/banz04/mic-drop-results/releases/), download, and extract [**mic-drop-results.zip**](https://github.com/banz04/mic-drop-results/releases/latest/download/mic-drop-results.zip).
 
 
