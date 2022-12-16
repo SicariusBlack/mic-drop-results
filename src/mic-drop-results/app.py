@@ -6,7 +6,6 @@ from io import BytesIO
 import itertools
 from json import load, dump
 from multiprocessing import Pool, freeze_support
-import multiprocessing.popen_spawn_win32 as forking
 import os
 import re
 import requests
@@ -34,29 +33,6 @@ from pptx.enum.dml import MSO_COLOR_TYPE
 from pptx.enum.shapes import MSO_SHAPE  # type: ignore
 from pptx.slide import Slide
 from pptx.util import Inches, lazyproperty
-
-
-class _Popen(forking.Popen):
-    """Makes multiprocessing compatible with pyinstaller.
-
-    Source:
-    https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing
-    """
-
-    def __init__(self, *args, **kw):
-        if hasattr(sys, 'frozen'):
-            os.putenv('_MEIPASS2', sys._MEIPASS)  # type: ignore
-        try:
-            super(_Popen, self).__init__(*args, **kw)
-        finally:
-            if hasattr(sys, 'frozen'):
-                if hasattr(os, 'unsetenv'):
-                    os.unsetenv('_MEIPASS2')
-                else:
-                    os.putenv('_MEIPASS2', '')
-
-
-forking.Popen = _Popen
 
 
 class ProgressBar:
@@ -357,8 +333,8 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
                     uid = str(df['uid'].iloc[i]).strip().replace('_', '')
 
-                    og_path = avatar_path + '_' + uid + '.png'
-                    img_path = avatar_path + str(effect) + '_' + uid + '.png'
+                    og_path = avatar_dir + '_' + uid + '.png'
+                    img_path = avatar_dir + str(effect) + '_' + uid + '.png'
 
                     if not os.path.isfile(og_path):
                         continue
@@ -475,9 +451,9 @@ def get_avatar(id: str, api_token: str) -> str | None:
             raise response.json() from e
 
 
-def download_avatar(uid, avatar_path, api_token):
+def download_avatar(uid, avatar_dir, api_token):
     uid = uid.strip().replace('_', '')
-    img_path = avatar_path + '_' + uid.strip() + '.png'
+    img_path = avatar_dir + '_' + uid.strip() + '.png'
 
     # Load image from link
     avatar_url = get_avatar(uid, api_token)
@@ -508,16 +484,20 @@ if __name__ == '__main__':
     cursor.hide()                               # Hide cursor
 
 
-    # Section B: Check for missing files
+    # Section B: Get current directories and files
+    app_dir = os.path.dirname(os.path.realpath(__file__)) + '\\'
+    output_dir = app_dir + 'output\\'
+    avatar_dir = app_dir + 'avatars\\'
+
     if missing := [f for f in (
 
             'settings.ini', 'data.xlsx', 'template.pptm', 'Module1.bas', 'token.txt'
 
-        ) if not os.path.isfile(f)]:
-        Error(40).throw('\n'.join(missing))
+        ) if not os.path.exists(app_dir + f)]:
+        Error(40).throw(app_dir, '\n'.join(missing))
 
 
-    # Section C: Load settings.ini
+    # Section C: Load user configurations
     config = load(open('settings.ini'))
 
     # Store config variables as local variables
@@ -591,10 +571,6 @@ if __name__ == '__main__':
 
 
     # Section E: Process the data
-    folder_path = os.getcwd() + '\\'
-    output_path = folder_path + 'output\\'
-    avatar_path = folder_path + 'avatars\\'
-
     xls = pd.ExcelFile('data.xlsx')
 
     sheetnames_raw = xls.sheet_names
@@ -705,7 +681,7 @@ if __name__ == '__main__':
         data[sheetnames[i]] = df
 
     if not data:
-        Error(f'No valid sheet found in {folder_path}data.xlsx').throw()
+        Error(f'No valid sheet found in {app_dir}data.xlsx').throw()
 
 
     # Section F: Generate PowerPoint slides
@@ -716,12 +692,12 @@ if __name__ == '__main__':
     run('TASKKILL /F /IM powerpnt.exe', stdout=DEVNULL, stderr=DEVNULL)
 
     # Open template presentation
-    os.makedirs(output_path, exist_ok=True)
-    os.makedirs(avatar_path, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(avatar_dir, exist_ok=True)
 
     # Clear cache
     if time.time() - last_clear > 1800:  # Clears every hour
-        for f in os.scandir(avatar_path):
+        for f in os.scandir(avatar_dir):
             os.unlink(f)
 
         # Update last clear time
@@ -741,7 +717,7 @@ if __name__ == '__main__':
                 Error('The \'uid\' column has a numeric data type instead of the supposed string data type.',
                       'Please exit the program and add an underscore before every user ID.', SHARING_VIOLATION).throw()
 
-            uid_list += [id for id in df['uid'] if not pd.isnull(id) and not os.path.isfile(avatar_path + id.strip() + '.png')]
+            uid_list += [id for id in df['uid'] if not pd.isnull(id) and not os.path.isfile(avatar_dir + id.strip() + '.png')]
 
         if len(uid_list) == 0:
             break
@@ -753,7 +729,7 @@ if __name__ == '__main__':
             Error(23).throw(str(uid_list), err_type=ErrorType.WARNING)
 
         pool.starmap(download_avatar, zip(uid_list,
-            [avatar_path] * len(uid_list), itertools.islice(itertools.cycle(token_list), len(uid_list))))
+            [avatar_dir] * len(uid_list), itertools.islice(itertools.cycle(token_list), len(uid_list))))
 
         attempt += 1
 
@@ -766,14 +742,14 @@ if __name__ == '__main__':
         # Open template presentation
         bar.set_description('Opening template.pptm')
         ppt = win32com.client.Dispatch('PowerPoint.Application')
-        ppt.Presentations.Open(f'{folder_path}template.pptm')
+        ppt.Presentations.Open(f'{app_dir}template.pptm')
         bar.add()
 
         # Import macros
         bar.set_description('Importing macros')
 
         try:
-            ppt.VBE.ActiveVBProject.VBComponents.Import(f'{folder_path}Module1.bas')
+            ppt.VBE.ActiveVBProject.VBComponents.Import(f'{app_dir}Module1.bas')
         except com_error as e:
             if e.hresult == -2147352567:  # type: ignore
             # Trust access settings not yet enabled
@@ -805,7 +781,7 @@ if __name__ == '__main__':
         bar.set_description('Saving templates')
         output_filename = f'{k}.pptx'
 
-        ppt.Run('SaveAs', f'{output_path}{output_filename}')
+        ppt.Run('SaveAs', f'{output_dir}{output_filename}')
         bar.add()
 
         run('TASKKILL /F /IM powerpnt.exe', stdout=DEVNULL, stderr=DEVNULL)
@@ -813,24 +789,24 @@ if __name__ == '__main__':
 
         # Replace text
         bar.set_description('Filling in judging data')
-        prs = Presentation(output_path + output_filename)
+        prs = Presentation(output_dir + output_filename)
 
         for i, slide in enumerate(prs.slides):
             replace_text(slide, df, i, avatar_mode)
         bar.add()
 
         # Save
-        bar.set_description(f'Saving as {output_path + output_filename}')
-        prs.save(output_path + output_filename)
+        bar.set_description(f'Saving as {output_dir + output_filename}')
+        prs.save(output_dir + output_filename)
         bar.add()
 
 
     # Section G: Launch the file
-    print(f'\nExported to {output_path}')
+    print(f'\nExported to {output_dir}')
 
     # Enable QuickEdit
     kernel32.SetConsoleMode(
         kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
 
     input_('Press Enter to open the output folder...')
-    os.startfile(output_path)
+    os.startfile(output_dir)
