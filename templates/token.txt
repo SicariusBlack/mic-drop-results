@@ -1,0 +1,34 @@
+"YOUR_TOKEN_1"
+"YOUR_TOKEN_2"
+"..."
+
+
+HOW TO GET YOUR TOKENS
+-------
+Follow the steps from the link below to get your API
+  token(s). It is important not to invite the bot to
+  any server or post your bot token online.
+
+https://mee6.xyz/tutorials/how-to-generate-a-custom-bot-token
+
+This token will be used to access Discord API for
+  user avatars. You can insert multiple tokens to
+  avoid getting rate-limited.
+
+Every application cannot have more than one bot; to
+  get multiple tokens, you must therefore create
+  multiple applications.
+
+
+HOW THIS FILE WORKS
+-------
+The program will go through every line in this file,
+  when it meets a line with more than 62 characters,
+  it will recognize such line as a token.
+
+Understanding the mechanism, you could now paste the
+  tokens inside the pairs of quotation marks, remove
+  or add similar lines if you must.
+
+You may disable avatar_mode in settings.ini if you
+  do not want to use this feature.
