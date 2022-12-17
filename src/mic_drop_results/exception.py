@@ -4,7 +4,7 @@ from traceback import format_exception
 
 from colorama import Fore, Style
 
-from mic_drop_results.utils import inp, console_style
+from utils import inp, console_style
 
 
 class ErrorType(Enum):

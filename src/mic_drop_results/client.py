@@ -6,8 +6,8 @@ from urllib.request import Request, urlopen
 import cv2
 import numpy as np
 
-from mic_drop_results.exception import Error, ErrorType
-from mic_drop_results.utils import is_number
+from exception import Error, ErrorType
+from utils import is_number
 
 
 # Section A: GitHub API
