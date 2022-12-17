@@ -1,7 +1,6 @@
 import configparser
 import contextlib
 from ctypes import windll
-from enum import Enum, auto
 from io import BytesIO
 import itertools
 from json import load, dump
@@ -13,9 +12,6 @@ from signal import signal, SIGINT, SIG_IGN
 from subprocess import run, DEVNULL
 import sys
 import time
-from typing import Any
-from traceback import format_exception
-from urllib.request import Request, urlopen
 import webbrowser
 
 import cursor
@@ -34,271 +30,11 @@ from pptx.enum.shapes import MSO_SHAPE  # type: ignore
 from pptx.slide import Slide
 from pptx.util import Inches, lazyproperty
 
-
-class ProgressBar:
-    """Creates and prints a progress bar.
-
-    Attributes:
-        progress: number of work done. Updates via the add() method.
-        total: number of work to perform.
-        title: title shown to the left of the progress bar.
-        max_title_length: length of the longest title to ensure left
-            alignment of the progress bars when there are more than
-            one bar.
-        bar_length: length of the progress bar in characters.
-        desc: description of the task in progress shown below the
-            progress bar. Updates via the set_description() method.
-    """
-
-    def __init__(self, total: int, title: str, max_title_length: int,
-                 bar_length: int = 40) -> None:
-        self.progress: int = 0
-        self.total = total
-        self.title = title
-        self.max_title_length = max_title_length
-        self.bar_length = bar_length
-        self.desc: str = ''
-
-    def refresh(self) -> None:
-        """Reprints the progress bar with updated parameters."""
-        filled_length = round(self.bar_length * self.progress / self.total)
-
-        percents = round(100 * self.progress / self.total, 1)
-        bar = '█' * filled_length + ' ' * (self.bar_length - filled_length)
-
-        if self.progress > 0:
-            sys.stdout.write('\033[2K\033[A\r')  # Delete line, move cursor up,
-                                                 # and to beginning of the line
-            sys.stdout.flush()
-
-        title_right_padding = self.max_title_length - len(self.title) + 1
-        sys.stdout.write(f'{self.title}{" " * title_right_padding}'
-                         f'|{bar}| {self.progress}/{self.total} [{percents}%]'
-                         f'{self.desc}')
-
-
-        # Preview:      Merge   |████████████████████████| 7/7 [100%]
-        #               Group 1 |███████████████         | 5/8 [63%]
-        #               Filling in judging data
-
-
-        if self.progress == self.total:
-            sys.stdout.write('\033[2K\r')        # Delete line and move cursor
-                                                 # to beginning of line
-
-        sys.stdout.flush()
-        
-    def set_description(self, desc: str = '') -> None:
-        """Sets the description shown below the progress bar."""
-        self.desc = '\n' + desc
-        self.refresh()
-
-    def add(self, increment: int = 1) -> None:
-        """Updates the progress by a specified increment."""
-        self.progress += increment
-        self.progress = min(self.progress, self.total)
-        self.refresh()
-
-
-def is_number(a: Any) -> bool:
-    """Checks if value is a number."""
-    try:
-        float(a)
-        return True
-    except ValueError:
-        return False
-
-
-def as_int(a: Any) -> int | Any:
-    """If possible, returns value as integer, otherwise returns value as is."""
-    try:
-        return int(a)
-    except ValueError:
-        return a
-
-
-def input_(*args, **kwargs):  # TODO: Add docstring and optimize code
-    # Enable QuickEdit, thus allowing the user to copy the error message
-    kernel32 = windll.kernel32
-    kernel32.SetConsoleMode(
-        kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
-    cursor.show()
-
-    print(*args, **kwargs, end='')
-    i = input()
-
-    # Disable QuickEdit and Insert mode
-    kernel32.SetConsoleMode(
-        kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
-    cursor.hide()
-
-    return i
-
-
-def console_style(style: str = Style.RESET_ALL) -> None:
-    """Sets the color and style in which the next line is printed.
-    
-    Args:
-        color (optional): an ANSI sequence from the Fore, Back, or Style
-            class of the colorama package.
-
-        Pass no argument to reset all formatting.
-
-    Examples:
-        >>> console_style(Fore.RED)
-        >>> console_style(Style.BRIGHT)
-
-        To reset the style to default:
-
-        >>> console_style()
-    """
-    print(style, end='')
-
-
-class ErrorType(Enum):
-    ERROR = auto()
-    WARNING = auto()
-    INFO = auto()
-
-
-class Traceback:
-    _err_lookup = {
-    # 0 – 19: Dev-only errors
-        0: [
-            'Unhandled error.',
-            'Please take a screenshot of everything displayed below '
-            'when filling out a bug report. Thank you for your '
-            'patience in getting the issue resolved.'
-        ],
-        1: [
-            'Traceback ID lookup error.',
-            'Failed to fetch info from the following traceback ID.'
-        ],
-
-    # 20 – 39: API errors
-        20: [
-            'Failed to communicate with the Discord API.',
-            'We are unable to download profile pictures at the moment. '
-            'Please check your internet connection and try again.'
-        ],
-        21: [
-            'No valid API token found.',
-            'Please add a bot token in token.txt or disable '
-            'avatar_mode in settings.ini.'
-        ],
-        21.1: [
-            'Unable to fetch data using the following API token.',
-            'Please replace this bot token with a new valid one in '
-            'token.txt or disable avatar_mode in settings.ini.'
-        ],
-        22: [
-            'Unknown API error.'
-        ],
-        23: [
-            'Failed to download profile pictures of the following IDs.',
-            'Please check if these user IDs are valid.'
-        ],
-
-    # 40 and above: Program errors
-        40: [
-            'The following files are missing.',
-            'Please review the documentation for more information '
-            'regarding file requirements.'
-        ],
-        41: [
-            'Failed to import VBA macro due to trust access settings.',
-            'Please open PowerPoint, navigate to:\n'
-            'File > Options > Trust Center > Trust Center Settings '
-            '> Macro Settings, and make sure "Trust access to the VBA '
-            'project object model" is enabled.'
-        ],
-    }
-
-    def lookup(self, tb: float) -> list[str]:
-        try:
-            return self._err_lookup[tb]
-        except KeyError:
-            tb_list = [i for i in self._err_lookup if abs(tb - i) < 2]
-            Error(1).throw(
-                str(tb),
-                f'Perhaps you are looking for: {tb_list}',
-            )
-            return []
-
-
-class Error(Traceback):
-    def __init__(self, tb: float):
-        self.tb = tb
-        self.tb_code = self.get_code()
-
-        # Look up content with traceback ID
-        self.content: list[str] = super().lookup(tb)
-
-    def get_code(self) -> str:
-        whole, decimal = int(self.tb), round(self.tb%1, 7)
-
-        whole = str(whole).zfill(3)
-        decimal = str(decimal).replace('.', '')
-
-        code = (whole if int(decimal) == 0 else
-                '{}.{}'.format(whole, int(decimal)))
-        return f'E-{code}'
-
-    def throw(
-            self, *details: str, err_type: ErrorType = ErrorType.ERROR
-        ) -> None:
-        self.content += [*details]
-        self._print(*self.content, err_type=err_type)
-
-    def _print(
-            self, *content: str,  err_type: ErrorType = ErrorType.ERROR
-        ) -> None:
-        """Handles and reprints an error with human-readable details.
-
-        Prints an error message with paragraphs explaining the error
-        and double-spaced between paragraphs.
-
-        The first paragraph will be shown beside the error type and will
-        inherit the color red if it is an error, the color yellow if it
-        is a warning, and the default color if it is an info message.
-
-        Args:
-            *content: every argument makes a paragraph of the error
-                message. The first paragraph should summarize the error
-                in one sentence. The rest of the paragraphs will explain
-                what causes and how to resolve the error.
-            err_type (optional): the error type taken from the ErrorType
-                class. Defaults to ErrorType.ERROR.
-        """
-        if content:
-            console_style(Style.BRIGHT)  # Make the error type stand out
-
-            if err_type == ErrorType.ERROR:
-                console_style(Fore.RED)
-            elif err_type == ErrorType.WARNING:
-                console_style(Fore.YELLOW)
-
-            print(f'\n\n{err_type.name}:{Style.NORMAL} {content[0]} '
-                  f'(Traceback code: {self.tb_code})')
-            console_style()
-
-        if len(content) > 1:
-            print()
-            print(*content[1:], sep='\n\n')
-
-        if err_type == ErrorType.ERROR:
-            input_('\nPress Enter to exit the program...')
-            sys.exit(1)
-        else:
-            input_('\nPress Enter to continue...')
-
-
-def print_exception_and_exit(exc_type, exc_value, tb) -> None:
-    Error(0).throw(''.join(format_exception(exc_type, exc_value, tb))[:-1])
-
-
-def hex_to_rgb(hex_val: str) -> tuple[int, int, int]:
-    return tuple(int(hex_val.lstrip('#')[i : i+2], 16) for i in (0, 2, 4))
+from mic_drop_results.client import ProgramStatus, fetch_latest_version
+from mic_drop_results.client import download_avatar
+from mic_drop_results.exception import Error, ErrorType, print_exception_hook
+from mic_drop_results.utils import is_number, as_int, hex_to_rgb
+from mic_drop_results.utils import inp, console_style, ProgressBar
 
 
 def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
@@ -419,69 +155,19 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
     return slide
 
 
-def get_avatar(id: str, api_token: str) -> str | None:
-    if not is_number(id):
-        return None
-
-    # Try sending out a request to the API for the avatar's hash
-    try:
-        header = {'Authorization': f'Bot {api_token}'}
-        response = requests.get(
-            f'https://discord.com/api/v9/users/{id}', headers=header
-        )
-    except requests.exceptions.ConnectionError:
-        Error(20).throw(err_type=ErrorType.WARNING)
-        return None
-
-    # Try extracting the hash and return the complete link if succeed
-    try:
-        return 'https://cdn.discordapp.com/avatars/{}/{}' \
-               % (id, response.json()['avatar'])
-    except KeyError as e:
-        # Invalid token or a user account has been deleted (hypothesis)
-        # TODO: Test out the hypothesis
-        if response.json()['message'].lower().contains('unauthorized'):
-            Error(21.1).throw(api_token, response.json())
-
-        elif (response.json()['message'].lower().contains('rate-limit')):
-            time.sleep(response.json()['retry_after'])
-            get_avatar(id, api_token)
-
-        else:
-            raise response.json() from e
-
-
-def download_avatar(uid, avatar_dir, api_token):
-    uid = uid.strip().replace('_', '')
-    img_path = avatar_dir + '_' + uid.strip() + '.png'
-
-    # Load image from link
-    avatar_url = get_avatar(uid, api_token)
-
-    if not avatar_url:
-        return None
-
-    avatar_url += '.png'
-
-    req = urlopen(Request(avatar_url, headers={'User-Agent': 'Mozilla/5.0'}))
-    arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
-    img = cv2.imdecode(arr, -1)
-
-    cv2.imwrite(img_path, img)
-
-
 if __name__ == '__main__':
-    # Section A: Fix Command Prompt issues
+    # Section A: Fix console issues
     freeze_support()          # Multiprocessing freeze support
     signal(SIGINT, SIG_IGN)   # Handle KeyboardInterrupt
 
     # Disable QuickEdit and Insert mode
     kernel32 = windll.kernel32
-    kernel32.SetConsoleMode(kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
+    kernel32.SetConsoleMode(
+        kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
 
-    sys.excepthook = print_exception_and_exit   # Avoid exiting the program when an error is thrown
-    init()                                      # Enable ANSI escape sequences
-    cursor.hide()                               # Hide cursor
+    sys.excepthook = print_exception_hook  # Avoid exiting program on exception
+    init()                                 # Enable ANSI escape sequences
+    cursor.hide()                          # Hide cursor
 
 
     # Section B: Get current directories and files
@@ -490,9 +176,11 @@ if __name__ == '__main__':
     avatar_dir = app_dir + 'avatars\\'
 
     if missing := [f for f in (
-
-            'settings.ini', 'data.xlsx', 'template.pptm', 'Module1.bas', 'token.txt'
-
+            'settings.ini',
+            'data.xlsx',
+            'template.pptm',
+            'Module1.bas',
+            'token.txt',
         ) if not os.path.exists(app_dir + f)]:
         Error(40).throw(app_dir, '\n'.join(missing))
 
@@ -520,38 +208,41 @@ if __name__ == '__main__':
 
 
     # Section D: Check for updates
-    status, url = '', ''
+    status = None
+    repo_url = 'https://github.com/banz04/mic-drop-results/'
 
     with contextlib.suppress(requests.exceptions.ConnectionError, KeyError):
         if config['update_check']:
-            response = requests.get('https://api.github.com/repos/banz04/mic-drop-results/releases/latest', timeout=3)
+            version, summary = fetch_latest_version()
 
-            raw_ver = response.json()['tag_name'][1:]
-            version, config_ver = [tuple(map(int, v.split('.'))) for v in (
-                raw_ver, config['version']
+            # Parse versions into tuples (e.g. 'v3.11.1' into (3, 11, 1))
+            v_latest, v_current = [tuple(map(int, v.split('.'))) for v in (
+                version, config['version']
             )]
 
-            if version > config_ver:
-                console_style(Fore.YELLOW)
-                print(f'Update v{raw_ver}')
-                print(response.json()['body'].partition('\n')[0])
+            if v_latest > v_current:
+                status = ProgramStatus.UPDATE_AVAILABLE
 
-                url = 'https://github.com/banz04/mic-drop-results/releases/latest/'
-                print(url + '\n')
-                webbrowser.open(url, new=2)
+                console_style(Fore.YELLOW + Style.BRIGHT)
+                print(f'Update v{version}')
+
+                console_style(Style.NORMAL)
+                print(summary)
+
+                release_url = f'{repo_url}releases/latest/'
+                print(release_url + '\n')
                 console_style()
 
-                status = 'update available'
-            elif version < config_ver:
-                status = 'beta'
-            else:
-                status = 'latest'
+                webbrowser.open(release_url, new=2)
 
-            status = f' [{status}]'
+            elif v_latest < v_current:
+                status = ProgramStatus.BETA
+            else:
+                status = ProgramStatus.UP_TO_DATE
 
     # Print a header containing information about the program
 
-    # Preview:      Mic Drop Results (vX.1) [latest]
+    # Normal:       Mic Drop Results (vX.1) [latest]
     #               https://github.com/banz04/mic-drop-results
 
 
@@ -561,13 +252,14 @@ if __name__ == '__main__':
     #
     #               Mic Drop Results (vX.0) [update available]
 
-
-    print(f'Mic Drop Results (v{config["version"]}){status}')
+    status_msg = f' [{status.value}]' if status else ''
+    print(f'Mic Drop Results (v{config["version"]}){status_msg}')
     console_style()
 
-    if 'update available' not in status:
-        url = 'https://github.com/banz04/mic-drop-results'
-        print(url)
+    if status != ProgramStatus.UPDATE_AVAILABLE:
+    # When an update is available, the download link is already shown above.
+    # To avoid confusion, we only print one link at a time.
+        print(repo_url)
 
 
     # Section E: Process the data
@@ -808,5 +500,5 @@ if __name__ == '__main__':
     kernel32.SetConsoleMode(
         kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
 
-    input_('Press Enter to open the output folder...')
+    inp('Press Enter to open the output folder...')
     os.startfile(output_dir)
