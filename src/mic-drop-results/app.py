@@ -35,7 +35,7 @@ from client import download_avatar
 from exception import Error, ErrorType, print_exception_hook
 from utils import is_number, as_int, hex_to_rgb
 from utils import inp, console_style, ProgressBar
-from vba.module1 import vba_module
+from vba.module1 import module1_integrated
 
 
 def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
@@ -441,7 +441,7 @@ if __name__ == '__main__':
         bar.set_description('Importing macros')
 
         try:
-            ppt.VBE.ActiveVBProject.VBComponents.Import(vba_module)
+            ppt.VBE.ActiveVBProject.VBComponents.Import(module1_integrated)
         except com_error as e:
             if e.hresult == -2147352567:  # type: ignore
             # Trust access settings not yet enabled
