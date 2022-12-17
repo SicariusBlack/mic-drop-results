@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 import cv2
 import numpy as np
 
-from exception import Error, ErrorType
+from exceptions import Error, ErrorType
 from utils import is_number
 
 
@@ -22,7 +22,7 @@ def fetch_latest_version() -> tuple[str, str]:
         'https://api.github.com/repos/banz04/mic-drop-results/releases/latest',
         timeout=3,
     )
-    version = response.json()['tag_name'][1:]
+    version = response.json()['tag_name'].lstrip('v')
     summary = response.json()['body'].partition('\n')[0]
     return (version, summary)
 

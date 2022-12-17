@@ -1,5 +1,4 @@
-module1_integrated = """
-
+module1_bas = """
 Attribute VB_Name = "Module1"
 Function DelSlide(ParamArray ind() As Variant)
     ActivePresentation.Slides.Range(ind()).Delete
@@ -18,5 +17,4 @@ End Function
 Function SaveAs(filename As String)
     ActivePresentation.SaveAs (filename)
 End Function
-
 """
