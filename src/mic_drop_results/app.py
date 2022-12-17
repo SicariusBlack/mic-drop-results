@@ -30,11 +30,12 @@ from pptx.enum.shapes import MSO_SHAPE  # type: ignore
 from pptx.slide import Slide
 from pptx.util import Inches, lazyproperty
 
-from mic_drop_results.client import ProgramStatus, fetch_latest_version
-from mic_drop_results.client import download_avatar
-from mic_drop_results.exception import Error, ErrorType, print_exception_hook
-from mic_drop_results.utils import is_number, as_int, hex_to_rgb
-from mic_drop_results.utils import inp, console_style, ProgressBar
+from client import ProgramStatus, fetch_latest_version
+from client import download_avatar
+from exception import Error, ErrorType, print_exception_hook
+from utils import is_number, as_int, hex_to_rgb
+from utils import inp, console_style, ProgressBar
+from vba.module1 import vba_module
 
 
 def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
@@ -179,7 +180,6 @@ if __name__ == '__main__':
             'settings.ini',
             'data.xlsx',
             'template.pptm',
-            'Module1.bas',
             'token.txt',
         ) if not os.path.exists(app_dir + f)]:
         Error(40).throw(app_dir, '\n'.join(missing))
@@ -441,7 +441,7 @@ if __name__ == '__main__':
         bar.set_description('Importing macros')
 
         try:
-            ppt.VBE.ActiveVBProject.VBComponents.Import(f'{app_dir}Module1.bas')
+            ppt.VBE.ActiveVBProject.VBComponents.Import(vba_module)
         except com_error as e:
             if e.hresult == -2147352567:  # type: ignore
             # Trust access settings not yet enabled
