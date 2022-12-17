@@ -20,10 +20,10 @@ def as_int(a: Any) -> int | Any:
     """Returns value as integer if possible, otherwise returns value as is.
 
     Examples:
-        >>> as_int('banz04')
-        'banz04'
-        >>> as_int('007')
-        7
+        >>> as_int('004'), as_int(3.2)
+        (4, 3)
+        >>> as_int('banz')
+        'banz'
     """
     try:
         return int(a)
@@ -37,16 +37,17 @@ def hex_to_rgb(hex_val: str) -> tuple[int, int, int]:
 
 
 def parse_version(*versions: str) -> Generator[tuple[int, ...], None, None]:
-    """Parse versions into tuples (e.g. 'v3.11.1' into (3, 11, 1)).
+    """Parses versions into tuples (e.g. 'v3.11.1' into (3, 11, 1)).
 
     Examples:
-        >>> ver = parse_version('v3.11.1')
-        >>> ver
+        >>> parse_version('3.11.1')
         (3, 11, 1)
 
-        You can also parse multiple versions at the same time:
+        You could also parse multiple versions at the same time:
 
-        >>> latest, current = parse_version('v3.11.1', 'v3.10')
+        >>> latest, current = parse_version('v3.11', 'v3.10')
+        >>> current
+        (3, 10)
     """
     return (tuple(map(int, v.lstrip('v').split('.'))) for v in versions)
 
@@ -80,10 +81,17 @@ def console_style(style: str = Style.RESET_ALL) -> None:
         Pass no argument to reset all formatting.
 
     Examples:
+        Please note that formatting will stack instead of starting anew
+            every time you call the function, which means:
+
         >>> console_style(Fore.RED)
         >>> console_style(Style.BRIGHT)
 
-        To reset the style to default:
+            ...is equivalent to:
+
+        >>> console_style(Fore.RED + Style.BRIGHT)
+
+        To reset the formatting to default:
 
         >>> console_style()
     """
