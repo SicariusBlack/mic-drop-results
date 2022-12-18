@@ -225,7 +225,7 @@ if __name__ == '__main__':
             if latest > current:
                 status = ProgramStatus.UPDATE_AVAILABLE
 
-                console_style(Fore.YELLOW + Style.BRIGHT)
+                console_style(Fore.YELLOW, Style.BRIGHT)
                 print(f'Update v{latest_tag}')
 
                 console_style(Style.NORMAL)
