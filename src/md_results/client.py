@@ -22,9 +22,9 @@ def fetch_latest_version() -> tuple[str, str]:
         'https://api.github.com/repos/banz04/mic-drop-results/releases/latest',
         timeout=3,
     )
-    version = response.json()['tag_name'].lstrip('v')
+    tag = response.json()['tag_name'].lstrip('v')
     summary = response.json()['body'].partition('\n')[0]
-    return (version, summary)
+    return (tag, summary)
 
 
 # Section B: Discord API

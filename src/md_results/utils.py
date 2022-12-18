@@ -1,4 +1,5 @@
 from ctypes import windll
+import os
 import sys
 from typing import Any, Generator
 
@@ -52,8 +53,24 @@ def parse_version(*versions: str) -> Generator[tuple[int, ...], None, None]:
     return (tuple(map(int, v.lstrip('v').split('.'))) for v in versions)
 
 
-# Section B: Console utils
-def inp(*args, **kwargs):  # TODO: Add docstring and optimize code
+# Section B: File path operations
+app_dir = os.path.dirname(os.path.realpath(__file__))
+
+def abs_path(*rels: str) -> str:
+    """Returns absolute path from a relative path.
+
+    Relative path here uses the path to the running file as a reference
+    point instead of the current working directory.
+
+    Examples:
+        >>> abs_path('vba', 'macros.py')
+        'D:\\parent_dir\\src\\md_results\\vba\\macros.py'
+    """
+    return os.path.join(app_dir, *rels)
+
+
+# Section C: Console utils
+def inp(*args: str, **kwargs) -> str:  # TODO: Add docstring and optimize code
     # Enable QuickEdit, thus allowing the user to copy printed messages
     kernel32 = windll.kernel32
     kernel32.SetConsoleMode(
