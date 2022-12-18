@@ -88,31 +88,34 @@ def inp(*args: str, **kwargs) -> str:  # TODO: Add docstring and optimize code
     return i
 
 
-def console_style(style: str = Style.RESET_ALL) -> None:
+def console_style(*style: str) -> None:
     """Sets the color and style in which the next line is printed.
     
     Args:
-        color (optional): an ANSI sequence from the Fore, Back, or Style
+        style (optional): an ANSI sequence from the Fore, Back, or Style
             class of the colorama package.
 
         Pass no argument to reset all formatting.
 
     Examples:
         Please note that formatting will stack instead of starting anew
-            every time you call the function, which means:
+        every time you call the function, which means:
 
         >>> console_style(Fore.RED)
         >>> console_style(Style.BRIGHT)
 
-            ...is equivalent to:
+        ...is equivalent to:
 
-        >>> console_style(Fore.RED + Style.BRIGHT)
+        >>> console_style(Fore.RED, Style.BRIGHT)
 
         To reset the formatting to default:
 
         >>> console_style()
     """
-    print(style, end='')
+    if not style:
+        print(Style.RESET_ALL, end='')
+    else:
+        print(*style, sep='', end='')
 
 
 class ProgressBar:
