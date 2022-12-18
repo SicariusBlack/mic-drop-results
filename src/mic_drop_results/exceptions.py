@@ -7,12 +7,6 @@ from colorama import Fore, Style
 from utils import inp, console_style
 
 
-class ErrorType(Enum):
-    ERROR = auto()
-    WARNING = auto()
-    INFO = auto()
-
-
 class Traceback:
     _err_lookup = {
     # 0 – 19: Dev-only errors
@@ -83,6 +77,12 @@ class Traceback:
                 f'Perhaps you are looking for: {tb_list}',
             )
             return []
+
+
+class ErrorType(Enum):
+    ERROR = auto()
+    WARNING = auto()
+    INFO = auto()
 
 
 class Error(Traceback):

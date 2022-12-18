@@ -18,18 +18,17 @@ def is_number(val: Any) -> bool:
         return False
 
 
-T = TypeVar('T')
-A = TypeVar('A')
+T = TypeVar('T')  # Pronounces "typed"
+A = TypeVar('A')  # Pronounces "anything"
 
 
 def as_type(
-        t: Callable[[T], A],
-        val: T) -> A | T:
+        t: Callable[[A], T],
+        val: A) -> T | A:
     """Returns value as type t if possible, otherwise returns value as it is.
 
     Args:
-        t: the type to convert. Type can only be of numeric class
-            (i.e. subtypes of complex: complex, float, int, and bool).
+        t: the resulting type class to convert.
         val: the value to convert.
 
     Examples:
@@ -53,28 +52,6 @@ def as_type(
         return t(val)
     except ValueError:
         return val
-
-
-def iter_to_type(  # TODO: Update docstring
-        t: Callable[[T], A],
-        iterable: Iterable[T]) -> list[A]:
-    """Similar to as_type() but for iterables.
-    
-    Returns all elements of an iterable as a list of type t if possible,
-    otherwise, even if a single element fails to convert, returns a list
-    of every element in its original type.
-
-    Examples:
-        >>> iter_as_type(int, [42.00, '-7'])
-        [42, -7]
-
-        If a single element fails to convert, every other items will
-        remain as they are. The returned iterable will become a list.
-
-        >>> iter_as_type(float, ('-1', 4.2, 'imposter', '7'))
-        ['-1', 4.2, 'imposter', '7']
-    """
-    return [t(v) for v in iterable]
 
 
 def hex_to_rgb(hex_val: str) -> tuple[int, int, int]:
@@ -206,7 +183,7 @@ class ProgressBar:
 
         if self.progr > 0:
             sys.stdout.write('\033[2K\033[A\r')  # Delete line, move cursor up,
-                                                 # and to beginning of the line
+                                                 # ... and to beginning of line
             sys.stdout.flush()
 
         title_right_padding = self.max_title_length - len(self.title) + 1
@@ -222,7 +199,7 @@ class ProgressBar:
 
         if self.progr == self.total:
             sys.stdout.write('\033[2K\r')        # Delete line and move cursor
-                                                 # to beginning of line
+                                                 # ... to beginning of line
 
         sys.stdout.flush()
         
