@@ -1,7 +1,8 @@
+from collections.abc import Callable, Generator, Iterable
 from ctypes import windll
 import os
 import sys
-from typing import Any, Callable, Generator, TypeVar
+from typing import Any, TypeVar
 
 from colorama import Style
 import cursor
@@ -18,11 +19,13 @@ def is_number(val: Any) -> bool:
 
 
 T = TypeVar('T')
-N = TypeVar('N', bound=complex)  # Can be any numeric type
+A = TypeVar('A')
 
 
-def as_type(t: Callable[[T], N], val: T) -> N | T:
-    """Returns value as type t if possible, otherwise returns value as is.
+def as_type(
+        t: Callable[[T], A],
+        val: T) -> A | T:
+    """Returns value as type t if possible, otherwise returns value as it is.
 
     Args:
         t: the type to convert. Type can only be of numeric class
@@ -37,11 +40,41 @@ def as_type(t: Callable[[T], N], val: T) -> N | T:
 
         >>> as_type(int, 'banz')
         'banz'
+    
+    Note:
+        Please note that a float under string type (e.g. '3.0') cannot
+        be convert directly to type int.
+
+        You could use a wrapper function in such case:
+
+        to_int = lambda str_value: int(float(str_value))
     """
     try:
         return t(val)
     except ValueError:
         return val
+
+
+def iter_to_type(  # TODO: Update docstring
+        t: Callable[[T], A],
+        iterable: Iterable[T]) -> list[A]:
+    """Similar to as_type() but for iterables.
+    
+    Returns all elements of an iterable as a list of type t if possible,
+    otherwise, even if a single element fails to convert, returns a list
+    of every element in its original type.
+
+    Examples:
+        >>> iter_as_type(int, [42.00, '-7'])
+        [42, -7]
+
+        If a single element fails to convert, every other items will
+        remain as they are. The returned iterable will become a list.
+
+        >>> iter_as_type(float, ('-1', 4.2, 'imposter', '7'))
+        ['-1', 4.2, 'imposter', '7']
+    """
+    return [t(v) for v in iterable]
 
 
 def hex_to_rgb(hex_val: str) -> tuple[int, int, int]:
@@ -203,14 +236,3 @@ class ProgressBar:
         self.progr += increment
         self.progr = min(self.progr, self.total)
         self.refresh()
-
-
-# Section D: Config parsing utils
-def parse_num(val: str):
-    pass
-
-
-def parse_list(val: str) -> list[str]:
-    return [v.strip() for v in
-            val.replace('(', '').replace(')', '').split(',')]
-

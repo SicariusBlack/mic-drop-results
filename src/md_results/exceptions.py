@@ -27,7 +27,7 @@ class Traceback:
             'Failed to fetch info from the following traceback ID.'
         ],
 
-    # 20 – 39: API errors
+    # 20 – 29: API errors
         20: [
             'Failed to communicate with the Discord API.',
             'We are unable to download profile pictures at the moment. '
@@ -49,6 +49,13 @@ class Traceback:
         23: [
             'Failed to download profile pictures of the following IDs.',
             'Please check if these user IDs are valid.'
+        ],
+    # 30 - 39: Config errors
+        30: [
+            'Missing variable in settings.ini',
+            'The following config variables are missing. Please download '
+            'the latest version of settings.ini and try again.\n'
+            'https://github.com/banz04/mic-drop-results/releases/latest'
         ],
 
     # 40 and above: Program errors
@@ -92,8 +99,9 @@ class Error(Traceback):
         whole = str(whole).zfill(3)
         decimal = str(decimal).replace('.', '')
 
-        code = (whole if int(decimal) == 0 else
-                '{}.{}'.format(whole, int(decimal)))
+        code = (whole
+                if int(decimal) == 0
+                else f'{whole}.{int(decimal)}')
         return f'E-{code}'
 
     def throw(
