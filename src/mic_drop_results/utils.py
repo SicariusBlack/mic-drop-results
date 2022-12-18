@@ -41,12 +41,14 @@ def as_type(
         'banz'
     
     Note:
-        Please note that a float under string type (e.g. '3.0') cannot
-        be convert directly to type int.
+        Please note that a float under str type (e.g. '3.0') cannot be
+        convert directly into type int.
 
-        You could use a wrapper function in such case:
+        You could use a wrapper function for t in such cases:
 
-        to_int = lambda str_value: int(float(str_value))
+        >>> to_int = lambda str_val: int(float(str_val))
+        >>> as_type(to_int, '3.0')
+        3
     """
     try:
         return t(val)
