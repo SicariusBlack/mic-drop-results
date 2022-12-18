@@ -32,7 +32,7 @@ import win32com.client
 from client import ProgramStatus, fetch_latest_version
 from client import download_avatar
 from exceptions import Error, ErrorType, print_exception_hook
-from utils import is_number, as_int, hex_to_rgb, parse_version
+from utils import is_number, as_type, hex_to_rgb, parse_version
 from utils import app_dir, abs_path
 from utils import inp, console_style, ProgressBar
 from vba.macros import module1_bas
@@ -65,7 +65,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                         continue
 
                     # Extract effect index and remove {p}
-                    effect = as_int(run.text.strip()[3:])
+                    effect = as_type(int, run.text.strip()[3:])
                     run.text = ''
 
                     uid = str(df['uid'].iloc[i]).strip().replace('_', '')
@@ -190,7 +190,9 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read(abs_path('settings.ini'))
 
-    # Store config variables as local variables
+    print(dict(config['FORMATTING']))  # TODO: Remove
+
+    # Store config in local variables
     range_list = config['FORMATTING']['ranges'][::-1]
     scheme = config['FORMATTING']['scheme'][::-1]
     scheme_alt = config['FORMATTING']['scheme_alt'][::-1]
@@ -459,7 +461,7 @@ if __name__ == '__main__':
 
         # Duplicate slides
         for t in df.loc[:, 'template']:
-            if as_int(t) not in range(1, slides_count + 1):
+            if as_type(int, t) not in range(1, slides_count + 1):
                 Error(f'Template {t} does not exist (error originated from the following sheet: {k}).',
                       f'Please exit the program and modify the \'template\' column of {k}.', SHARING_VIOLATION).throw()
 
