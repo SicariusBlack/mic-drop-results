@@ -1,35 +1,47 @@
 from ctypes import windll
 import os
 import sys
-from typing import Any, Generator
+from typing import Any, Callable, Generator, TypeVar
 
 from colorama import Style
 import cursor
 
 
 # Section A: Basic operations
-def is_number(a: Any) -> bool:
+def is_number(val: Any) -> bool:
     """Checks if value is a number."""
     try:
-        float(a)
+        float(val)
         return True
     except ValueError:
         return False
 
 
-def as_int(a: Any) -> int | Any:
-    """Returns value as integer if possible, otherwise returns value as is.
+T = TypeVar('T')
+N = TypeVar('N', bound=float)  # Can be any numeric type
+
+
+def as_type(t: Callable[[T], N], val: T) -> N | T:
+    """Returns value as type t if possible, otherwise returns value as is.
+
+    Args:
+        t: the type to convert. Type can only be numeric (subtypes of
+            float; including float, int, and bool).
+        val: the value to convert.
 
     Examples:
-        >>> as_int('004'), as_int(3.2)
-        (4, 3)
-        >>> as_int('banz')
+        >>> as_type(float, '004'), as_type(int, 3.2)
+        (4.0, 3)
+
+        Returns the value as is if it cannot convert.
+
+        >>> as_type(int, 'banz')
         'banz'
     """
     try:
-        return int(a)
+        return t(val)
     except ValueError:
-        return a
+        return val
 
 
 def hex_to_rgb(hex_val: str) -> tuple[int, int, int]:
@@ -38,7 +50,7 @@ def hex_to_rgb(hex_val: str) -> tuple[int, int, int]:
 
 
 def parse_version(*versions: str) -> Generator[tuple[int, ...], None, None]:
-    """Parses versions into tuples (e.g. 'v3.11.1' into (3, 11, 1)).
+    """Parses version string into tuple (e.g. 'v3.11.1' into (3, 11, 1)).
 
     Examples:
         >>> parse_version('3.11.1')
@@ -70,7 +82,17 @@ def abs_path(*rels: str) -> str:
 
 
 # Section C: Console utils
-def inp(*args: str, **kwargs) -> str:  # TODO: Add docstring and optimize code
+def inp(*args: str, **kwargs) -> str:  # TODO: Add docstring, optimize code
+    """A wrapper function of the built-in input function.
+
+    This function inherits all the arguments and keyword arguments of
+    the built-in print function. Besides, it also enables QuickEdit to
+    allow the user to copy printed messages, which are usually error
+    details, and disables it thereafter.
+
+    Returns:
+        The user input as string.
+    """
     # Enable QuickEdit, thus allowing the user to copy printed messages
     kernel32 = windll.kernel32
     kernel32.SetConsoleMode(
@@ -122,7 +144,7 @@ class ProgressBar:
     """Creates and prints a progress bar.
 
     Attributes:
-        progress: number of work done. Updates via the add() method.
+        progr: number of work done. Updates via the add() method.
         total: number of work to perform.
         title: title shown to the left of the progress bar.
         max_title_length: length of the longest title to ensure left
@@ -135,7 +157,7 @@ class ProgressBar:
 
     def __init__(self, total: int, title: str, max_title_length: int,
                  bar_length: int = 40) -> None:
-        self.progress: int = 0
+        self.progr: int = 0
         self.total = total
         self.title = title
         self.max_title_length = max_title_length
@@ -144,19 +166,19 @@ class ProgressBar:
 
     def refresh(self) -> None:
         """Reprints the progress bar with updated parameters."""
-        filled_length = round(self.bar_length * self.progress / self.total)
+        filled_length = round(self.bar_length * self.progr / self.total)
 
-        percents = round(100 * self.progress / self.total, 1)
+        percents = round(100 * self.progr / self.total, 1)
         bar = '█' * filled_length + ' ' * (self.bar_length - filled_length)
 
-        if self.progress > 0:
+        if self.progr > 0:
             sys.stdout.write('\033[2K\033[A\r')  # Delete line, move cursor up,
                                                  # and to beginning of the line
             sys.stdout.flush()
 
         title_right_padding = self.max_title_length - len(self.title) + 1
         sys.stdout.write(f'{self.title}{" " * title_right_padding}'
-                         f'|{bar}| {self.progress}/{self.total} [{percents}%]'
+                         f'|{bar}| {self.progr}/{self.total} [{percents}%]'
                          f'{self.desc}')
 
 
@@ -165,7 +187,7 @@ class ProgressBar:
         #               Filling in judging data
 
 
-        if self.progress == self.total:
+        if self.progr == self.total:
             sys.stdout.write('\033[2K\r')        # Delete line and move cursor
                                                  # to beginning of line
 
@@ -178,6 +200,17 @@ class ProgressBar:
 
     def add(self, increment: int = 1) -> None:
         """Updates the progress by a specified increment."""
-        self.progress += increment
-        self.progress = min(self.progress, self.total)
+        self.progr += increment
+        self.progr = min(self.progr, self.total)
         self.refresh()
+
+
+# Section D: Config parsing utils
+def parse_num(val: str):
+    pass
+
+
+def parse_list(val: str) -> list[str]:
+    return [v.strip() for v in
+            val.replace('(', '').replace(')', '').split(',')]
+
