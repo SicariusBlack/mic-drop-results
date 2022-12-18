@@ -3,37 +3,37 @@ import contextlib
 from ctypes import windll
 from io import BytesIO
 import itertools
-from json import load, dump
+from json import dump
 from multiprocessing import Pool, freeze_support
 import os
 import re
-import requests
 from signal import signal, SIGINT, SIG_IGN
 from subprocess import run, DEVNULL
 import sys
 import time
 import webbrowser
 
-import cursor
 from colorama import init, Fore, Style
+import cursor
 import cv2
 import numpy as np
 import pandas as pd
 from PIL import Image
-from pywintypes import com_error
-import win32com.client
-
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.dml import MSO_COLOR_TYPE
 from pptx.enum.shapes import MSO_SHAPE  # type: ignore
 from pptx.slide import Slide
-from pptx.util import Inches, lazyproperty
+from pptx.util import Inches, lazyproperty  # TODO: Remove when done inspecting
+from pywintypes import com_error
+import requests
+import win32com.client
 
 from client import ProgramStatus, fetch_latest_version
 from client import download_avatar
 from exceptions import Error, ErrorType, print_exception_hook
 from utils import is_number, as_int, hex_to_rgb, parse_version
+from utils import app_dir, abs_path
 from utils import inp, console_style, ProgressBar
 from vba.macros import module1_bas
 
@@ -157,6 +157,8 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
 
 if __name__ == '__main__':
+    version_tag = '3.0'
+
     # Section A: Fix console issues
     freeze_support()          # Multiprocessing freeze support
     signal(SIGINT, SIG_IGN)   # Handle KeyboardInterrupt
@@ -172,31 +174,31 @@ if __name__ == '__main__':
 
 
     # Section B: Get current directories and files
-    app_dir = os.path.dirname(os.path.realpath(__file__)) + '\\'
-    output_dir = app_dir + 'output\\'
-    avatar_dir = app_dir + 'avatars\\'
+    output_dir = abs_path('output')
+    avatar_dir = abs_path('avatars')
 
     if missing := [f for f in (
             'settings.ini',
             'data.xlsx',
             'template.pptm',
             'token.txt',
-        ) if not os.path.exists(app_dir + f)]:
+        ) if not os.path.exists(abs_path(f))]:
         Error(40).throw(app_dir, '\n'.join(missing))
 
 
     # Section C: Load user configurations
-    config = load(open('settings.ini'))
+    config = configparser.ConfigParser()
+    config.read(abs_path('settings.ini'))
 
     # Store config variables as local variables
-    range_list = config['format']['ranges'][::-1]
-    scheme = config['format']['colors'][::-1]
-    scheme_alt = config['format']['colors_light'][::-1]
-    starts = config['format']['starts_with']
-    avatar_mode = config['avatars']
-    last_clear = config['last_clear_avatar_cache']
+    range_list = config['FORMATTING']['ranges'][::-1]
+    scheme = config['FORMATTING']['scheme'][::-1]
+    scheme_alt = config['FORMATTING']['scheme_alt'][::-1]
+    starts = config['FORMATTING']['trigger_word']
+    avatar_mode = config['AVATARS']['avatar_mode']
+    last_clear = config['AVATARS']['last_clear_avatar_cache']
 
-    with open('token.txt') as f:
+    with open(abs_path('token.txt')) as f:
         token_list = f.read().splitlines()
         token_list = [i.strip() for i in token_list if len(i) > 62]
 
@@ -212,19 +214,19 @@ if __name__ == '__main__':
     repo_url = 'https://github.com/banz04/mic-drop-results/'
 
     with contextlib.suppress(requests.exceptions.ConnectionError, KeyError):
-        if config['update_check']:
+        if config['PROGRAM']['update_check']:
             # Fetch the latest version and the summary of the update
-            version, summary = fetch_latest_version()
+            latest_tag, summary = fetch_latest_version()
 
             latest, current = parse_version(
-                version, config['version']
+                latest_tag, version_tag
             )
 
             if latest > current:
                 status = ProgramStatus.UPDATE_AVAILABLE
 
                 console_style(Fore.YELLOW + Style.BRIGHT)
-                print(f'Update v{version}')
+                print(f'Update v{latest_tag}')
 
                 console_style(Style.NORMAL)
                 print(summary)
@@ -253,7 +255,7 @@ if __name__ == '__main__':
     #               Mic Drop Results (vX.0) [update available]
 
     status_msg = f' [{status.value}]' if status else ''
-    print(f'Mic Drop Results (v{config["version"]}){status_msg}')
+    print(f'Mic Drop Results (v{version_tag}){status_msg}')
     console_style()
 
     if status != ProgramStatus.UPDATE_AVAILABLE:
