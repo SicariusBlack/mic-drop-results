@@ -18,22 +18,22 @@ def is_number(val: Any) -> bool:
 
 
 T = TypeVar('T')
-N = TypeVar('N', bound=float)  # Can be any numeric type
+N = TypeVar('N', bound=complex)  # Can be any numeric type
 
 
 def as_type(t: Callable[[T], N], val: T) -> N | T:
     """Returns value as type t if possible, otherwise returns value as is.
 
     Args:
-        t: the type to convert. Type can only be numeric (subtypes of
-            float; including float, int, and bool).
+        t: the type to convert. Type can only be of numeric class
+            (i.e. subtypes of complex: complex, float, int, and bool).
         val: the value to convert.
 
     Examples:
         >>> as_type(float, '004'), as_type(int, 3.2)
         (4.0, 3)
 
-        Returns the value as is if it cannot convert.
+        Returns the value as is if it cannot be converted.
 
         >>> as_type(int, 'banz')
         'banz'
