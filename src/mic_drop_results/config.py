@@ -51,6 +51,5 @@ if __name__ == '__main__':
                                        # ... var_type is list[float]
                 config[var]
             )
-        
-    
+
     print(config)
