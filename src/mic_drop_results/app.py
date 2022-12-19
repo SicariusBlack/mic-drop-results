@@ -29,7 +29,7 @@ import requests
 import win32com.client
 
 from client import ProgramStatus, fetch_latest_version
-from client import download_avatar
+from client import download_avatar, fetch_avatar_url
 from config import Config
 from constants import *
 from exceptions import Error, ErrorType, print_exception_hook
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     cursor.hide()                          # Hide cursor
 
 
-# Section B: Get current directories and files
+# Section B: Check for missing files
     if missing := [f for f in (
             'settings.ini',
             'data.xlsx',
@@ -190,12 +190,18 @@ if __name__ == '__main__':
     scheme = list(map(hex_to_rgb, cfg.scheme))
     scheme_alt = list(map(hex_to_rgb, cfg.scheme_alt))
 
+# Section D: Parse and test tokens
     with open(abs_path('token.txt')) as f:
         token_list = f.read().splitlines()
-        token_list = [i.strip() for i in token_list if len(i) > 62]
+        token_list = [line.replace('"', '').strip()
+                      for line in token_list if len(line) > 70]
 
     if not token_list and cfg.avatar_mode:
         Error(21).throw()
+
+    # Fetch my avatar's URL to test the tokens
+    for token in token_list:
+        fetch_avatar_url('1010885414850154587', token)
 
 
 # Section D: Check for updates
