@@ -1,4 +1,4 @@
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Generator
 from ctypes import windll
 import os
 import sys
@@ -6,6 +6,8 @@ from typing import Any, TypeVar
 
 from colorama import Style
 import cursor
+
+from constants import *
 
 
 # Section A: Basic operations
@@ -78,8 +80,6 @@ def parse_version(*versions: str) -> Generator[tuple[int, ...], None, None]:
 
 
 # Section B: File path operations
-app_dir = os.path.dirname(os.path.realpath(__file__))
-
 def abs_path(*rels: str) -> str:
     """Returns absolute path from a relative path.
 
@@ -90,7 +90,7 @@ def abs_path(*rels: str) -> str:
         >>> abs_path('vba', 'macros.py')
         'D:\\parent_dir\\src\\md_results\\vba\\macros.py'
     """
-    return os.path.join(app_dir, *rels)
+    return os.path.join(APP_DIR, *rels)
 
 
 # Section C: Console utils

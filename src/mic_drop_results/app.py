@@ -1,4 +1,3 @@
-import configparser
 import contextlib
 from ctypes import windll
 from io import BytesIO
@@ -31,9 +30,11 @@ import win32com.client
 
 from client import ProgramStatus, fetch_latest_version
 from client import download_avatar
+from config import Config
+from constants import *
 from exceptions import Error, ErrorType, print_exception_hook
 from utils import is_number, as_type, hex_to_rgb, parse_version
-from utils import app_dir, abs_path
+from utils import abs_path
 from utils import inp, console_style, ProgressBar
 from vba.macros import module1_bas
 
@@ -70,8 +71,8 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
                     uid = str(df['uid'].iloc[i]).strip().replace('_', '')
 
-                    og_path = avatar_dir + '_' + uid + '.png'
-                    img_path = avatar_dir + str(effect) + '_' + uid + '.png'
+                    og_path = AVATAR_DIR + '_' + uid + '.png'
+                    img_path = AVATAR_DIR + str(effect) + '_' + uid + '.png'
 
                     if not os.path.isfile(og_path):
                         continue
@@ -146,12 +147,12 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                         RGBColor(0, 0, 0), RGBColor(255, 255, 255)]):
                     continue
 
-                for ind, val in enumerate(range_list):
+                for ind, val in enumerate(cfg.ranges[::-1]):
                     if is_number(repl) and float(repl) >= val:
                         if run_text.endswith('1'):
-                            run.font.color.rgb = RGBColor(*scheme_alt[ind])
+                            run.font.color.rgb = RGBColor(*scheme_alt[::-1][ind])
                         else:
-                            run.font.color.rgb = RGBColor(*scheme[ind])
+                            run.font.color.rgb = RGBColor(*scheme[::-1][ind])
                         break
     return slide
 
@@ -159,7 +160,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 if __name__ == '__main__':
     version_tag = '3.0'
 
-    # Section A: Fix console issues
+# Section A: Fix console issues
     freeze_support()          # Multiprocessing freeze support
     signal(SIGINT, SIG_IGN)   # Handle KeyboardInterrupt
 
@@ -173,50 +174,34 @@ if __name__ == '__main__':
     cursor.hide()                          # Hide cursor
 
 
-    # Section B: Get current directories and files
-    output_dir = abs_path('output')
-    avatar_dir = abs_path('avatars')
-
+# Section B: Get current directories and files
     if missing := [f for f in (
             'settings.ini',
             'data.xlsx',
             'template.pptm',
             'token.txt',
         ) if not os.path.exists(abs_path(f))]:
-        Error(40).throw(app_dir, '\n'.join(missing))
+        Error(40).throw(APP_DIR, '\n'.join(missing))
 
 
-    # Section C: Load user configurations
-    config = configparser.ConfigParser()
-    config.read(abs_path('settings.ini'))
+# Section C: Load user settings
+    cfg = Config(abs_path('settings.ini'))
 
-    print(dict(config['FORMATTING']))  # TODO: Remove
-
-    # Store config in local variables
-    range_list = config['FORMATTING']['ranges'][::-1]
-    scheme = config['FORMATTING']['scheme'][::-1]
-    scheme_alt = config['FORMATTING']['scheme_alt'][::-1]
-    starts = config['FORMATTING']['trigger_word']
-    avatar_mode = config['AVATARS']['avatar_mode']
-    last_clear = config['AVATARS']['last_clear_avatar_cache']
+    scheme = list(map(hex_to_rgb, cfg.scheme))
+    scheme_alt = list(map(hex_to_rgb, cfg.scheme_alt))
 
     with open(abs_path('token.txt')) as f:
         token_list = f.read().splitlines()
         token_list = [i.strip() for i in token_list if len(i) > 62]
 
-    if not token_list and avatar_mode:
+    if not token_list and cfg.avatar_mode:
         Error(21).throw()
 
-    scheme = list(map(hex_to_rgb, scheme))
-    scheme_alt = list(map(hex_to_rgb, scheme_alt))
 
-
-    # Section D: Check for updates
+# Section D: Check for updates
     status = None
-    repo_url = 'https://github.com/banz04/mic-drop-results/'
-
     with contextlib.suppress(requests.exceptions.ConnectionError, KeyError):
-        if config['PROGRAM']['update_check']:
+        if cfg.update_check:
             # Fetch the latest version and the summary of the update
             latest_tag, summary = fetch_latest_version()
 
@@ -233,11 +218,11 @@ if __name__ == '__main__':
                 console_style(Style.NORMAL)
                 print(summary)
 
-                release_url = f'{repo_url}releases/latest/'
-                print(release_url + '\n')
+                print(LATEST_RELEASE_URL)
+                print()
                 console_style()
 
-                webbrowser.open(release_url, new=2)
+                webbrowser.open(LATEST_RELEASE_URL, new=2)
 
             elif latest < current:
                 status = ProgramStatus.BETA
@@ -246,15 +231,15 @@ if __name__ == '__main__':
 
     # Print a header containing information about the program
 
-    # Normal:       Mic Drop Results (vX.1) [latest]
+    # Normal:       Mic Drop Results (v3.10) [latest]
     #               https://github.com/banz04/mic-drop-results
 
 
-    # With update:  Update vX.1
+    # With update:  Update v3.11
     #               A summary of the update will appear in this line.
     #               https://github.com/banz04/mic-drop-results/releases/latest/
     #
-    #               Mic Drop Results (vX.0) [update available]
+    #               Mic Drop Results (v3.10) [update available]
 
     status_msg = f' [{status.value}]' if status else ''
     print(f'Mic Drop Results (v{version_tag}){status_msg}')
@@ -263,11 +248,11 @@ if __name__ == '__main__':
     if status != ProgramStatus.UPDATE_AVAILABLE:
     # When an update is available, the download link is already shown above.
     # To avoid confusion, we only print one link at a time.
-        print(repo_url)
+        print(REPO_URL)
 
 
     # Section E: Process the data
-    xls = pd.ExcelFile('data.xlsx')
+    xls = pd.ExcelFile(abs_path('data.xlsx'))
 
     sheetnames_raw = xls.sheet_names
     sheetnames = [re.sub(r'[\\\/:"*?<>|]+',  # Forbidden file name characters
@@ -377,7 +362,7 @@ if __name__ == '__main__':
         data[sheetnames[i]] = df
 
     if not data:
-        Error(f'No valid sheet found in {app_dir}data.xlsx').throw()
+        Error(f'No valid sheet found in {APP_DIR}data.xlsx').throw()
 
 
     # Section F: Generate PowerPoint slides
@@ -388,12 +373,12 @@ if __name__ == '__main__':
     run('TASKKILL /F /IM powerpnt.exe', stdout=DEVNULL, stderr=DEVNULL)
 
     # Open template presentation
-    os.makedirs(output_dir, exist_ok=True)
-    os.makedirs(avatar_dir, exist_ok=True)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    os.makedirs(AVATAR_DIR, exist_ok=True)
 
     # Clear cache
     if time.time() - last_clear > 1800:  # Clears every hour
-        for f in os.scandir(avatar_dir):
+        for f in os.scandir(AVATAR_DIR):
             os.unlink(f)
 
         # Update last clear time
@@ -413,7 +398,7 @@ if __name__ == '__main__':
                 Error('The \'uid\' column has a numeric data type instead of the supposed string data type.',
                       'Please exit the program and add an underscore before every user ID.', SHARING_VIOLATION).throw()
 
-            uid_list += [id for id in df['uid'] if not pd.isnull(id) and not os.path.isfile(avatar_dir + id.strip() + '.png')]
+            uid_list += [id for id in df['uid'] if not pd.isnull(id) and not os.path.isfile(AVATAR_DIR + id.strip() + '.png')]
 
         if len(uid_list) == 0:
             break
@@ -425,7 +410,7 @@ if __name__ == '__main__':
             Error(23).throw(str(uid_list), err_type=ErrorType.WARNING)
 
         pool.starmap(download_avatar, zip(uid_list,
-            [avatar_dir] * len(uid_list), itertools.islice(itertools.cycle(token_list), len(uid_list))))
+            [AVATAR_DIR] * len(uid_list), itertools.islice(itertools.cycle(token_list), len(uid_list))))
 
         attempt += 1
 
@@ -438,7 +423,7 @@ if __name__ == '__main__':
         # Open template presentation
         bar.set_description('Opening template.pptm')
         ppt = win32com.client.Dispatch('PowerPoint.Application')
-        ppt.Presentations.Open(f'{app_dir}template.pptm')
+        ppt.Presentations.Open(f'{APP_DIR}template.pptm')
         bar.add()
 
         # Import macros
@@ -477,7 +462,7 @@ if __name__ == '__main__':
         bar.set_description('Saving templates')
         output_filename = f'{k}.pptx'
 
-        ppt.Run('SaveAs', f'{output_dir}{output_filename}')
+        ppt.Run('SaveAs', f'{OUTPUT_DIR}{output_filename}')
         bar.add()
 
         run('TASKKILL /F /IM powerpnt.exe', stdout=DEVNULL, stderr=DEVNULL)
@@ -485,24 +470,24 @@ if __name__ == '__main__':
 
         # Replace text
         bar.set_description('Filling in judging data')
-        prs = Presentation(output_dir + output_filename)
+        prs = Presentation(OUTPUT_DIR + output_filename)
 
         for i, slide in enumerate(prs.slides):
             replace_text(slide, df, i, avatar_mode)
         bar.add()
 
         # Save
-        bar.set_description(f'Saving as {output_dir + output_filename}')
-        prs.save(output_dir + output_filename)
+        bar.set_description(f'Saving as {OUTPUT_DIR + output_filename}')
+        prs.save(OUTPUT_DIR + output_filename)
         bar.add()
 
 
     # Section G: Launch the file
-    print(f'\nExported to {output_dir}')
+    print(f'\nExported to {OUTPUT_DIR}')
 
     # Enable QuickEdit
     kernel32.SetConsoleMode(
         kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
 
     inp('Press Enter to open the output folder...')
-    os.startfile(output_dir)
+    os.startfile(OUTPUT_DIR)

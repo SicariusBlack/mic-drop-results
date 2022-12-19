@@ -4,6 +4,7 @@ from traceback import format_exception
 
 from colorama import Fore, Style
 
+from constants import *
 from utils import inp, console_style
 
 
@@ -49,7 +50,7 @@ class Traceback:
             'Missing variable in settings.ini.',
             'The following config variables are missing. Please download '
             'the latest version of settings.ini and try again.\n'
-            'https://github.com/banz04/mic-drop-results/releases/latest'
+            + LATEST_RELEASE_URL
         ],
         31: [
             'Invalid data type for the following variable in settings.ini.',
