@@ -199,7 +199,7 @@ if __name__ == '__main__':
     if not token_list and cfg.avatar_mode:
         Error(21).throw()
 
-    # Fetch my avatar's URL to test the tokens
+    # Fetch my avatar's URL to test the tokens (TODO: [maintenance])
     for token in token_list:
         fetch_avatar_url('1010885414850154587', token)
 

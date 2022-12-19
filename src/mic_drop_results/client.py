@@ -46,18 +46,18 @@ def fetch_avatar_url(id: str, api_token: str) -> str | None:
     try:
         return 'https://cdn.discordapp.com/avatars/{}/{}.png'.format(
             id, response.json()['avatar'])
-    except KeyError as e:
-        # Invalid token or a user account has been deleted (hypothesis)
-        # TODO: Test out the hypothesis
-        if '401: unauthorized' in response.json()['message'].lower():
+    except KeyError:
+        msg = response.json()['message'].lower()
+
+        if '401: unauthorized' in msg:  # Invalid token
             Error(21.1).throw(api_token, response.json())
 
-        elif 'rate-limit' in response.json()['message'].lower():
+        elif 'rate-limit' in msg:
             time.sleep(response.json()['retry_after'])
             fetch_avatar_url(id, api_token)
 
-        else:
-            raise response.json() from e
+        elif 'unknown user' not in msg:
+            Error(22).throw(api_token, response.json())
 
 
 def download_avatar(uid, avatar_dir, api_token):
