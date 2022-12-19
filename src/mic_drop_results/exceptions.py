@@ -9,17 +9,21 @@ from utils import inp, console_style
 
 
 class Traceback:
-    SCREENSHOT = ('Please take a screenshot of everything displayed below '
-                  'when filling out a bug report. Thank you for your '
-                  'patience in getting the issue resolved.')
-    
-    CONFIG_FORMAT = ('Please verify that the config variables are in their '
-                     'valid format according to the note above each variable.')
+    templates = {
+        'screenshot': (
+            'Please take a screenshot of everything displayed below '
+            'when filling out a bug report. Thank you for your '
+            'patience in getting the issue resolved.'),
+
+        'cfg_format': (
+            'Please verify that the config variables are in their '
+            'valid format according to the note above each variable.'),
+    }
 
     _err_lookup = {
     # 0 – 19: Dev-only errors
         0: [
-            'Unhandled error.', SCREENSHOT
+            'Unhandled error.', templates['screenshot']
         ],
         1: [
             'Traceback ID lookup error.',
@@ -43,7 +47,7 @@ class Traceback:
             'valid one or disable avatar_mode in settings.ini.'
         ],
         22: [
-            'Unknown API error.', SCREENSHOT
+            'Unknown API error.', templates['screenshot']
         ],
         23: [
             'Failed to download profile pictures of the following IDs.',
@@ -58,11 +62,11 @@ class Traceback:
         ],
         31: [
             'Invalid data type for the following variable in settings.ini.',
-            CONFIG_FORMAT
+            templates['cfg_format']
         ],
         31.1: [
             'A variable from settings.ini failed the requirement check.',
-            CONFIG_FORMAT
+            templates['cfg_format']
         ],
 
     # 40 and above: Program errors
