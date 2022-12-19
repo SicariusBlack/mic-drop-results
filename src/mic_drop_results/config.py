@@ -56,9 +56,10 @@ if __name__ == '__main__':
                     config[var])
         except ValueError:
             if var_type.__name__ == 'list':
-                class_name = f'{var_type.__name__} of {var_type.__args__[0].__name__}'
+                class_name = f'list of {var_type.__args__[0].__name__}'
             else:
                 class_name = var_type.__name__
+
             Error(31).throw(
                 f'Failed to convert the following '
                 f'variable to type: <{class_name}>',
