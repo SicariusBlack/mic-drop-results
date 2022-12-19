@@ -51,6 +51,11 @@ class Traceback:
             'the latest version of settings.ini and try again.\n'
             'https://github.com/banz04/mic-drop-results/releases/latest'
         ],
+        31: [
+            'Invalid data type for variable in settings.ini',
+            'Please verify that the config variable is in the correct '
+            'format according to the note left above the variable.'
+        ],
 
     # 40 and above: Program errors
         40: [

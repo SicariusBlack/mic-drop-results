@@ -41,15 +41,28 @@ if __name__ == '__main__':
         Error(30).throw(str(missing_vars))
 
     for var, var_type in ConfigVarTypes.__annotations__.items():
-        if var_type in [float, int, bool, str]:
-            config[var] = var_type(config[var])
+        try:
+            if var_type in [float, str]:
+                config[var] = var_type(config[var])
+            
+            elif var_type in [int, bool]:
+                config[var] = var_type(float(config[var]))
 
-        else:  # Remaining is <class 'list'>
-            config[var] = parse_list(
-                var_type.__args__[0],  # Extract the type of the list
-                                       # ... e.g. <class 'float'> if
-                                       # ... var_type is list[float]
-                config[var]
+            else:  # Remaining is <class 'list'>
+                config[var] = parse_list(
+                    var_type.__args__[0], # Extract the type of the list
+                                          # ... e.g. <class 'float'> if
+                                          # ... var_type is list[float]
+                    config[var])
+        except ValueError:
+            if var_type.__name__ == 'list':
+                class_name = f'{var_type.__name__} of {var_type.__args__[0].__name__}'
+            else:
+                class_name = var_type.__name__
+            Error(31).throw(
+                f'Failed to convert the following '
+                f'variable to type: <{class_name}>',
+                f'    {var} = {config[var]}'
             )
 
     print(config)
