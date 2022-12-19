@@ -34,47 +34,48 @@ class Config(ConfigVarTypes):
         for scheme in [self.scheme, self.scheme_alt]:
             assert all(re.fullmatch(hex_pattern, h) for h in scheme), (
                 f'Invalid hex code found:'
-                f'{self.show_var("scheme", "scheme_alt")}'
-                f'Did you make a typo?')
+                f'{self._show_var("scheme", "scheme_alt")}')
 
     def __init__(self, filepath: str):
         parser = configparser.ConfigParser()
         parser.read(filepath)
 
-        # Flatted config dict
-        self.__dict__ |= {k: v for d in parser.values() for k, v in d.items()}
+        # Flatten config dict
+        self.config: dict[str, Any] = {
+            k: v for d in parser.values() for k, v in d.items()
+        }
 
-        self.check_missing_vars()
-        self.parse_dict()
+        self._check_missing_vars()
+        self._parse_values()
 
-        # Conditional validation
         try:
+            self.__dict__ = self.config
             self.validate()
         except AssertionError as e:
             Error(31.1).throw(*e.args)
 
-    def check_missing_vars(self):
+    def _check_missing_vars(self):
         if missing_vars := [
-            v for v in ConfigVarTypes.__annotations__ if v not in self.__dict__
+            v for v in ConfigVarTypes.__annotations__ if v not in self.config
         ]:
             Error(30).throw(str(missing_vars))
 
-    def parse_dict(self):
+    def _parse_values(self):
         for var, var_type in ConfigVarTypes.__annotations__.items():
             try:
                 if var_type in [float, str]:
-                    self.__dict__[var] = var_type(self.__dict__[var])
+                    self.config[var] = var_type(self.config[var])
                 
                 elif var_type in [int, bool]:
                     # Fix str conversion issues such as '0' == True
-                    self.__dict__[var] = var_type(float(self.__dict__[var]))
+                    self.config[var] = var_type(float(self.config[var]))
 
                 else:  # Remaining is <class 'list'>
-                    self.__dict__[var] = self.parse_list(
+                    self.config[var] = self._parse_list(
                         var_type.__args__[0],  # Extract the type of the list
                                                # ... e.g. <class 'float'> if
                                                # ... var_type is list[float]
-                        self.__dict__[var])
+                        self.config[var])
             except ValueError:
                 if var_type.__name__ == 'list':
                     type_name = f'list of {var_type.__args__[0].__name__}'
@@ -86,12 +87,12 @@ class Config(ConfigVarTypes):
                 Error(31).throw(
                     f'Failed to convert the following '
                     f'variable into type: <{type_name}>'
-                    f'{self.show_var(var)}'
+                    f'{self._show_var(var)}'
                 )
 
     T = TypeVar('T')
 
-    def parse_list(self, var_type: Callable[[str], T], val: str) -> list[T]:
+    def _parse_list(self, var_type: Callable[[str], T], val: str) -> list[T]:
         raw_list = (
             val
             .replace('(', '')
@@ -100,8 +101,8 @@ class Config(ConfigVarTypes):
 
         return [var_type(v.strip()) for v in raw_list]
 
-    def show_var(self, *vars: str) -> str:
-        l = [f'    {var} = {self.__dict__[var]}' for var in vars]
+    def _show_var(self, *vars: str) -> str:
+        l = [f'    {var} = {self.config[var]}' for var in vars]
         return '\n\n' + '\n'.join(l) + '\n'
 
 
