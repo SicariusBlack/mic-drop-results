@@ -1,5 +1,6 @@
 from collections.abc import Callable
 import configparser
+import re
 from typing import TypedDict, Any, TypeVar
 
 from exceptions import Error
@@ -17,6 +18,32 @@ class ConfigVarTypes(TypedDict):
     ranges: list[float]
     scheme: list[str]
     scheme_alt: list[str]
+
+
+class ConfigVarConditions:
+    def __init__(self, config) -> None:
+        self.trigger_word: str
+        self.ranges: list
+        self.scheme: list
+        self.scheme_alt: list
+
+        self.__dict__.update(**config)
+
+    def check(self):
+        assert len(self.trigger_word) > 0, (
+            'Variable trigger_word must not be empty.')
+        
+        assert len(self.ranges) == len(self.scheme) == len(self.scheme_alt), (
+            'Lists in variables ranges, scheme, and scheme_alt must '
+            'all have the same length (see notes for details).')
+        
+        hex_pattern = r'^(?:[0-9a-fA-F]{3}){1,2}$'
+
+        for i, scheme in enumerate([self.scheme, self.scheme_alt]):
+            assert all(re.fullmatch(hex_pattern, h) for h in scheme), (
+                f'Invalid hex code found in\n'
+                f'    {["scheme", "scheme_alt"][i]} = {scheme}\n'
+                f'Did you make a typo?')
 
 
 T = TypeVar('T')  # Pronounces "typed"
@@ -78,7 +105,14 @@ def load_config(filepath: str) -> ConfigVarTypes:
     ]:
         Error(30).throw(str(missing_vars))
 
-    return parse_config(config)
+    config = parse_config(config)
+
+    try:
+        ConfigVarConditions(config).check()
+    except AssertionError as e:
+        Error(31.1).throw(*e.args)
+
+    return config
 
 
 if __name__ == '__main__':

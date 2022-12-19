@@ -46,15 +46,19 @@ class Traceback:
         ],
     # 30 - 39: Config errors
         30: [
-            'Missing variable in settings.ini',
+            'Missing variable in settings.ini.',
             'The following config variables are missing. Please download '
             'the latest version of settings.ini and try again.\n'
             'https://github.com/banz04/mic-drop-results/releases/latest'
         ],
         31: [
-            'Invalid data type for variable in settings.ini',
+            'Invalid data type for the following variable in settings.ini.',
             'Please verify that the config variable is in the correct '
-            'format according to the note left above the variable.'
+            'format according to the notes above the variable.'
+        ],
+        31.1: [
+            'A variable from settings.ini failed the requirement check.',
+            'Please see the notes above the variable for more details.'
         ],
 
     # 40 and above: Program errors
