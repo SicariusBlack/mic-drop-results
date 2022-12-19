@@ -4,7 +4,6 @@ import re
 from typing import Any, TypeVar
 
 from exceptions import Error
-from utils import abs_path
 
 
 class ConfigVarTypes:
@@ -23,7 +22,7 @@ class ConfigVarTypes:
 T = TypeVar('T')
 
 
-class Config(ConfigVarTypes):
+class Config(ConfigVarTypes):  # TODO: Add docstrings
     def __init__(self, filepath: str):
         parser = configparser.ConfigParser()
         parser.read(filepath)
@@ -108,8 +107,3 @@ class Config(ConfigVarTypes):
     def _show_var(self, *vars: str) -> str:
         l = [f'    {name} = {self.config[name]}' for name in vars]
         return '\n\n' + '\n'.join(l) + '\n'
-
-
-if __name__ == '__main__':
-    config = Config(abs_path('settings.ini')).__dict__
-    print(config)
