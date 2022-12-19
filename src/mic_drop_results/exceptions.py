@@ -58,7 +58,8 @@ class Traceback:
         ],
         31.1: [
             'A variable from settings.ini failed the requirement check.',
-            'Please see the notes above the variable for more details.'
+            'Please verify that the config variable is in the correct '
+            'format according to the notes above the variable.'
         ],
 
     # 40 and above: Program errors
