@@ -9,13 +9,17 @@ from utils import inp, console_style
 
 
 class Traceback:
+    SCREENSHOT = ('Please take a screenshot of everything displayed below '
+                  'when filling out a bug report. Thank you for your '
+                  'patience in getting the issue resolved.')
+    
+    CONFIG_FORMAT = ('Please verify that the config variables are in their '
+                     'valid format according to the note above each variable.')
+
     _err_lookup = {
     # 0 – 19: Dev-only errors
         0: [
-            'Unhandled error.',
-            'Please take a screenshot of everything displayed below '
-            'when filling out a bug report. Thank you for your '
-            'patience in getting the issue resolved.'
+            'Unhandled error.', SCREENSHOT
         ],
         1: [
             'Traceback ID lookup error.',
@@ -24,22 +28,22 @@ class Traceback:
 
     # 20 – 29: API errors
         20: [
-            'Failed to communicate with the Discord API.',
+            'Failed to communicate with Discord API.',
             'We are unable to download profile pictures at the moment. '
             'Please check your internet connection and try again.'
         ],
         21: [
             'No valid API token found.',
-            'Please add a bot token in token.txt or disable '
+            'Please add a bot token to token.txt or turn off '
             'avatar_mode in settings.ini.'
         ],
         21.1: [
-            'Unable to fetch data using the following API token.',
-            'Please replace this bot token with a new valid one in '
-            'token.txt or disable avatar_mode in settings.ini.'
+            'Unable to fetch data from Discord API using the following token.',
+            'Please replace the following bot token in token.txt with a new '
+            'valid one or disable avatar_mode in settings.ini.'
         ],
         22: [
-            'Unknown API error.'
+            'Unknown API error.', SCREENSHOT
         ],
         23: [
             'Failed to download profile pictures of the following IDs.',
@@ -54,13 +58,11 @@ class Traceback:
         ],
         31: [
             'Invalid data type for the following variable in settings.ini.',
-            'Please verify that the config variable is in the correct '
-            'format according to the notes above the variable.'
+            CONFIG_FORMAT
         ],
         31.1: [
             'A variable from settings.ini failed the requirement check.',
-            'Please verify that the config variable is in the correct '
-            'format according to the notes above the variable.'
+            CONFIG_FORMAT
         ],
 
     # 40 and above: Program errors
