@@ -23,7 +23,7 @@ Every application cannot have more than one bot; to
 HOW THIS FILE WORKS
 -------
 The program will go through every line in this file,
-  when it meets a line with more than 62 characters,
+  when it meets a line with more than 70 characters,
   it will recognize such line as a token.
 
 Understanding the mechanism, you could now paste the
