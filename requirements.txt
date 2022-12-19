@@ -9,6 +9,7 @@ idna==3.4
 lxml==4.9.2
 numpy==1.23.5
 opencv-python==4.6.0.66
+openpyxl==3.0.10
 packaging==22.0
 pandas==1.5.2
 pefile==2022.5.30
