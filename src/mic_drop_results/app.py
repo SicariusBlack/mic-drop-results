@@ -204,7 +204,7 @@ if __name__ == '__main__':
         fetch_avatar_url('1010885414850154587', token)
 
 
-# Section D: Check for updates
+# Section E: Check for updates
     status = None
     with contextlib.suppress(requests.exceptions.ConnectionError, KeyError):
         if cfg.update_check:
@@ -257,38 +257,42 @@ if __name__ == '__main__':
         print(REPO_URL)
 
 
-    # Section E: Process the data
+# Section E: Read and process data.xlsx
     xls = pd.ExcelFile(abs_path('data.xlsx'))
 
-    sheetnames_raw = xls.sheet_names
-    sheetnames = [re.sub(r'[\\\/:"*?<>|]+',  # Forbidden file name characters
-        '', sheet) for sheet in sheetnames_raw]
+    sheet_names = [str(name) for name in xls.sheet_names]
+    sheet_names_filtered = [re.sub(
+        r'[\\\/:"*?<>|]+', '',  # Forbidden file name characters
+        name) for name in sheet_names]
+
+
+    # Extract tables that belong to the database
+    database: list[pd.DataFrame] = []
+
+    for sheet in sheet_names:
+        if not sheet.startswith('_'):  # Database tables are signified with _
+            continue
+
+        table = pd.read_excel(xls, sheet)
+
+        if table.empty or table.shape < (1, 2):  # 1 row, 2 cols min
+            continue
+
+        database.append(table)
 
     data = {}
 
-    db_list = []
-    for sheet in sheetnames_raw:
-        if sheet.startswith('_'):
-            df = pd.read_excel(xls, sheet)
+    SHARING_VIOLATION = ('NOTE: Please exit the program before modifying '
+                        'data.xlsx or Microsoft Excel will throw a '
+                        'Sharing Violation error.')  # TODO
 
-            # Validate shape
-            if df.empty or df.shape < (1, 2):
-                continue
-
-            db_list.append(df)
-
-    SHARING_VIOLATION = '\033[33mNOTE: Please exit the program before modifying data.xlsx or ' \
-                        'Microsoft Excel will throw a Sharing Violation error.\033[39m'
-
-    for i, sheet in enumerate(sheetnames_raw):
-        df = pd.read_excel(xls, sheet)
-
-        # Validate shape
-        if df.empty or df.shape < (1, 2):
+    for i, sheet in enumerate(sheet_names):
+        if sheet.startswith('_'):  # Exclude database tables
             continue
 
-        # Exclude database sheets
-        if sheet.startswith('_'):
+        df = pd.read_excel(xls, sheet)
+
+        if df.empty or df.shape < (1, 2):  # 1 row, 2 cols min
             continue
 
         # Exclude sheets with first two columns where data is not numeric
@@ -335,8 +339,8 @@ if __name__ == '__main__':
 
         # Merge contestant database
         clean_name = lambda x: x.str.lower().str.strip() if(x.dtype.kind == 'O') else x
-        if db_list:
-            for db in db_list:
+        if database:
+            for db in database:
                 df_cols = df.columns.values.tolist()
                 db_cols = db.columns.values.tolist()
                 merge_col = db_cols[0]
@@ -365,7 +369,7 @@ if __name__ == '__main__':
         # Fill in missing templates
         df['template'].fillna(1, inplace=True)
 
-        data[sheetnames[i]] = df
+        data[sheet_names_filtered[i]] = df
 
     if not data:
         Error(f'No valid sheet found in {APP_DIR}data.xlsx').throw()
