@@ -1,6 +1,5 @@
 import os
 
-
 # Web URLs
 REPO_URL = 'https://github.com/banz04/mic-drop-results/'
 LATEST_RELEASE_URL = f'{REPO_URL}releases/latest/'
