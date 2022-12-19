@@ -1,7 +1,7 @@
 from collections.abc import Callable
 import configparser
 import re
-from typing import TypedDict, Any, TypeVar
+from typing import Any, TypeVar
 
 from exceptions import Error
 from utils import abs_path
@@ -21,20 +21,24 @@ class ConfigVarTypes:
 
 
 class Config(ConfigVarTypes):
-    def validate(self):
+    def _validate(self):
         assert len(self.trigger_word) > 0, (
-            'Variable trigger_word must not be empty.')
-        
-        assert len(self.ranges) == len(self.scheme) == len(self.scheme_alt), (
-            'Lists in variables ranges, scheme, and scheme_alt must '
-            'all have the same length (see notes for details).')
-        
-        hex_pattern = r'^(?:[0-9a-fA-F]{3}){1,2}$'
+            'Config variable trigger_word must not be empty.')
 
-        for scheme in [self.scheme, self.scheme_alt]:
-            assert all(re.fullmatch(hex_pattern, h) for h in scheme), (
-                f'Invalid hex code found:'
-                f'{self._show_var("scheme", "scheme_alt")}')
+        assert (len(self.ranges) ==
+                len(self.scheme) ==
+                len(self.scheme_alt)), (
+            'Lists from variables ranges, scheme, and scheme_alt must '
+            'all have the same length.')
+
+        valid_hex = r'^(?:[0-9a-fA-F]{3}){1,2}$'
+
+        assert all(re.fullmatch(valid_hex, h)
+                   for scheme in [self.scheme, self.scheme_alt]
+                   for h in scheme), (
+            'Invalid hex codes found in:'
+            + self._show_var('scheme', 'scheme_alt'))
+
 
     def __init__(self, filepath: str):
         parser = configparser.ConfigParser()
@@ -45,14 +49,15 @@ class Config(ConfigVarTypes):
             k: v for d in parser.values() for k, v in d.items()
         }
 
-        self._check_missing_vars()
-        self._parse_values()
+        self._check_missing_vars()   # Check for missing config variables
+        self._parse_config()         # Parse values to their assigned types
+        self.__dict__ = self.config  # Assign config to class attributes
 
         try:
-            self.__dict__ = self.config
-            self.validate()
+            self._validate()         # Validate special conditions
         except AssertionError as e:
             Error(31.1).throw(*e.args)
+
 
     def _check_missing_vars(self):
         if missing_vars := [
@@ -60,7 +65,8 @@ class Config(ConfigVarTypes):
         ]:
             Error(30).throw(str(missing_vars))
 
-    def _parse_values(self):
+
+    def _parse_config(self):
         for var, var_type in ConfigVarTypes.__annotations__.items():
             try:
                 if var_type in [float, str]:
@@ -92,6 +98,7 @@ class Config(ConfigVarTypes):
 
     T = TypeVar('T')
 
+
     def _parse_list(self, var_type: Callable[[str], T], val: str) -> list[T]:
         raw_list = (
             val
@@ -100,6 +107,7 @@ class Config(ConfigVarTypes):
             .split(','))
 
         return [var_type(v.strip()) for v in raw_list]
+
 
     def _show_var(self, *vars: str) -> str:
         l = [f'    {var} = {self.config[var]}' for var in vars]
