@@ -274,7 +274,6 @@ if __name__ == '__main__':
             continue
 
         table = pd.read_excel(xls, sheet)
-
         if table.empty or table.shape < (1, 2):  # 1 row, 2 cols min
             continue
 
@@ -291,12 +290,11 @@ if __name__ == '__main__':
             continue
 
         df = pd.read_excel(xls, sheet)
-
         if df.empty or df.shape < (1, 2):  # 1 row, 2 cols min
             continue
 
-        # Exclude sheets with first two columns where data is not numeric
-        if sum(df.iloc[:, i].dtype.kind in 'biufc' for i in range(2)) < 2:
+        # Exclude sheets where first two columns are not numeric
+        if any(df.iloc[:, i].dtype.kind not in 'biufc' for i in range(2)):
             Error(f'Invalid data type. The following rows of {sheet} contain strings '
                    'instead of the supposed numeric data type within the first two columns. '
                    'The sheet will be excluded if you proceed on.',
@@ -308,7 +306,7 @@ if __name__ == '__main__':
 
             continue
 
-        # Replace NaN values within the first two columns with 0
+        # Replace nan values within the first two columns with 0
         if df.iloc[:, :2].isnull().values.any():
             Error(f'The following rows of {sheet} contain empty values '
                 'within the first two columns.',
