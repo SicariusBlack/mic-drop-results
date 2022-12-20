@@ -381,12 +381,13 @@ if __name__ == '__main__':
 
             df.loc[:, scols] = df.loc[:, scols].fillna(0)
 
-        # Check for cases where avg and std are the same (hold the same rank)
-        print(cfg.sorting_columns)
-        print(pd.DataFrame(df.loc[:, scols]
-            * (2*np.array(cfg.sorting_columns)-1)))
-        df['r'] = pd.DataFrame(zip(df.iloc[:, 0], df.iloc[:, 1] * -1)) \
-                    .apply(tuple, axis=1).rank(method='min', ascending=False).astype(int)
+        # Rank data
+        df['r'] = (
+            pd.DataFrame(df.loc[:, scols]             # Sorting columns
+            * (np.array(cfg.sorting_columns)*2 - 1))  # Turn 0/1 into -1/1
+            .apply(tuple, axis=1)  # type: ignore
+            .rank(method='min', ascending=False)
+            .astype(int))
 
         # Sort the slides
         df = df.sort_values(by='r', ascending=True)
@@ -394,7 +395,7 @@ if __name__ == '__main__':
         print(
             '\n\n'
             + preview_df(df, df.columns, len(df.columns), highlight=False))
-
+        sys.exit()
         # Remove .0 from whole numbers
         format_number = lambda x: str(int(x)) if x % 1 == 0 else str(x)
         df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_number)
@@ -457,9 +458,9 @@ if __name__ == '__main__':
             os.unlink(f)
 
         # Update last clear time
-        with open('config.json', 'w') as f:
-            config['last_clear_avatar_cache'] = int(time.time())
-            dump(config, f, indent=4)
+        # with open('config.json', 'w') as f:
+        #     config['last_clear_avatar_cache'] = int(time.time())
+        #     dump(config, f, indent=4)
 
     # Download avatars with parallel processing
     attempt = 0
