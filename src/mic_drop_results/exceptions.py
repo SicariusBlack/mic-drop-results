@@ -5,7 +5,7 @@ from traceback import format_exception
 from colorama import Fore, Style
 
 from constants import *
-from utils import inp, console_style
+from utils import abs_path, inp, console_style
 
 
 class Tag(Enum):
@@ -106,6 +106,15 @@ class Traceback:
             'The sorting columns of the following sheet contain cells '
             'with empty values.',
             'These empty values will be replaced with 0\'s if you proceed on.'
+        ],
+        68: [
+            Tag.DATA_XLSX, 'No valid sheet found.',
+            'We have examined every sheet from the following Excel file:\n'
+            + abs_path("data.xlsx"),
+            'No sheet appears to be in the correct format.',
+            'Please download a sample data.xlsx file from the following link '
+            'and use it as a reference for customizing your own.\n'
+            + TEMPLATES_URL
         ],
     }
 

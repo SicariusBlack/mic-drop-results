@@ -157,6 +157,28 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
     return slide
 
 
+def preview_df(df: pd.DataFrame, filter_series: pd.Series,
+               highlight_cols: list[str],
+               highlight_words: list[str] | None = None) -> str:
+
+    if highlight_words is None:
+        highlight_words = []
+
+    preview = (df.iloc[:, : min(2+4, df.shape[1])]
+               [filter_series].to_string())
+
+    for col_name in highlight_cols:
+        preview = preview.replace(
+            col_name, f'{Fore.RED}{col_name}{Fore.RESET}', 1)
+
+    for word in highlight_words:
+        preview = preview.replace(
+            word, f'{Fore.RED}{word}{Fore.RESET}')
+
+    preview = f'{Style.BRIGHT}' + preview.replace('\n', Style.NORMAL + '\n', 1)
+    return preview
+
+
 if __name__ == '__main__':
     version_tag = '3.0'
 
@@ -293,18 +315,19 @@ if __name__ == '__main__':
 
         df.index += 2  # To reflect row numbers as displayed in Excel
 
+        sorting_columns = df.columns.values.tolist()[:2]
         SORTING_COLUMNS = (
-            f'Sorting columns: {df.columns.values.tolist()[:2]}\n'
-            f'Sheet: \'{sheet}\'')
+            f'  Sheet name:       {sheet}\n'
+            f'  Sorting columns:  {", ".join(sorting_columns)}')
+
 
         # Exclude sheets where sorting columns are not numeric
         if any(df.iloc[:, i].dtype.kind not in 'biufc' for i in range(2)):
             Error(60).throw(
                 SORTING_COLUMNS,
 
-                (df.iloc[:, : min(2+4, df.shape[1])]
-                [~df.iloc[:, :2].applymap(np.isreal).all(1)]
-                .to_string()),
+                preview_df(df, ~df.iloc[:, :2].applymap(np.isreal).all(1),
+                           sorting_columns),
 
                 err_type=ErrorType.WARNING)
             continue
@@ -314,9 +337,9 @@ if __name__ == '__main__':
             Error(61).throw(
                 SORTING_COLUMNS,
 
-                (df.iloc[:, : min(2+4, df.shape[1])]
-                [df.iloc[:, :2].isnull().any(axis=1)]
-                .to_string()),
+                preview_df(df, df.iloc[:, :2].isnull().any(axis=1),
+                           sorting_columns,
+                           highlight_words=['NaN']),
 
                 err_type=ErrorType.WARNING)
 
@@ -371,7 +394,7 @@ if __name__ == '__main__':
         data[sheet_names_filtered[i]] = df
 
     if not data:
-        Error(f'No valid sheet found in {APP_DIR}data.xlsx').throw()
+        Error(68).throw()
 
 
     # Section F: Generate PowerPoint slides
