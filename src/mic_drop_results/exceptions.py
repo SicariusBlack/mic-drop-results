@@ -98,7 +98,7 @@ class Traceback:
             Tag.DATA_XLSX, 'Invalid data type within the sorting columns.',
             'The sorting columns of the following sheet contain text '
             'instead of the expected numeric data type.\n'
-            'Did you accidentally type in a non-numeric character?',
+            'Have you pasted data in the wrong column by any chance?',
             'The sheet will be excluded if you proceed on.'
         ],
         61: [

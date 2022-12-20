@@ -341,8 +341,9 @@ if __name__ == '__main__':
         n_scols = len(cfg.sorting_columns)
         scols = df.columns.values.tolist()[:n_scols]
         SORTING_COLUMNS = (
-            f'    Sheet name:       {sheet}\n'
-            f'    Sorting columns:  {", ".join(scols)}')
+            f'{Style.BRIGHT}Sheet name:{Style.NORMAL}       {sheet}\n'
+            f'{Style.BRIGHT}Sorting columns:{Style.NORMAL}  {", ".join(scols)}'
+        )
 
 
         if df.empty or df.shape < (1, n_scols):  # (rows, columns) min
