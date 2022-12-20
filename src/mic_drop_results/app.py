@@ -157,14 +157,15 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
     return slide
 
 
-def preview_df(df: pd.DataFrame, filter_series: pd.Series, n_cols: int,
+def preview_df(df: pd.DataFrame, filter_series: pd.Series,
+               n_cols: int, n_cols_ext: int = 3,
                highlight_words: list[str | None] | None = None) -> str:
 
     if highlight_words is None:
         highlight_words = []
 
     # Only show the first few columns for preview
-    df = df.iloc[:, : min(n_cols + 3, df.shape[1])][filter_series]
+    df = df.iloc[:, : min(n_cols + n_cols_ext, df.shape[1])][filter_series]
 
     # Replace values_to_highlight with {values_to_highlight}
     for word in highlight_words:
@@ -178,7 +179,7 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series, n_cols: int,
 
     # Highlight column names
     for n in range(n_cols):
-        col = df.columns.values[n]
+        col = df.columns.values.tolist()[n]
         preview = preview.replace(
             col, f'{Fore.RED}{col}{Fore.RESET}', 1)
 
@@ -324,41 +325,46 @@ if __name__ == '__main__':
 
         # Parse sorting columns
         n_scols = len(cfg.sorting_columns)
-        scols = df.columns.values[:n_scols]
+        scols = df.columns.values.tolist()[:n_scols]
         SORTING_COLUMNS = (
             f'  Sheet name:       {sheet}\n'
             f'  Sorting columns:  {", ".join(scols)}')
 
 
-        if df.empty or df.shape < (1, n_scols):  # (# rows, # columns) min
+        if df.empty or df.shape < (1, n_scols):  # (rows, columns) min
             continue
 
         df.index += 2  # To reflect row numbers as displayed in Excel
 
         # Exclude sheets where sorting columns are not numeric
-        if any(df.loc[:, col].dtype.kind not in 'biufc' for col in scols):
+        if any(df.loc[:, scol].dtype.kind not in 'biufc' for scol in scols):
+            # Get list of non-numeric values
+            str_vals = (df.loc[:, scols][~df.loc[:, scols].applymap(np.isreal)]
+                .melt().dropna()['value'].tolist())
+
             Error(60).throw(
                 SORTING_COLUMNS,
 
                 preview_df(
-                    df, ~df.iloc[:, :n_scols].applymap(np.isreal).all(1),
-                    n_scols, highlight_words=['1a']),  # TODO
+                    df, ~df.loc[:, scols].applymap(np.isreal).all(1),
+                    n_scols, highlight_words=str_vals),
 
                 err_type=ErrorType.WARNING)
+
             continue
 
         # Replace empty values within the sorting columns with 0
-        if df.iloc[:, :n_scols].isnull().values.any():
+        if df.loc[:, scols].isnull().values.any():
             Error(61).throw(
                 SORTING_COLUMNS,
 
                 preview_df(
-                    df, df.iloc[:, :n_scols].isnull().any(axis=1),
+                    df, df.loc[:, scols].isnull().any(axis=1),
                     n_scols, highlight_words=[None]),
 
                 err_type=ErrorType.WARNING)
 
-            df.iloc[:, :n_scols] = df.iloc[:, :n_scols].fillna(0)
+            df.loc[:, scols] = df.loc[:, scols].fillna(0)
 
         # Check for cases where avg and std are the same (hold the same rank)
         df['r'] = pd.DataFrame(zip(df.iloc[:, 0], df.iloc[:, 1] * -1)) \
