@@ -293,11 +293,14 @@ if __name__ == '__main__':
 
         df.index += 2  # To reflect row numbers as displayed in Excel
 
-        # Exclude sheets where first two columns are not numeric
+        SORTING_COLUMNS = (
+            f'Sorting columns: {df.columns.values.tolist()[:2]}\n'
+            f'Sheet: \'{sheet}\'')
+
+        # Exclude sheets where sorting columns are not numeric
         if any(df.iloc[:, i].dtype.kind not in 'biufc' for i in range(2)):
             Error(60).throw(
-                f'Sorting columns: {df.columns.values.tolist()[:2]}\n'
-                f'Sheet: \'{sheet}\'',
+                SORTING_COLUMNS,
 
                 (df.iloc[:, : min(2+4, df.shape[1])]
                 [~df.iloc[:, :2].applymap(np.isreal).all(1)]
@@ -306,18 +309,16 @@ if __name__ == '__main__':
                 err_type=ErrorType.WARNING)
             continue
 
-        # Replace nan values within the first two columns with 0
+        # Replace empty values within the sorting columns with 0
         if df.iloc[:, :2].isnull().values.any():
-            Error(f'The following rows of {sheet} contain empty values '
-                'within the first two columns.',
+            Error(61).throw(
+                SORTING_COLUMNS,
 
-                df[df.iloc[:, :2].isnull().any(axis=1)],
+                (df.iloc[:, : min(2+4, df.shape[1])]
+                [df.iloc[:, :2].isnull().any(axis=1)]
+                .to_string()),
 
-                'You may exit this program and modify your data or proceed on with '
-                'these empty values substituted with 0.',
-
-                err_type=ErrorType.WARNING
-            ).throw()
+                err_type=ErrorType.WARNING)
 
             df.iloc[:, :2] = df.iloc[:, :2].fillna(0)
 
