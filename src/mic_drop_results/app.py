@@ -180,18 +180,6 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series,
 
     preview = df.head(10).__repr__()
 
-    # Add ... at the end of each line if preview is a snippet of all columns
-    if n_cols < len(df.columns):
-        preview = preview.replace('\n', '  ...\n') + '  ...'
-    
-    # Bold first row of column names
-    preview = f'{Style.BRIGHT}' + preview.replace('\n', Style.NORMAL + '\n', 1)
-
-    if not highlight:
-        preview = preview.replace('⦃', '  ').replace('⦄', '')
-        return preview
-
-
     # Highlight ⦃values_to_highlight⦄
     preview = preview.replace('⦃', Fore.RED + '  ').replace('⦄', Fore.RESET)
 
@@ -201,6 +189,17 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series,
         preview = preview.replace(
             ' ' + col, f' {Fore.RED}{col}{Fore.RESET}', 1)
 
+
+    # Add ... at the end of each line if preview is a snippet
+    if n_cols < len(df.columns):
+        preview = preview.replace('\n', '  ...\n') + '  ...'
+
+    # Bold first row
+    preview = f'{Style.BRIGHT}' + preview.replace('\n', Style.NORMAL + '\n', 1)
+
+
+    if not highlight:
+        preview = preview.replace(Fore.RED, '')
     return preview
 
 
