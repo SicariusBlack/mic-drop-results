@@ -382,7 +382,9 @@ if __name__ == '__main__':
             df.loc[:, scols] = df.loc[:, scols].fillna(0)
 
         # Check for cases where avg and std are the same (hold the same rank)
-        print(pd.DataFrame(df.iloc[:, :2] * (2*np.array(cfg.sorting_columns)-1)))
+        print(cfg.sorting_columns)
+        print(pd.DataFrame(df.loc[:, scols]
+            * (2*np.array(cfg.sorting_columns)-1)))
         df['r'] = pd.DataFrame(zip(df.iloc[:, 0], df.iloc[:, 1] * -1)) \
                     .apply(tuple, axis=1).rank(method='min', ascending=False).astype(int)
 
