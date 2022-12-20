@@ -165,6 +165,8 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series,
     if words_to_highlight is None:
         words_to_highlight = []
 
+    df.index += 2  # To reflect row numbers as displayed in Excel
+
     # Only show the first few columns for preview
     df = df.iloc[:, : min(n_cols + n_cols_ext, df.shape[1])][filter_series]
 
@@ -349,8 +351,6 @@ if __name__ == '__main__':
         if df.empty or df.shape < (1, n_scols):  # (rows, columns) min
             continue
 
-        df.index += 2  # To reflect row numbers as displayed in Excel
-
         # Exclude sheets where sorting columns are not numeric
         if any(df.loc[:, scol].dtype.kind not in 'biufc' for scol in scols):
             # Get list of non-numeric values
@@ -382,6 +382,7 @@ if __name__ == '__main__':
             df.loc[:, scols] = df.loc[:, scols].fillna(0)
 
         # Check for cases where avg and std are the same (hold the same rank)
+        print(pd.DataFrame(df.iloc[:, :2] * (2*np.array(cfg.sorting_columns)-1)))
         df['r'] = pd.DataFrame(zip(df.iloc[:, 0], df.iloc[:, 1] * -1)) \
                     .apply(tuple, axis=1).rank(method='min', ascending=False).astype(int)
 
