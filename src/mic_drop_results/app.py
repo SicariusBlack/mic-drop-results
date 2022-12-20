@@ -398,7 +398,7 @@ if __name__ == '__main__':
     attempt = 0
     pool = Pool(3)
 
-    while avatar_mode:
+    while cfg.avatar_mode:
         uid_list = []
 
         for df in data.values():

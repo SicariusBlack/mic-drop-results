@@ -8,6 +8,15 @@ from constants import *
 from utils import inp, console_style
 
 
+class Tag(Enum):
+    DEV = 'DEV'
+    SYS = 'SYS'
+    INTERNET = 'ConnectionError'
+    SETTINGS_INI = 'settings.ini'
+    TOKEN_TXT = 'token.txt'
+    DATA_XLSX = 'data.xlsx'
+
+
 class Traceback:
     templates = {
         'screenshot': (
@@ -23,60 +32,60 @@ class Traceback:
     _err_lookup = {
     # 0 – 19: Dev-only errors
         0: [
-            'Unhandled error.', templates['screenshot']
+            Tag.DEV, 'Unhandled error.'
         ],
         1: [
-            'Traceback ID lookup error.',
-            'Failed to fetch info from the following traceback ID.'
+            Tag.DEV, 'Traceback ID lookup error.'
         ],
 
     # 20 – 29: API errors
         20: [
-            'Failed to communicate with Discord API.',
+            Tag.INTERNET, 'Failed to communicate with Discord API.',
             'We are unable to download profile pictures at the moment. '
             'Please check your internet connection and try again.'
         ],
         21: [
-            'No valid API token found.',
+            Tag.TOKEN_TXT, 'No valid API token found.',
             'Please add a bot token to token.txt or turn off '
             'avatar_mode in settings.ini.'
         ],
         21.1: [
-            'Unable to fetch data from Discord API using the following token.',
-            'Please replace the following bot token in token.txt with a new '
+            Tag.TOKEN_TXT, 'The following API token is invalid.',
+            'Please replace the following token in token.txt with a new '
             'valid one or disable avatar_mode in settings.ini.'
         ],
         22: [
-            'Unknown API error.', templates['screenshot']
+            Tag.DEV, 'Unknown API error.'
         ],
         23: [
-            'Failed to download profile pictures of the following IDs.',
+            Tag.DATA_XLSX, 'Failed to download avatars of the following IDs.',
             'Please check if these user IDs are valid.'
         ],
     # 30 - 39: Config errors
         30: [
-            'Missing variable in settings.ini.',
+            Tag.SETTINGS_INI, 'Missing config variables.',
             'The following config variables are missing. Please download '
             'the latest version of settings.ini and try again.\n'
-            + LATEST_RELEASE_URL
+            + TEMPLATES_URL
         ],
         31: [
-            'Invalid data type for the following variable in settings.ini.',
+            Tag.SETTINGS_INI, 'Invalid data type for config variable.',
             templates['cfg_format']
         ],
         31.1: [
-            'A variable from settings.ini failed the requirement check.',
+            Tag.SETTINGS_INI, 'Config variable failed requirement check.',
             templates['cfg_format']
         ],
 
     # 40 and above: Program errors
         40: [
-            'The following files are missing.',
-            'Please review the documentation for more information '
-            'regarding file requirements.'
+            Tag.SYS, 'The following files are missing.',
+            'Please download the missing files from the following link.\n'
+            + TEMPLATES_URL
         ],
         41: [
-            'Failed to import VBA macro due to trust access settings.',
+            Tag.SYS, 'Failed to import VBA macro due to trust access '
+            'settings.',
             'Please open PowerPoint, navigate to:\n'
             'File > Options > Trust Center > Trust Center Settings '
             '> Macro Settings, and make sure "Trust access to the VBA '
@@ -86,12 +95,21 @@ class Traceback:
 
     def lookup(self, tb: float) -> list[str]:
         try:
-            return self._err_lookup[tb]
+            res = self._err_lookup[tb]
+            res[1] = f'[{res[0].name}] {res[1]}'
+
+            if res[0] == Tag.DEV:
+                res.append(self.templates['screenshot'])
+
+            return res[1:]
         except KeyError:
-            tb_list = [i for i in self._err_lookup if abs(tb - i) < 2]
+            tb_list = [i for i in self._err_lookup if abs(tb - i) < 5]
+            if not tb_list:
+                tb_list = list(self._err_lookup)
+
             Error(1).throw(
-                str(tb),
-                f'Perhaps you are looking for: {tb_list}',
+                f'Traceback ID: {tb}\n'
+                f'Perhaps you are looking for: {tb_list}'
             )
             return []
 
