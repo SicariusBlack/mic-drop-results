@@ -281,15 +281,13 @@ if __name__ == '__main__':
 
     data = {}
 
-    SHARING_VIOLATION = ('NOTE: Please exit the program before modifying '
-                        'data.xlsx or Microsoft Excel will throw a '
-                        'Sharing Violation error.')  # TODO
-
     for i, sheet in enumerate(sheet_names):
         if sheet.startswith('_'):  # Exclude database tables
             continue
 
         df = pd.read_excel(xls, sheet)
+        xls.close()
+
         if df.empty or df.shape < (1, 2):  # 1 row, 2 cols min
             continue
 
@@ -316,7 +314,7 @@ if __name__ == '__main__':
                 df[df.iloc[:, :2].isnull().any(axis=1)],
 
                 'You may exit this program and modify your data or proceed on with '
-                'these empty values substituted with 0.', SHARING_VIOLATION,
+                'these empty values substituted with 0.',
 
                 err_type=ErrorType.WARNING
             ).throw()
