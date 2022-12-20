@@ -158,36 +158,49 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
 
 def preview_df(df: pd.DataFrame, filter_series: pd.Series,
-               n_cols: int, n_cols_ext: int = 3,
-               highlight_words: list[str | None] | None = None) -> str:
+               n_cols: int, n_cols_ext: int = 5,
+               highlight: bool = True,
+               words_to_highlight: list[str | None] | None = None) -> str:
 
-    if highlight_words is None:
-        highlight_words = []
+    if words_to_highlight is None:
+        words_to_highlight = []
 
     # Only show the first few columns for preview
     df = df.iloc[:, : min(n_cols + n_cols_ext, df.shape[1])][filter_series]
 
-    # Replace values_to_highlight with {values_to_highlight}
-    for word in highlight_words:
+    # Replace values_to_highlight with ⦃values_to_highlight⦄
+    # The brackets are weird Unicode characters that no one would ever use.
+    for word in words_to_highlight:
         if word is None:
-            df.iloc[:, :n_cols] = df.iloc[:, :n_cols].fillna('{NaN}')
+            df.iloc[:, :n_cols] = df.iloc[:, :n_cols].fillna('⦃NaN⦄')
         else:
             df.iloc[:, :n_cols] = df.iloc[:, :n_cols].replace(
-                word, '{' + str(word) + '}')
+                word, f'⦃{word}⦄')
 
-    preview = df.to_string()
+
+    preview = df.head(10).__repr__()
+
+    # Add ... at the end of each line if preview is a snippet of all columns
+    if n_cols < len(df.columns):
+        preview = preview.replace('\n', '  ...\n') + '  ...'
+    
+    # Bold first row of column names
+    preview = f'{Style.BRIGHT}' + preview.replace('\n', Style.NORMAL + '\n', 1)
+
+    if not highlight:
+        preview = preview.replace('⦃', '  ').replace('⦄', '')
+        return preview
+
+
+    # Highlight ⦃values_to_highlight⦄
+    preview = preview.replace('⦃', Fore.RED + '  ').replace('⦄', Fore.RESET)
 
     # Highlight column names
     for n in range(n_cols):
         col = df.columns.values.tolist()[n]
         preview = preview.replace(
-            col, f'{Fore.RED}{col}{Fore.RESET}', 1)
+            ' ' + col, f' {Fore.RED}{col}{Fore.RESET}', 1)
 
-    # Highlight {values_to_highlight}
-    preview = preview.replace('{', Fore.RED + '  ').replace('}', Fore.RESET)
-
-    # Bold first header row
-    preview = f'{Style.BRIGHT}' + preview.replace('\n', Style.NORMAL + '\n', 1)
     return preview
 
 
@@ -221,6 +234,8 @@ if __name__ == '__main__':
 # Section C: Load user settings
     cfg = Config(abs_path('settings.ini'))
 
+    avatar_mode = cfg.avatar_mode
+
     scheme = list(map(hex_to_rgb, cfg.scheme))
     scheme_alt = list(map(hex_to_rgb, cfg.scheme_alt))
 
@@ -230,7 +245,7 @@ if __name__ == '__main__':
         token_list = [line.replace('"', '').strip()
                       for line in token_list if len(line) > 70]
 
-    if not token_list and cfg.avatar_mode:
+    if not token_list and avatar_mode:
         Error(21).throw()
 
     # Fetch my avatar's URL to test the tokens (TODO: [maintenance])
@@ -327,8 +342,8 @@ if __name__ == '__main__':
         n_scols = len(cfg.sorting_columns)
         scols = df.columns.values.tolist()[:n_scols]
         SORTING_COLUMNS = (
-            f'  Sheet name:       {sheet}\n'
-            f'  Sorting columns:  {", ".join(scols)}')
+            f'    Sheet name:       {sheet}\n'
+            f'    Sorting columns:  {", ".join(scols)}')
 
 
         if df.empty or df.shape < (1, n_scols):  # (rows, columns) min
@@ -347,7 +362,7 @@ if __name__ == '__main__':
 
                 preview_df(
                     df, ~df.loc[:, scols].applymap(np.isreal).all(1),
-                    n_scols, highlight_words=str_vals),
+                    n_scols, words_to_highlight=str_vals),
 
                 err_type=ErrorType.WARNING)
 
@@ -360,7 +375,7 @@ if __name__ == '__main__':
 
                 preview_df(
                     df, df.loc[:, scols].isnull().any(axis=1),
-                    n_scols, highlight_words=[None]),
+                    n_scols, words_to_highlight=[None]),
 
                 err_type=ErrorType.WARNING)
 
@@ -372,6 +387,10 @@ if __name__ == '__main__':
 
         # Sort the slides
         df = df.sort_values(by='r', ascending=True)
+
+        print(
+            '\n\n'
+            + preview_df(df, df.columns, len(df.columns), highlight=False))
 
         # Remove .0 from whole numbers
         format_number = lambda x: str(int(x)) if x % 1 == 0 else str(x)
@@ -407,7 +426,7 @@ if __name__ == '__main__':
                 tb.update(tb[update_cols])
                 df.reset_index(drop=True, inplace=True)
 
-        if 'uid' not in df.columns.values.tolist(): avatar_mode = 0
+        if 'uid' not in df.columns.values.tolist(): avatar_mode = False
 
         # Fill in missing templates
         df['template'].fillna(1, inplace=True)
@@ -443,7 +462,7 @@ if __name__ == '__main__':
     attempt = 0
     pool = Pool(3)
 
-    while cfg.avatar_mode:
+    while avatar_mode:
         uid_list = []
 
         for df in data.values():
@@ -526,7 +545,7 @@ if __name__ == '__main__':
         prs = Presentation(OUTPUT_DIR + output_filename)
 
         for i, slide in enumerate(prs.slides):
-            replace_text(slide, df, i, cfg.avatar_mode)
+            replace_text(slide, df, i, avatar_mode)
         bar.add()
 
         # Save
