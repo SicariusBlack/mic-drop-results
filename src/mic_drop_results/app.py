@@ -293,17 +293,19 @@ if __name__ == '__main__':
         if df.empty or df.shape < (1, 2):  # 1 row, 2 cols min
             continue
 
+        df.index += 2  # To reflect row numbers as displayed in Excel
+
         # Exclude sheets where first two columns are not numeric
         if any(df.iloc[:, i].dtype.kind not in 'biufc' for i in range(2)):
-            Error(f'Invalid data type. The following rows of {sheet} contain strings '
-                   'instead of the supposed numeric data type within the first two columns. '
-                   'The sheet will be excluded if you proceed on.',
+            Error(60).throw(
+                f'Sorting columns: {df.columns.values.tolist()[:2]}\n'
+                f'Sheet: \'{sheet}\'',
 
-                df[~df.iloc[:, :2].applymap(np.isreal).all(1)],
+                (df.iloc[:, : min(2+4, df.shape[1])]
+                [~df.iloc[:, :2].applymap(np.isreal).all(1)]
+                .to_string()),
 
-                err_type=ErrorType.WARNING
-            ).throw()
-
+                err_type=ErrorType.WARNING)
             continue
 
         # Replace nan values within the first two columns with 0

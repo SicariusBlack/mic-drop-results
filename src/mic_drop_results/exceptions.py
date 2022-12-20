@@ -12,9 +12,9 @@ class Tag(Enum):
     DEV = 'DEV'
     SYS = 'SYS'
     INTERNET = 'ConnectionError'
-    SETTINGS_INI = 'settings.ini'
-    TOKEN_TXT = 'token.txt'
-    DATA_XLSX = 'data.xlsx'
+    SETTINGS_INI = 'SETTINGS.INI'
+    TOKEN_TXT = 'TOKEN.TXT'
+    DATA_XLSX = 'DATA.XLSX'
 
 
 class Traceback:
@@ -61,7 +61,8 @@ class Traceback:
             Tag.DATA_XLSX, 'Failed to download avatars of the following IDs.',
             'Please check if these user IDs are valid.'
         ],
-    # 30 - 39: Config errors
+
+    # 30 – 39: Config errors
         30: [
             Tag.SETTINGS_INI, 'Missing config variables.',
             'The following config variables are missing. Please download '
@@ -77,7 +78,7 @@ class Traceback:
             templates['cfg_format']
         ],
 
-    # 40 and above: Program errors
+    # 40 – 59: System errors
         40: [
             Tag.SYS, 'The following files are missing.',
             'Please download the missing files from the following link.\n'
@@ -91,12 +92,21 @@ class Traceback:
             '> Macro Settings, and make sure "Trust access to the VBA '
             'project object model" is enabled.'
         ],
+
+    # 60 and above: Data errors
+        60: [
+            Tag.DATA_XLSX, 'Invalid data type.',
+            f'The sorting columns of the following sheet contain text '
+            'instead of the expected numeric data type.\n'
+            'Did you accidentally type in a non-numeric character?',
+            'The sheet will be excluded if you proceed on.'
+        ],
     }
 
     def lookup(self, tb: float) -> list[str]:
         try:
             res = self._err_lookup[tb]
-            res[1] = f'[{res[0].name}] {res[1]}'
+            res[1] = f'[{res[0].value}] {res[1]}'
 
             if res[0] == Tag.DEV:
                 res.append(self.templates['screenshot'])
