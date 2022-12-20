@@ -102,10 +102,10 @@ class Config(ConfigVarTypes):  # TODO: Add docstrings
                     .split(','))
 
         match ele_type():
-            case int():
-                ele_type = lambda v: int(float(v))
             case bool():
                 ele_type = lambda v: bool(float(v))
+            case int():
+                ele_type = lambda v: int(float(v))
 
         return [ele_type(element.strip()) for element in raw_list]
 
