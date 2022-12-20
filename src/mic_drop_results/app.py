@@ -159,21 +159,26 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
 def preview_df(df: pd.DataFrame, filter_series: pd.Series,
                highlight_cols: list[str],
-               highlight_words: list[str] | None = None) -> str:
+               highlight_words: list | None = None) -> str:
 
     if highlight_words is None:
         highlight_words = []
 
-    preview = (df.iloc[:, : min(2+4, df.shape[1])]
-               [filter_series].to_string())
+    # TODO: Change when there is cfg.sorting_cols
+    df = df.iloc[:, : min(2+4, df.shape[1])][filter_series]
+
+    if 'NaN' in highlight_words:
+        df.iloc[:, :2] = df.iloc[:, :2].fillna('{NaN}')
+    for word in highlight_words:
+        df.iloc[:, :2] = df.iloc[:, :2].replace(word, '{' + str(word) + '}')
+
+    preview = (df.to_string())
 
     for col_name in highlight_cols:
         preview = preview.replace(
             col_name, f'{Fore.RED}{col_name}{Fore.RESET}', 1)
 
-    for word in highlight_words:
-        preview = preview.replace(
-            word, f'{Fore.RED}{word}{Fore.RESET}')
+    preview = preview.replace('{', Fore.RED + '  ').replace('}', Fore.RESET)
 
     preview = f'{Style.BRIGHT}' + preview.replace('\n', Style.NORMAL + '\n', 1)
     return preview
@@ -326,7 +331,8 @@ if __name__ == '__main__':
                 SORTING_COLUMNS,
 
                 preview_df(df, ~df.iloc[:, :2].applymap(np.isreal).all(1),
-                           sorting_columns),
+                           sorting_columns,
+                           highlight_words=['1a']),
 
                 err_type=ErrorType.WARNING)
             continue
@@ -361,14 +367,14 @@ if __name__ == '__main__':
         # Merge contestant database
         clean_name = lambda x: x.str.lower().str.strip() if(x.dtype.kind == 'O') else x
         if database:
-            for db in database:
+            for tb in database:
                 df_cols = df.columns.values.tolist()
-                db_cols = db.columns.values.tolist()
-                merge_col = db_cols[0]
+                tb_cols = tb.columns.values.tolist()
+                merge_col = tb_cols[0]
 
                 # Use merge for non-existing columns
-                df = df.merge(db[[merge_col] + [i for i in db_cols if i not in df_cols]],
-                    left_on=clean_name(df[merge_col]), right_on=clean_name(db[merge_col]), how='left')
+                df = df.merge(tb[[merge_col] + [i for i in tb_cols if i not in df_cols]],
+                    left_on=clean_name(df[merge_col]), right_on=clean_name(tb[merge_col]), how='left')
 
                 df.loc[:, merge_col] = df[merge_col + '_x']
                 df.drop(['key_0', merge_col + '_x', merge_col + '_y'], axis=1, inplace=True)
@@ -377,12 +383,12 @@ if __name__ == '__main__':
                 df['update_index'] = clean_name(df[merge_col])
                 df = df.set_index('update_index')
 
-                db['update_index'] = clean_name(db[merge_col])
-                db = db.set_index('update_index')
-                db_cols.remove(merge_col)
+                tb['update_index'] = clean_name(tb[merge_col])
+                tb = tb.set_index('update_index')
+                tb_cols.remove(merge_col)
 
-                update_cols = [i for i in db_cols if i in df_cols]
-                df.update(db[update_cols])
+                update_cols = [i for i in tb_cols if i in df_cols]
+                tb.update(tb[update_cols])
                 df.reset_index(drop=True, inplace=True)
 
         if 'uid' not in df.columns.values.tolist(): avatar_mode = 0
