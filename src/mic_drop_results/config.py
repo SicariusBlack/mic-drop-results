@@ -21,9 +21,6 @@ class ConfigVarTypes:
     scheme_alt: list[str]
 
 
-T = TypeVar('T')
-
-
 class Config(ConfigVarTypes):  # TODO: Add docstrings
     def __init__(self, filepath: str):
         parser = configparser.ConfigParser()
@@ -95,7 +92,7 @@ class Config(ConfigVarTypes):  # TODO: Add docstrings
                     f'{self._show_var(name)}'
                 )
 
-    def _parse_list(self, list_type: Callable[[str], T], val: str) -> list[T]:
+    def _parse_list(self, list_type: Callable[[str], Any], val: str) -> list:
         ele_type = list_type.__args__[0]  # Extract the elements' type
                                           # ... e.g. <class 'float'> if
                                           # ... list_type is list[float]
@@ -103,6 +100,12 @@ class Config(ConfigVarTypes):  # TODO: Add docstrings
                     .replace('(', '')
                     .replace(')', '')
                     .split(','))
+
+        match ele_type():
+            case int():
+                ele_type = lambda v: int(float(v))
+            case bool():
+                ele_type = lambda v: bool(float(v))
 
         return [ele_type(element.strip()) for element in raw_list]
 
