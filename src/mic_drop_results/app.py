@@ -157,29 +157,35 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
     return slide
 
 
-def preview_df(df: pd.DataFrame, filter_series: pd.Series,
-               highlight_cols: list[str],
-               highlight_words: list | None = None) -> str:
+def preview_df(df: pd.DataFrame, filter_series: pd.Series, n_cols: int,
+               highlight_words: list[str | None] | None = None) -> str:
 
     if highlight_words is None:
         highlight_words = []
 
-    # TODO: Change when there is cfg.sorting_cols
-    df = df.iloc[:, : min(2+4, df.shape[1])][filter_series]
+    # Only show the first few columns for preview
+    df = df.iloc[:, : min(n_cols + 3, df.shape[1])][filter_series]
 
-    if 'NaN' in highlight_words:
-        df.iloc[:, :2] = df.iloc[:, :2].fillna('{NaN}')
+    # Replace values_to_highlight with {values_to_highlight}
     for word in highlight_words:
-        df.iloc[:, :2] = df.iloc[:, :2].replace(word, '{' + str(word) + '}')
+        if word is None:
+            df.iloc[:, :n_cols] = df.iloc[:, :n_cols].fillna('{NaN}')
+        else:
+            df.iloc[:, :n_cols] = df.iloc[:, :n_cols].replace(
+                word, '{' + str(word) + '}')
 
-    preview = (df.to_string())
+    preview = df.to_string()
 
-    for col_name in highlight_cols:
+    # Highlight column names
+    for n in range(n_cols):
+        col = df.columns.values[n]
         preview = preview.replace(
-            col_name, f'{Fore.RED}{col_name}{Fore.RESET}', 1)
+            col, f'{Fore.RED}{col}{Fore.RESET}', 1)
 
+    # Highlight {values_to_highlight}
     preview = preview.replace('{', Fore.RED + '  ').replace('}', Fore.RESET)
 
+    # Bold first header row
     preview = f'{Style.BRIGHT}' + preview.replace('\n', Style.NORMAL + '\n', 1)
     return preview
 
@@ -315,40 +321,44 @@ if __name__ == '__main__':
         df = pd.read_excel(xls, sheet)
         xls.close()
 
-        if df.empty or df.shape < (1, 2):  # 1 row, 2 cols min
+
+        # Parse sorting columns
+        n_scols = len(cfg.sorting_columns)
+        scols = df.columns.values[:n_scols]
+        SORTING_COLUMNS = (
+            f'  Sheet name:       {sheet}\n'
+            f'  Sorting columns:  {", ".join(scols)}')
+
+
+        if df.empty or df.shape < (1, n_scols):  # (# rows, # columns) min
             continue
 
         df.index += 2  # To reflect row numbers as displayed in Excel
 
-        sorting_columns = df.columns.values.tolist()[:2]
-        SORTING_COLUMNS = (
-            f'  Sheet name:       {sheet}\n'
-            f'  Sorting columns:  {", ".join(sorting_columns)}')
-
         # Exclude sheets where sorting columns are not numeric
-        if any(df.iloc[:, i].dtype.kind not in 'biufc' for i in range(2)):
+        if any(df.loc[:, col].dtype.kind not in 'biufc' for col in scols):
             Error(60).throw(
                 SORTING_COLUMNS,
 
-                preview_df(df, ~df.iloc[:, :2].applymap(np.isreal).all(1),
-                           sorting_columns,
-                           highlight_words=['1a']),
+                preview_df(
+                    df, ~df.iloc[:, :n_scols].applymap(np.isreal).all(1),
+                    n_scols, highlight_words=['1a']),  # TODO
 
                 err_type=ErrorType.WARNING)
             continue
 
         # Replace empty values within the sorting columns with 0
-        if df.iloc[:, :2].isnull().values.any():
+        if df.iloc[:, :n_scols].isnull().values.any():
             Error(61).throw(
                 SORTING_COLUMNS,
 
-                preview_df(df, df.iloc[:, :2].isnull().any(axis=1),
-                           sorting_columns,
-                           highlight_words=['NaN']),
+                preview_df(
+                    df, df.iloc[:, :n_scols].isnull().any(axis=1),
+                    n_scols, highlight_words=[None]),
 
                 err_type=ErrorType.WARNING)
 
-            df.iloc[:, :2] = df.iloc[:, :2].fillna(0)
+            df.iloc[:, :n_scols] = df.iloc[:, :n_scols].fillna(0)
 
         # Check for cases where avg and std are the same (hold the same rank)
         df['r'] = pd.DataFrame(zip(df.iloc[:, 0], df.iloc[:, 1] * -1)) \
