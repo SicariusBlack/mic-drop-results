@@ -103,7 +103,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
                 run_text = run.text
 
-                if search_str.startswith(starts):
+                if search_str.startswith(cfg.trigger_word):
                     run.text = repl
                 else:
                     run.text = run.text.replace('{' + search_str + '}', repl)
@@ -138,7 +138,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                             err_type=ErrorType.WARNING).throw()
 
                 # Color formatting
-                if not search_str.startswith(starts):
+                if not search_str.startswith(cfg.trigger_word):
                     continue
 
                 # Check RGB
@@ -279,7 +279,7 @@ if __name__ == '__main__':
         print(REPO_URL)
 
 
-# Section E: Read and process data.xlsx
+# Section F: Read and process data.xlsx
     xls = pd.ExcelFile(abs_path('data.xlsx'))
 
     sheet_names = [str(name) for name in xls.sheet_names]
@@ -319,7 +319,6 @@ if __name__ == '__main__':
         SORTING_COLUMNS = (
             f'  Sheet name:       {sheet}\n'
             f'  Sorting columns:  {", ".join(sorting_columns)}')
-
 
         # Exclude sheets where sorting columns are not numeric
         if any(df.iloc[:, i].dtype.kind not in 'biufc' for i in range(2)):
@@ -397,7 +396,7 @@ if __name__ == '__main__':
         Error(68).throw()
 
 
-    # Section F: Generate PowerPoint slides
+# Section G: Generate PowerPoint slides
     print('\nGenerating slides...')
     print('Please do not click on any PowerPoint windows that may show up in the process.\n')
 
@@ -409,7 +408,7 @@ if __name__ == '__main__':
     os.makedirs(AVATAR_DIR, exist_ok=True)
 
     # Clear cache
-    if time.time() - last_clear > 1800:  # Clears every hour
+    if time.time() - cfg.last_clear_avatar_cache > 1800:  # Clear every hour
         for f in os.scandir(AVATAR_DIR):
             os.unlink(f)
 
@@ -428,7 +427,7 @@ if __name__ == '__main__':
         for df in data.values():
             if df['uid'].dtype.kind in 'biufc':
                 Error('The \'uid\' column has a numeric data type instead of the supposed string data type.',
-                      'Please exit the program and add an underscore before every user ID.', SHARING_VIOLATION).throw()
+                      'Please exit the program and add an underscore before every user ID.').throw()
 
             uid_list += [id for id in df['uid'] if not pd.isnull(id) and not os.path.isfile(AVATAR_DIR + id.strip() + '.png')]
 
@@ -480,7 +479,7 @@ if __name__ == '__main__':
         for t in df.loc[:, 'template']:
             if as_type(int, t) not in range(1, slides_count + 1):
                 Error(f'Template {t} does not exist (error originated from the following sheet: {k}).',
-                      f'Please exit the program and modify the \'template\' column of {k}.', SHARING_VIOLATION).throw()
+                      f'Please exit the program and modify the \'template\' column of {k}.').throw()
 
             ppt.Run('Duplicate', t)
 
@@ -505,7 +504,7 @@ if __name__ == '__main__':
         prs = Presentation(OUTPUT_DIR + output_filename)
 
         for i, slide in enumerate(prs.slides):
-            replace_text(slide, df, i, avatar_mode)
+            replace_text(slide, df, i, cfg.avatar_mode)
         bar.add()
 
         # Save
@@ -514,7 +513,7 @@ if __name__ == '__main__':
         bar.add()
 
 
-    # Section G: Launch the file
+# Section H: Launch the file
     print(f'\nExported to {OUTPUT_DIR}')
 
     # Enable QuickEdit
