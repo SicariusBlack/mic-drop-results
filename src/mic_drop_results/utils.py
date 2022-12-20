@@ -88,7 +88,7 @@ def abs_path(*rels: str) -> str:
 
     Examples:
         >>> abs_path('vba', 'macros.py')
-        'D:\\parent_dir\\src\\md_results\\vba\\macros.py'
+        'D:\\\\parent_dir\\\\src\\\\md_results\\\\vba\\\\macros.py'
     """
     return os.path.join(APP_DIR, *rels)
 
