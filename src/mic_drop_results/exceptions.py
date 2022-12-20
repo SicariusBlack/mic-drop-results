@@ -12,9 +12,9 @@ class Tag(Enum):
     DEV = 'DEV'
     SYS = 'SYS'
     INTERNET = 'ConnectionError'
-    SETTINGS_INI = 'SETTINGS.INI'
-    TOKEN_TXT = 'TOKEN.TXT'
-    DATA_XLSX = 'DATA.XLSX'
+    SETTINGS_INI = 'settings.ini'
+    TOKEN_TXT = 'token.txt'
+    DATA_XLSX = 'data.xlsx'
 
 
 class Traceback:
@@ -95,11 +95,17 @@ class Traceback:
 
     # 60 and above: Data errors
         60: [
-            Tag.DATA_XLSX, 'Invalid data type.',
-            f'The sorting columns of the following sheet contain text '
+            Tag.DATA_XLSX, 'Invalid data type within the sorting columns.',
+            'The sorting columns of the following sheet contain text '
             'instead of the expected numeric data type.\n'
             'Did you accidentally type in a non-numeric character?',
             'The sheet will be excluded if you proceed on.'
+        ],
+        61: [
+            Tag.DATA_XLSX, 'Empty values within the sorting columns.',
+            'The sorting columns of the following sheet contain cells '
+            'with empty values.',
+            'These empty values will be replaced with 0\'s if you proceed on.'
         ],
     }
 
