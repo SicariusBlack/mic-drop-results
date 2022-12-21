@@ -235,10 +235,13 @@ if __name__ == '__main__':
 # Section C: Load user settings
     cfg = Config(abs_path('settings.ini'))
 
+    n_scols = len(cfg.sorting_columns)
+
     avatar_mode = cfg.avatar_mode
 
     scheme = list(map(hex_to_rgb, cfg.scheme))
     scheme_alt = list(map(hex_to_rgb, cfg.scheme_alt))
+
 
 # Section D: Parse and test tokens
     with open(abs_path('token.txt')) as f:
@@ -309,11 +312,16 @@ if __name__ == '__main__':
 
 # Section F: Read and process data.xlsx
     xls = pd.ExcelFile(abs_path('data.xlsx'))
+    workbook: dict[int | str, pd.DataFrame] = pd.read_excel(
+        xls, sheet_name=None)
+    xls.close()
 
-    sheet_names = [str(name) for name in xls.sheet_names]
-    sheet_names_filtered = [re.sub(
+    sheet_names = [re.sub(
         r'[\\\/:"*?<>|]+', '',  # Forbidden file name characters
-        name) for name in sheet_names]
+        str(name)).strip() for name in workbook]
+
+    workbook = {name: list(workbook.values())[i]
+                for i, name in enumerate(sheet_names)}
 
 
     # Extract tables that belong to the database
@@ -322,7 +330,7 @@ if __name__ == '__main__':
         if not sheet.startswith('_'):  # Database tables are signified with _
             continue
 
-        table = pd.read_excel(xls, sheet)
+        table = workbook[sheet]
         if table.empty or table.shape < (1, 2):  # (1 row, 2 cols) min
             continue
         database[sheet] = table
@@ -334,12 +342,12 @@ if __name__ == '__main__':
         if sheet.startswith('_'):  # Exclude database tables
             continue
 
-        df = pd.read_excel(xls, sheet)
-        xls.close()
+        df = workbook[sheet]
+        if df.empty or df.shape < (1, n_scols):  # (rows, cols) min
+            continue
 
 
         # Get sorting columns
-        n_scols = len(cfg.sorting_columns)
         scols = df.columns.tolist()[:n_scols]
         SORTING_COLUMNS = (
             f'{Style.BRIGHT}Sheet name:{Style.NORMAL}       {sheet}\n'
@@ -347,14 +355,11 @@ if __name__ == '__main__':
         )
 
 
-        if df.empty or df.shape < (1, n_scols):  # (rows, cols) min
-            continue
-
-        # Exclude sheets where sorting columns are not numeric
+        # Exclude sheets with non-numeric sorting columns
         if any(df.loc[:, scol].dtype.kind not in 'biufc' for scol in scols):
             # Get list of non-numeric values
             str_vals = (df.loc[:, scols][~df.loc[:, scols].applymap(np.isreal)]
-                .melt().dropna()['value'].tolist())
+                .melt(value_name='__value__').dropna()['__value__'].tolist())
 
             Error(60).throw(
                 SORTING_COLUMNS,
@@ -367,7 +372,7 @@ if __name__ == '__main__':
 
             continue
 
-        # Replace empty values within the sorting columns with 0
+        # Fill nan values within the sorting columns
         if df.loc[:, scols].isnull().values.any():
             Error(61).throw(
                 SORTING_COLUMNS,
@@ -381,45 +386,44 @@ if __name__ == '__main__':
             df.loc[:, scols] = df.loc[:, scols].fillna(0)
 
         # Rank data
-        df['rank'] = (
+        df['__rank__'] = (
             pd.DataFrame(df.loc[:, scols]             # Select sorting columns
             * (np.array(cfg.sorting_columns)*2 - 1))  # Turn 0/1 into -1/1
             .apply(tuple, axis=1)  # type: ignore
             .rank(method='min', ascending=False)
             .astype(int))
-        df = df[['rank'] + df.columns.tolist()[:-1]]  # Move rank to beginning
+        df = df[['__rank__'] + df.columns.tolist()[:-1]]  # Move to beginning
 
         # Sort the slides
-        df = df.sort_values(by='rank', ascending=True)
+        df = df.sort_values(by='__rank__', ascending=True)
 
         # Remove .0 from whole numbers
         format_int = lambda x: str(int(x)) if x % 1 == 0 else str(x)
         df.loc[:, df.dtypes == float] = (
             df.loc[:, df.dtypes == float].applymap(format_int))
 
-        # Replace {sheet} with sheet name
-        df['sheet'] = sheet
+        # Replace {__sheet__} with sheet name
+        df['__sheet__'] = sheet
 
-        # print(  # TODO
-        #     '\n\nHere are the first few rows of your processed data:\n\n'
-        #     + preview_df(df, df.columns, len(df.columns), highlight=False))
 
         # Merge contestant database
         if database:
-            alphanumeric = lambda x: re.sub(r'[^\w]', '', x).lower()
-            process_str = lambda x: (alphanumeric(x) if(x.dtype.kind == 'O')
-                                     else x)
+            alphanumeric = lambda text: re.sub(r'[^\w]', '', text).lower()
+            process_str = lambda series: (
+                series.apply(alphanumeric) if(series.dtype.kind == 'O')
+                else series)
+
             for tb in database.values():
                 df_cols = df.columns.tolist()
                 tb_cols = tb.columns.tolist()
                 merge_col = tb_cols[0]
 
                 # Use merge for non-existing columns
-                df = df.merge(tb[[merge_col] + [i for i in tb_cols if i not in df_cols]],
-                    left_on=process_str(df[merge_col]), right_on=process_str(tb[merge_col]), how='left')
+                # df = df.merge(tb[[merge_col] + [i for i in tb_cols if i not in df_cols]],
+                #     left_on=process_str(df[merge_col]), right_on=process_str(tb[merge_col]), how='left')
 
-                df.loc[:, merge_col] = df[merge_col + '_x']
-                df.drop(['key_0', merge_col + '_x', merge_col + '_y'], axis=1, inplace=True)
+                # df.loc[:, merge_col] = df[merge_col + '_x']
+                # df.drop(['key_0', merge_col + '_x', merge_col + '_y'], axis=1, inplace=True)
 
                 # Use update for existing columns
                 df['update_index'] = process_str(df[merge_col])
@@ -434,6 +438,10 @@ if __name__ == '__main__':
                 df.reset_index(drop=True, inplace=True)
 
         if 'uid' not in df.columns.tolist(): avatar_mode = False
+
+        print(  # TODO
+            '\n\nHere are the first few rows of your processed data:\n\n'
+            + preview_df(df, df.columns, len(df.columns), highlight=False))
 
         # Fill in missing templates
         df['template'].fillna(1, inplace=True)
