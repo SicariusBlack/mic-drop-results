@@ -417,29 +417,30 @@ if __name__ == '__main__':
                 series.apply(alphanumeric) if(series.dtype.kind == 'O')
                 else series)
 
-            for tb in database.values():
+            for table in database.values():
                 df_cols = df.columns.tolist()
-                tb_cols = tb.columns.tolist()
-                merge_col = tb_cols[0]
+                db_cols = table.columns.tolist()
 
-                # Use merge for non-existing columns
-                # df = df.merge(tb[[merge_col] + [i for i in tb_cols if i not in df_cols]],
-                #     left_on=process_str(df[merge_col]), right_on=process_str(tb[merge_col]), how='left')
+                anchor_col = db_cols[0]
+                overlapped_cols = [col for col in db_cols
+                              if (col in df_cols) and (col != anchor_col)]
 
-                # df.loc[:, merge_col] = df[merge_col + '_x']
-                # df.drop(['key_0', merge_col + '_x', merge_col + '_y'], axis=1, inplace=True)
+                if anchor_col not in df_cols:  # TODO: Add a warning
+                    continue
 
-                # Use update for existing columns
-                df['__merge_anchor__'] = process_str(df[merge_col])
-                df = df.set_index('__merge_anchor__')
+                # Copy processed values of anchor column to '__merge_anchor__'
+                df['__merge_anchor__'] = process_str(df[anchor_col])
+                table['__merge_anchor__'] = process_str(table[anchor_col])
+                table = table.drop(columns=anchor_col)
 
-                tb['__merge_anchor__'] = process_str(tb[merge_col])
-                tb = tb.set_index('__merge_anchor__')
-                tb_cols.remove(merge_col)
+                # Merge
+                df = df.merge(table, on='__merge_anchor__', how='left')
+                for col in overlapped_cols:
+                    df[col] = df[f'{col}_y'].fillna(df[f'{col}_x'])
+                    df = df.drop(columns=[f'{col}_x', f'{col}_y'])
 
-                update_cols = [i for i in tb_cols if i in df_cols]
-                tb.update(tb[update_cols])
-                df.reset_index(drop=True, inplace=True)
+                df = df.drop(columns='__merge_anchor__')
+
 
         if 'uid' not in df.columns.tolist(): avatar_mode = False
 
