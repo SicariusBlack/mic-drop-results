@@ -10,7 +10,7 @@ class ConfigVarTypes:
     update_check: bool
     ini_version_tag: str
 
-    sorting_columns: list[bool]
+    sorting_orders: list[bool]
 
     avatar_mode: bool
     last_clear_avatar_cache: int

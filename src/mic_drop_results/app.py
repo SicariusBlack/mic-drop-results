@@ -238,7 +238,7 @@ if __name__ == '__main__':
 # Section C: Load user settings
     cfg = Config(abs_path('settings.ini'))
 
-    n_scols = len(cfg.sorting_columns)
+    n_scols = len(cfg.sorting_orders)
 
     avatar_mode = cfg.avatar_mode
 
@@ -393,7 +393,7 @@ if __name__ == '__main__':
         # Rank data
         df['__rank__'] = (
             pd.DataFrame(df.loc[:, scols]             # Select sorting columns
-            * (np.array(cfg.sorting_columns)*2 - 1))  # Turn 0/1 into -1/1
+            * (np.array(cfg.sorting_orders)*2 - 1))  # Turn 0/1 into -1/1
             .apply(tuple, axis=1)  # type: ignore
             .rank(method='min', ascending=False)
             .astype(int))
@@ -442,17 +442,19 @@ if __name__ == '__main__':
                 df = df.drop(columns='__merge_anchor__')
 
 
-        if 'uid' not in df.columns.tolist(): avatar_mode = False
+        if 'uid' not in df.columns.tolist():
+            avatar_mode = False
+
+        # Fill in missing templates
+        df['_template'] = df['_template'].fillna(1)
+        df['_uid'] = df['_uid'].str.replace('_', '').str.strip()
+
+        groups[sheet] = df
 
         print(  # TODO
             '\n\nHere is a snippet of your processed data:\n\n'
             + preview_df(
                 df, n_cols=len(df.columns), highlight=False))
-
-        # Fill in missing templates
-        df['_template'].fillna(1, inplace=True)
-
-        groups[sheet] = df
 
     if not groups:
         Error(68).throw()
@@ -465,7 +467,10 @@ if __name__ == '__main__':
     # Kill all PowerPoint instances
     run('TASKKILL /F /IM powerpnt.exe', stdout=DEVNULL, stderr=DEVNULL)
 
-    # Open template presentation
+
+    OUTPUT_DIR = abs_path('output')
+    AVATAR_DIR = abs_path('avatars')
+
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     os.makedirs(AVATAR_DIR, exist_ok=True)
 
@@ -486,12 +491,12 @@ if __name__ == '__main__':
     while avatar_mode:
         uid_list = []
 
-        for df in data.values():
-            if df['uid'].dtype.kind in 'biufc':
+        for df in groups.values():
+            if df['_uid'].dtype.kind in 'biufc':
                 Error('The \'uid\' column has a numeric data type instead of the supposed string data type.',
                       'Please exit the program and add an underscore before every user ID.').throw()
 
-            uid_list += [id for id in df['uid'] if not pd.isnull(id) and not os.path.isfile(AVATAR_DIR + id.strip() + '.png')]
+            uid_list += [id for id in df['uid'] if not pd.isnull(id) and not os.path.isfile(abs_path(AVATAR_DIR, id + '.png'))]
 
         if len(uid_list) == 0:
             break
@@ -510,13 +515,13 @@ if __name__ == '__main__':
     pool.close()
     pool.join()
 
-    for k, df in data.items():
-        bar = ProgressBar(8, title=k, max_title_length=max(map(len, data.keys())))
+    for sheet, df in groups.items():
+        bar = ProgressBar(8, title=sheet, max_title_length=max(map(len, sheet_names)))
 
         # Open template presentation
         bar.set_description('Opening template.pptm')
         ppt = win32com.client.Dispatch('PowerPoint.Application')
-        ppt.Presentations.Open(f'{APP_DIR}template.pptm')
+        ppt.Presentations.Open(abs_path('template.pptm'))
         bar.add()
 
         # Import macros
@@ -553,9 +558,9 @@ if __name__ == '__main__':
 
         # Save as output file
         bar.set_description('Saving templates')
-        output_filename = f'{k}.pptx'
+        output_dir = f'{sheet}.pptx'
 
-        ppt.Run('SaveAs', f'{OUTPUT_DIR}{output_filename}')
+        ppt.Run('SaveAs', f'{output_filename}')
         bar.add()
 
         run('TASKKILL /F /IM powerpnt.exe', stdout=DEVNULL, stderr=DEVNULL)
