@@ -2,7 +2,6 @@ import contextlib
 from ctypes import windll
 from io import BytesIO
 import itertools
-from json import dump
 from multiprocessing import Pool, freeze_support
 import os
 import re
@@ -157,7 +156,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
     return slide
 
 
-def preview_df(df: pd.DataFrame, filter_series: pd.Series,
+def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
                n_cols: int, n_cols_ext: int = 5,
                highlight: bool = True,
                words_to_highlight: list[str | None] | None = None) -> str:
@@ -168,7 +167,11 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series,
     df.index += 2  # To reflect row numbers as displayed in Excel
 
     # Only show the first few columns for preview
-    df = df.iloc[:, : min(n_cols + n_cols_ext, df.shape[1])][filter_series]
+    df = df.iloc[:, : min(n_cols + n_cols_ext, df.shape[1])]
+
+    if filter_series:
+        filter_series.index += 2
+        df = df[filter_series]
 
     # Replace values_to_highlight with ⦃values_to_highlight⦄
     # The brackets are weird Unicode characters that no one would ever use.
@@ -180,7 +183,7 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series,
                 word, f'⦃{word}⦄')
 
 
-    preview = df.head(10).__repr__()
+    preview = df.head(8).__repr__()
 
     # Highlight ⦃values_to_highlight⦄
     preview = preview.replace('⦃', Fore.RED + '  ').replace('⦄', Fore.RESET)
@@ -337,21 +340,22 @@ if __name__ == '__main__':
 
 
     # Process non-database sheets
-    sheet_data: dict[str, pd.DataFrame] = {}
-    for i, sheet in enumerate(sheet_names):
+    groups: dict[str, pd.DataFrame] = {}
+    for sheet in sheet_names:
         if sheet.startswith('_'):  # Exclude database tables
             continue
 
         df = workbook[sheet]
-        if df.empty or df.shape < (1, n_scols):  # (rows, cols) min
+        if df.empty or df.shape < (1, n_scols):  # (1 row, n sorting cols) min
             continue
-
 
         # Get sorting columns
         scols = df.columns.tolist()[:n_scols]
         SORTING_COLUMNS = (
             f'{Style.BRIGHT}Sheet name:{Style.NORMAL}       {sheet}\n'
             f'{Style.BRIGHT}Sorting columns:{Style.NORMAL}  {", ".join(scols)}'
+            f'\n\nPlease have a look at the following rows in data.xlsx '
+            f'to find out what caused the problem.'
         )
 
 
@@ -374,6 +378,7 @@ if __name__ == '__main__':
 
         # Fill nan values within the sorting columns
         if df.loc[:, scols].isnull().values.any():
+            print(df.loc[:, scols].isnull().any(axis=1))
             Error(61).throw(
                 SORTING_COLUMNS,
 
@@ -392,7 +397,6 @@ if __name__ == '__main__':
             .apply(tuple, axis=1)  # type: ignore
             .rank(method='min', ascending=False)
             .astype(int))
-        df = df[['__rank__'] + df.columns.tolist()[:-1]]  # Move to beginning
 
         # Sort the slides
         df = df.sort_values(by='__rank__', ascending=True)
@@ -426,11 +430,11 @@ if __name__ == '__main__':
                 # df.drop(['key_0', merge_col + '_x', merge_col + '_y'], axis=1, inplace=True)
 
                 # Use update for existing columns
-                df['update_index'] = process_str(df[merge_col])
-                df = df.set_index('update_index')
+                df['__merge_anchor__'] = process_str(df[merge_col])
+                df = df.set_index('__merge_anchor__')
 
-                tb['update_index'] = process_str(tb[merge_col])
-                tb = tb.set_index('update_index')
+                tb['__merge_anchor__'] = process_str(tb[merge_col])
+                tb = tb.set_index('__merge_anchor__')
                 tb_cols.remove(merge_col)
 
                 update_cols = [i for i in tb_cols if i in df_cols]
@@ -440,15 +444,16 @@ if __name__ == '__main__':
         if 'uid' not in df.columns.tolist(): avatar_mode = False
 
         print(  # TODO
-            '\n\nHere are the first few rows of your processed data:\n\n'
-            + preview_df(df, df.columns, len(df.columns), highlight=False))
+            '\n\nHere is a snippet of your processed data:\n\n'
+            + preview_df(
+                df, n_cols=len(df.columns), highlight=False))
 
         # Fill in missing templates
-        df['template'].fillna(1, inplace=True)
+        df['_template'].fillna(1, inplace=True)
 
-        sheet_data[sheet_names_filtered[i]] = df
+        groups[sheet] = df
 
-    if not sheet_data:
+    if not groups:
         Error(68).throw()
 
 
@@ -532,7 +537,7 @@ if __name__ == '__main__':
         slides_count = ppt.Run('Count')
 
         # Duplicate slides
-        for t in df.loc[:, 'template']:
+        for t in df.loc[:, '_template']:
             if as_type(int, t) not in range(1, slides_count + 1):
                 Error(f'Template {t} does not exist (error originated from the following sheet: {k}).',
                       f'Please exit the program and modify the \'template\' column of {k}.').throw()
