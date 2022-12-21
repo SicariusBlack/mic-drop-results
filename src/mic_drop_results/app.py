@@ -41,7 +41,7 @@ from vba.macros import module1_bas
 
 def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
     """Replaces and formats text."""
-    cols = df.columns.values.tolist() + ['p']
+    cols = df.columns.tolist() + ['p']
 
     for shape in slide.shapes:  # type: ignore
         if not shape.has_text_frame or '{' not in shape.text:
@@ -187,7 +187,7 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series,
 
     # Highlight column names
     for n in range(n_cols):
-        col = df.columns.values.tolist()[n]
+        col = df.columns.tolist()[n]
         preview = preview.replace(
             ' ' + col, f' {Fore.RED}{col}{Fore.RESET}', 1)
 
@@ -318,19 +318,18 @@ if __name__ == '__main__':
 
     # Extract tables that belong to the database
     database: list[pd.DataFrame] = []
-
     for sheet in sheet_names:
         if not sheet.startswith('_'):  # Database tables are signified with _
             continue
 
         table = pd.read_excel(xls, sheet)
-        if table.empty or table.shape < (1, 2):  # 1 row, 2 cols min
+        if table.empty or table.shape < (1, 2):  # (1 row, 2 cols) min
             continue
-
         database.append(table)
 
-    data = {}
 
+    # Process group sheets
+    data = {}
     for i, sheet in enumerate(sheet_names):
         if sheet.startswith('_'):  # Exclude database tables
             continue
@@ -339,16 +338,16 @@ if __name__ == '__main__':
         xls.close()
 
 
-        # Parse sorting columns
+        # Get sorting columns
         n_scols = len(cfg.sorting_columns)
-        scols = df.columns.values.tolist()[:n_scols]
+        scols = df.columns.tolist()[:n_scols]
         SORTING_COLUMNS = (
             f'{Style.BRIGHT}Sheet name:{Style.NORMAL}       {sheet}\n'
             f'{Style.BRIGHT}Sorting columns:{Style.NORMAL}  {", ".join(scols)}'
         )
 
 
-        if df.empty or df.shape < (1, n_scols):  # (rows, columns) min
+        if df.empty or df.shape < (1, n_scols):  # (rows, cols) min
             continue
 
         # Exclude sheets where sorting columns are not numeric
@@ -382,33 +381,39 @@ if __name__ == '__main__':
             df.loc[:, scols] = df.loc[:, scols].fillna(0)
 
         # Rank data
-        df['r'] = (
-            pd.DataFrame(df.loc[:, scols]             # Sorting columns
+        df['rank'] = (
+            pd.DataFrame(df.loc[:, scols]             # Select sorting columns
             * (np.array(cfg.sorting_columns)*2 - 1))  # Turn 0/1 into -1/1
             .apply(tuple, axis=1)  # type: ignore
             .rank(method='min', ascending=False)
             .astype(int))
+        df = df[['rank'] + df.columns.tolist()[:-1]]  # Move rank to beginning
 
         # Sort the slides
-        df = df.sort_values(by='r', ascending=True)
+        df = df.sort_values(by='rank', ascending=True)
 
-        print(
-            '\n\n'
-            + preview_df(df, df.columns, len(df.columns), highlight=False))
-        sys.exit()
         # Remove .0 from whole numbers
-        format_number = lambda x: str(int(x)) if x % 1 == 0 else str(x)
-        df.loc[:, df.dtypes == float] = df.loc[:, df.dtypes == float].applymap(format_number)
+        format_int = lambda x: str(int(x)) if x % 1 == 0 else str(x)
+        df.loc[:, df.dtypes == float] = (
+            df.loc[:, df.dtypes == float].applymap(format_int))
 
         # Replace {sheet} with sheet name
         df['sheet'] = sheet
 
+        # print(  # TODO
+        #     '\n\nHere are the first few rows of your processed data:\n\n'
+        #     + preview_df(df, df.columns, len(df.columns), highlight=False))
+
         # Merge contestant database
         clean_name = lambda x: x.str.lower().str.strip() if(x.dtype.kind == 'O') else x
+
+        clean = lambda x: re.sub(r'[^\w]', '', x).lower()
+        print(clean('Troll me arap5'))
+        sys.exit()
         if database:
             for tb in database:
-                df_cols = df.columns.values.tolist()
-                tb_cols = tb.columns.values.tolist()
+                df_cols = df.columns.tolist()
+                tb_cols = tb.columns.tolist()
                 merge_col = tb_cols[0]
 
                 # Use merge for non-existing columns
@@ -430,7 +435,7 @@ if __name__ == '__main__':
                 tb.update(tb[update_cols])
                 df.reset_index(drop=True, inplace=True)
 
-        if 'uid' not in df.columns.values.tolist(): avatar_mode = False
+        if 'uid' not in df.columns.tolist(): avatar_mode = False
 
         # Fill in missing templates
         df['template'].fillna(1, inplace=True)
