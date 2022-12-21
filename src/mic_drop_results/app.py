@@ -317,7 +317,7 @@ if __name__ == '__main__':
 
 
     # Extract tables that belong to the database
-    database: list[pd.DataFrame] = []
+    database: dict[str, pd.DataFrame] = {}
     for sheet in sheet_names:
         if not sheet.startswith('_'):  # Database tables are signified with _
             continue
@@ -325,11 +325,11 @@ if __name__ == '__main__':
         table = pd.read_excel(xls, sheet)
         if table.empty or table.shape < (1, 2):  # (1 row, 2 cols) min
             continue
-        database.append(table)
+        database[sheet] = table
 
 
-    # Process group sheets
-    data = {}
+    # Process non-database sheets
+    sheet_data: dict[str, pd.DataFrame] = {}
     for i, sheet in enumerate(sheet_names):
         if sheet.startswith('_'):  # Exclude database tables
             continue
@@ -405,29 +405,27 @@ if __name__ == '__main__':
         #     + preview_df(df, df.columns, len(df.columns), highlight=False))
 
         # Merge contestant database
-        clean_name = lambda x: x.str.lower().str.strip() if(x.dtype.kind == 'O') else x
-
-        clean = lambda x: re.sub(r'[^\w]', '', x).lower()
-        print(clean('Troll me arap5'))
-        sys.exit()
         if database:
-            for tb in database:
+            alphanumeric = lambda x: re.sub(r'[^\w]', '', x).lower()
+            process_str = lambda x: (alphanumeric(x) if(x.dtype.kind == 'O')
+                                     else x)
+            for tb in database.values():
                 df_cols = df.columns.tolist()
                 tb_cols = tb.columns.tolist()
                 merge_col = tb_cols[0]
 
                 # Use merge for non-existing columns
                 df = df.merge(tb[[merge_col] + [i for i in tb_cols if i not in df_cols]],
-                    left_on=clean_name(df[merge_col]), right_on=clean_name(tb[merge_col]), how='left')
+                    left_on=process_str(df[merge_col]), right_on=process_str(tb[merge_col]), how='left')
 
                 df.loc[:, merge_col] = df[merge_col + '_x']
                 df.drop(['key_0', merge_col + '_x', merge_col + '_y'], axis=1, inplace=True)
 
                 # Use update for existing columns
-                df['update_index'] = clean_name(df[merge_col])
+                df['update_index'] = process_str(df[merge_col])
                 df = df.set_index('update_index')
 
-                tb['update_index'] = clean_name(tb[merge_col])
+                tb['update_index'] = process_str(tb[merge_col])
                 tb = tb.set_index('update_index')
                 tb_cols.remove(merge_col)
 
@@ -440,9 +438,9 @@ if __name__ == '__main__':
         # Fill in missing templates
         df['template'].fillna(1, inplace=True)
 
-        data[sheet_names_filtered[i]] = df
+        sheet_data[sheet_names_filtered[i]] = df
 
-    if not data:
+    if not sheet_data:
         Error(68).throw()
 
 
