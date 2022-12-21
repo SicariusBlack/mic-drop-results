@@ -370,7 +370,7 @@ if __name__ == '__main__':
 
                 preview_df(
                     df, ~df.loc[:, scols].applymap(np.isreal).all(1),
-                    n_scols, words_to_highlight=str_vals),
+                    n_cols=n_scols, words_to_highlight=str_vals),
 
                 err_type=ErrorType.WARNING)
 
@@ -384,7 +384,7 @@ if __name__ == '__main__':
 
                 preview_df(
                     df, df.loc[:, scols].isnull().any(axis=1),
-                    n_scols, words_to_highlight=[None]),
+                    n_cols=n_scols, words_to_highlight=[None]),
 
                 err_type=ErrorType.WARNING)
 
