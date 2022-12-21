@@ -12,7 +12,7 @@ from constants import *
 
 # Section A: Basic operations
 def is_number(val: Any) -> bool:
-    """Checks if value is a number."""
+    """Checks if value can be converted into float."""
     try:
         float(val)
         return True
@@ -59,7 +59,6 @@ def as_type(
 
 
 def hex_to_rgb(hex_val: str) -> tuple[int, int, int]:
-    """Returns in a tuple the RGB values of a color from a given hex code."""
     return tuple(int(hex_val.lstrip('#')[i : i+2], 16) for i in (0, 2, 4))
 
 
@@ -87,8 +86,21 @@ def abs_path(*rels: str) -> str:
     point instead of the current working directory.
 
     Examples:
+        Given that the directory of the running file is:
+        `D:\\\\parent_dir\\\\src\\\\md_results\\\\`
+
+        The demonstration will yield the following result:
+
         >>> abs_path('vba', 'macros.py')
         'D:\\\\parent_dir\\\\src\\\\md_results\\\\vba\\\\macros.py'
+
+        You may also pass an absolute directory for the first argument.
+
+        >>> AVATAR_DIR = abs_path('avatars')
+        >>> AVATAR_DIR
+        'D:\\\\parent_dir\\\\src\\\\md_results\\\\avatars'
+        >>> abs_path(AVATAR_DIR, 'avatar.png')
+        'D:\\\\parent_dir\\\\src\\\\md_results\\\\avatars\\\\avatar.png'
     """
     return os.path.join(APP_DIR, *rels)
 
@@ -103,7 +115,7 @@ def inp(*args: str, **kwargs) -> str:  # TODO: Add docstring, optimize code
     details, and disables it thereafter.
 
     Returns:
-        The user input as string.
+        The str value of user input.
     """
     # Enable QuickEdit, thus allowing the user to copy printed messages
     kernel32 = windll.kernel32
@@ -156,7 +168,7 @@ class ProgressBar:
     """Creates and prints a progress bar.
 
     Attributes:
-        progr: number of work done. Updates via the add() method.
+        prog: number of work done. Updates via the add() method.
         total: number of work to perform.
         title: title shown to the left of the progress bar.
         max_title_length: length of the longest title to ensure left
@@ -169,7 +181,7 @@ class ProgressBar:
 
     def __init__(self, total: int, title: str, max_title_length: int,
                  bar_length: int = 40) -> None:
-        self.progr: int = 0
+        self.prog: int = 0
         self.total = total
         self.title = title
         self.max_title_length = max_title_length
@@ -178,19 +190,19 @@ class ProgressBar:
 
     def refresh(self) -> None:
         """Reprints the progress bar with updated parameters."""
-        filled_length = round(self.bar_length * self.progr / self.total)
+        filled_length = round(self.bar_length * self.prog / self.total)
 
-        percents = round(100 * self.progr / self.total, 1)
+        percents = round(100 * self.prog / self.total, 1)
         bar = '█' * filled_length + ' ' * (self.bar_length - filled_length)
 
-        if self.progr > 0:
+        if self.prog > 0:
             sys.stdout.write('\033[2K\033[A\r')  # Delete line, move cursor up,
                                                  # ... and to beginning of line
             sys.stdout.flush()
 
         title_right_padding = self.max_title_length - len(self.title) + 1
         sys.stdout.write(f'{self.title}{" " * title_right_padding}'
-                         f'|{bar}| {self.progr}/{self.total} [{percents}%]'
+                         f'|{bar}| {self.prog}/{self.total} [{percents}%]'
                          f'{self.desc}')
 
 
@@ -199,7 +211,7 @@ class ProgressBar:
         #               Filling in judging data
 
 
-        if self.progr == self.total:
+        if self.prog == self.total:
             sys.stdout.write('\033[2K\r')        # Delete line and move cursor
                                                  # ... to beginning of line
 
@@ -212,6 +224,6 @@ class ProgressBar:
 
     def add(self, increment: int = 1) -> None:
         """Updates the progress by a specified increment."""
-        self.progr += increment
-        self.progr = min(self.progr, self.total)
+        self.prog += increment
+        self.prog = min(self.prog, self.total)
         self.refresh()
