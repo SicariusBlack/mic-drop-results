@@ -179,7 +179,7 @@ class ProgressBar:
             progress bar. Updates via the set_description() method.
     """
 
-    def __init__(self, total: int, title: str, max_title_length: int,
+    def __init__(self, total: int, *, title: str, max_title_length: int,
                  bar_length: int = 40) -> None:
         self.prog: int = 0
         self.total = total
