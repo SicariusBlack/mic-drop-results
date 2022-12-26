@@ -8,4 +8,5 @@ output/
 avatars/
 *.xlsx
 *.pptm
+*.bas
 token.txt
