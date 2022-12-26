@@ -1,4 +1,5 @@
 from collections.abc import Callable, Generator
+import contextlib
 from ctypes import windll
 import os
 import sys
@@ -124,7 +125,9 @@ def inp(*args: str, **kwargs) -> str:  # TODO: Add docstring, optimize code
     cursor.show()
 
     print(*args, **kwargs, end='')
+    contextlib.redirect_stdout(None)
     i = input()
+    contextlib.redirect_stdout(sys.__stdout__)
 
     # Disable QuickEdit
     kernel32.SetConsoleMode(
