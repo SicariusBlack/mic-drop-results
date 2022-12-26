@@ -209,7 +209,7 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
 
 
 if __name__ == '__main__':
-    version_tag = '3.0'
+    version_tag = '2.3.0'
 
 # Section A: Fix console issues
     freeze_support()          # Multiprocessing freeze support
@@ -309,6 +309,7 @@ if __name__ == '__main__':
     #
     #               Mic Drop Results (v3.10) [update available]
 
+    console_style(Style.BRIGHT)
     status_msg = f' [{status.value}]' if status else ''
     print(f'Mic Drop Results (v{version_tag}){status_msg}')
     console_style()
@@ -452,23 +453,23 @@ if __name__ == '__main__':
             avatar_mode = False
 
         # Fill in missing templates
-        df['_template'] = df['_template'].fillna(1)
-        df['_uid'] = df['_uid'].str.replace('_', '').str.strip()
+        df['__template__'] = df['__template__'].fillna(1)
+        df['__uid__'] = df['__uid__'].str.replace('_', '').str.strip()
 
         groups[sheet] = df
 
-        print(  # TODO
-            '\n\nHere is a snippet of your processed data:\n\n'
-            + preview_df(
-                df, n_cols=len(df.columns), highlight=False))
+        if len(groups) == 1:
+            print('\n\nHere is a snippet of your processed data:')
+
+        print('\n' + preview_df(df, n_cols=len(df.columns), highlight=False))
 
     if not groups:
         Error(68).throw()
 
 
 # Section G: Generate PowerPoint slides
-    print('\nGenerating slides...')
-    print('Please do not click on any PowerPoint windows that may show up in the process.\n')
+    print('\n\nGenerating slides...')
+    print('Please do not click on any PowerPoint window that may show up in the process.\n')
 
     # Kill all PowerPoint instances
     run('TASKKILL /F /IM powerpnt.exe', stdout=DEVNULL, stderr=DEVNULL)
@@ -498,7 +499,7 @@ if __name__ == '__main__':
         uid_list = []
 
         for df in groups.values():
-            if df['_uid'].dtype.kind in 'biufc':
+            if df['__uid__'].dtype.kind in 'biufc':
                 Error('The \'uid\' column has a numeric data type instead of the supposed string data type.',
                       'Please exit the program and add an underscore before every user ID.').throw()
 
@@ -522,7 +523,8 @@ if __name__ == '__main__':
     pool.join()
 
     for sheet, df in groups.items():
-        bar = ProgressBar(8, title=sheet, max_title_length=max(map(len, sheet_names)))
+        bar = ProgressBar(
+            8, title=sheet, max_title_length=max(map(len, groups.keys())))
 
         # Open template presentation
         bar.set_description('Opening template.pptm')
@@ -549,7 +551,7 @@ if __name__ == '__main__':
         slides_count = ppt.Run('Count')
 
         # Duplicate slides
-        for t in df.loc[:, '_template']:
+        for t in df.loc[:, '__template__']:
             if as_type(int, t) not in range(1, slides_count + 1):
                 Error(f'Template {t} does not exist (error originated from the following sheet: {k}).',
                       f'Please exit the program and modify the \'template\' column of {k}.').throw()
