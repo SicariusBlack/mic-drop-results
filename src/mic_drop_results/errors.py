@@ -121,10 +121,14 @@ class Traceback:
         ],
         70: [
             Tag.DATA_XLSX, 'No leading underscore in user IDs.',
-            'Please add an underscore character (_) before every user ID in '
-            'the "__uid__" column. For example: _1010885414850154587.',
+            'Please add an underscore (_) before every user ID in the '
+            '"__uid__" column. For example: _1010885414850154587',
             'This is to prevent Excel and the program from rounding the UIDs.',
             'Make sure all IDs are still valid before adding the underscores.'
+        ],
+        71: [
+            Tag.DATA_XLSX, 'Template does not exist.',
+            'The following template ID could not be found in template.pptm.'
         ],
     }
 
