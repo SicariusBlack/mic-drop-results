@@ -2,6 +2,7 @@ from enum import Enum
 import requests
 import time
 from urllib.request import Request, urlopen
+from urllib.error import URLError
 
 import cv2
 import numpy as np
@@ -68,14 +69,17 @@ def fetch_avatar_url(uid: str, api_token: str) -> str | None:  # TODO: docstring
 def download_avatar(uid: str, avatar_dir: str, api_token: str) -> None:
     img_path = get_avatar_path(avatar_dir, uid)
 
-    if avatar_url := fetch_avatar_url(uid, api_token):
-        print('\033[A\033[2K' + avatar_url)
-        req = urlopen(Request(
-            avatar_url, headers={'User-Agent': 'Mozilla/5.0'}), timeout=10)
-        arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
-        img = cv2.imdecode(arr, -1)
+    try:
+        if avatar_url := fetch_avatar_url(uid, api_token):
+            print('\033[A\033[2K' + avatar_url)
+            req = urlopen(Request(
+                avatar_url, headers={'User-Agent': 'Mozilla/5.0'}), timeout=10)
+            arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
+            img = cv2.imdecode(arr, -1)
 
-        cv2.imwrite(img_path, img)
+            cv2.imwrite(img_path, img)
+    except URLError as e:
+        raise ConnectionError from e
 
 
 def get_avatar_path(avatar_dir: str, uid: str, *,
