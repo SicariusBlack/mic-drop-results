@@ -22,13 +22,13 @@ from pptx.dml.color import RGBColor
 from pptx.enum.dml import MSO_COLOR_TYPE
 from pptx.enum.shapes import MSO_SHAPE  # type: ignore
 from pptx.slide import Slide
-from pptx.util import Inches, lazyproperty  # TODO: Remove when done inspecting
+from pptx.util import Inches
 from pywintypes import com_error
 import requests
 import win32com.client
 
 from client import ProgramStatus, fetch_latest_version
-from client import download_avatar, fetch_avatar_url, get_avatar_path
+from client import download_avatar, get_avatar_path
 from config import Config
 from constants import *
 from errors import Error, ErrorType, print_exception_hook
@@ -58,10 +58,11 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                 # Avatars
                 if search_str == 'p':
                     # Test cases
-                    if 'uid' not in cols or not avatar_mode:
+                    if '__uid__' not in cols or not avatar_mode:
+                        run.text = ''
                         continue
 
-                    if pd.isnull(df['uid'].iloc[i]):
+                    if pd.isnull(df['__uid__'].iloc[i]):
                         run.text = ''
                         continue
 
@@ -86,7 +87,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
                         cv2.imwrite(avatarfx_path, img)
 
-                    new_shape = slide.shapes._fget().add_picture(  # TODO
+                    new_shape = slide.shapes.add_picture(  # type: ignore
                         avatarfx_path, shape.left, shape.top,
                         shape.width, shape.height
                     )
@@ -151,9 +152,11 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                 for ind, val in enumerate(cfg.ranges[::-1]):
                     if is_number(repl) and float(repl) >= val:
                         if run_text.endswith('1'):
-                            run.font.color.rgb = RGBColor(*scheme_alt[::-1][ind])
+                            run.font.color.rgb = RGBColor(
+                                *scheme_alt[::-1][ind])
                         else:
-                            run.font.color.rgb = RGBColor(*scheme[::-1][ind])
+                            run.font.color.rgb = RGBColor(
+                                *scheme[::-1][ind])
                         break
     return slide
 
@@ -169,7 +172,7 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
     df.index += 2  # To reflect row numbers as displayed in Excel
 
     # Only show the first few columns for preview
-    df = df.iloc[:, : min(n_cols + n_cols_ext, df.shape[1])]
+    df = df.iloc[:, : min(n_cols + n_cols_ext, len(df.columns))]
 
     if filter_series:
         filter_series.index += 2
@@ -235,12 +238,6 @@ if __name__ == '__main__':
             'token.txt',
         ) if not os.path.exists(abs_path(f))]:
         Error(40).throw(APP_DIR, '\n'.join(missing))
-
-    if not os.path.exists(abs_path('Module1.bas')):
-        with open(abs_path('Module1.bas'), 'w') as f:
-            f.write(module1_bas)
-
-    check_call(['attrib', '+H', abs_path('Module1.bas')])
 
 
 # Section C: Load user settings
@@ -397,8 +394,8 @@ if __name__ == '__main__':
 
         # Rank data
         df['__rank__'] = (
-            pd.DataFrame(df.loc[:, scols]             # Select sorting columns
-            * (np.array(cfg.sorting_orders)*2 - 1))  # Turn 0/1 into -1/1
+            pd.DataFrame(df.loc[:, scols]            # Select sorting columns
+            * (np.array(cfg.sorting_orders)*2 - 1))  # Turn bool 0/1 into -1/1
             .apply(tuple, axis=1)  # type: ignore
             .rank(method='min', ascending=False)
             .astype(int))
@@ -472,19 +469,35 @@ if __name__ == '__main__':
 
     OUTPUT_DIR = abs_path('output')
     AVATAR_DIR = abs_path('avatars')
+    TEMP_DIR = abs_path('.temp')
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     os.makedirs(AVATAR_DIR, exist_ok=True)
+    os.makedirs(TEMP_DIR, exist_ok=True)
 
-    # Clear cache
-    if time.time() - cfg.last_clear_avatar_cache > 1800:  # Clear every hour
-        for f in os.scandir(AVATAR_DIR):
-            os.unlink(f)
+    check_call(['attrib', '+H', TEMP_DIR])
 
-        # Update last clear time
-        # with open('config.json', 'w') as f:
-        #     config['last_clear_avatar_cache'] = int(time.time())
-        #     dump(config, f, indent=4)
+
+    # Create Module1.bas
+    if not os.path.exists(abs_path(TEMP_DIR, 'Module1.bas')):
+        with open(abs_path(TEMP_DIR, 'Module1.bas'), 'w') as f:
+            f.write(module1_bas)
+
+
+    # Clear cache (TODO)
+    with open(abs_path('.temp', 'last_clear_avatar_cache.txt'), 'w') as f:
+        try:
+            last_clear = int(f.readline())
+        except:
+            last_clear = 0
+
+        if time.time() - last_clear > 1800:  # Clear every hour
+            for avatar_path in os.scandir(AVATAR_DIR):
+                os.unlink(avatar_path)
+
+            # Update last clear time
+            f.write(str(int(time.time())))
+
 
     # Download avatars with parallel processing
     if avatar_mode:
@@ -528,8 +541,9 @@ if __name__ == '__main__':
                             itertools.cycle(token_list), len(uid_list))
                     )
                 )
-            except ConnectionError as e:
-                if attempt == 0:
+
+            except (ConnectionError, TimeoutError) as e:
+                if attempt == 3:
                     Error(20).throw(err_type=ErrorType.WARNING)
 
             except InvalidTokenError as e:
@@ -552,7 +566,7 @@ if __name__ == '__main__':
         pool.close()
         pool.join()
 
-
+    time.sleep(0.2)
     print('\n\nGenerating slides...')
     print('Please do not click on any PowerPoint window that may '
           'show up in the process.\n')
@@ -572,7 +586,7 @@ if __name__ == '__main__':
 
         try:
             ppt.VBE.ActiveVBProject.VBComponents.Import(
-                abs_path('Module1.bas'))
+                abs_path(TEMP_DIR, 'Module1.bas'))
         except com_error as e:
             if e.hresult == -2147352567:  # type: ignore
                 Error(41).throw()  # Trust access not yet enabled
@@ -586,12 +600,26 @@ if __name__ == '__main__':
         slides_count = ppt.Run('Count')
 
         # Duplicate slides
-        for t in df.loc[:, '__template__']:
-            if as_type(int, t) not in range(1, slides_count + 1):
-                Error(f'Template {t} does not exist (error originated from the following sheet: {k}).',
-                      f'Please exit the program and modify the "__template__" column of {k}.').throw()
+        for template in df.loc[:, '__template__']:
+            if as_type(int, template) not in range(1, slides_count + 1):
+                df_showcase = df[
+                    ['__template__']
+                    + [col for col in df.columns if col != '__template__']]
 
-            ppt.Run('Duplicate', t)
+                Error(71).throw(
+                    f'{Style.BRIGHT}Template ID:{Style.NORMAL}     {template}'
+                    f'\n'
+                    f'{Style.BRIGHT}Error in sheet:{Style.NORMAL}  {sheet}',
+                    f'Please also inspect merging sheets (signified with '
+                    f'underscores at the beginning) if the problem could '
+                    f'not directly be found in the mentioned sheet.',
+
+                    preview_df(df_showcase,
+                               n_cols=1,
+                               words_to_highlight=[template]),
+                )
+
+            ppt.Run('Duplicate', template)
 
         bar.add()
 
