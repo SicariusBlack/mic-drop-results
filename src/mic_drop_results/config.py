@@ -3,7 +3,7 @@ import configparser
 import re
 from typing import Any, TypeVar
 
-from exceptions import Error
+from errors import Error
 
 
 class ConfigVarTypes:
