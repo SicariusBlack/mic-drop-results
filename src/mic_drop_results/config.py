@@ -13,7 +13,6 @@ class ConfigVarTypes:
     sorting_orders: list[bool]
 
     avatar_mode: bool
-    last_clear_avatar_cache: int
 
     trigger_word: str
     ranges: list[float]
@@ -22,9 +21,9 @@ class ConfigVarTypes:
 
 
 class Config(ConfigVarTypes):  # TODO: Add docstrings
-    def __init__(self, filepath: str):
+    def __init__(self, file_path: str):
         parser = configparser.ConfigParser()
-        parser.read(filepath)
+        parser.read(file_path)
 
         # Flatten config dict
         self.config: dict[str, Any] = {
