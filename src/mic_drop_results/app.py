@@ -6,7 +6,7 @@ from multiprocessing import Pool, freeze_support
 import os
 import re
 from signal import signal, SIGINT, SIG_IGN
-from subprocess import run, DEVNULL
+from subprocess import check_call, run, DEVNULL
 import sys
 import time
 import webbrowser
@@ -183,7 +183,7 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
                 word, f'⦃{word}⦄')
 
 
-    preview = df.head(8).__repr__()
+    preview = repr(df.head(8))
 
     # Highlight ⦃values_to_highlight⦄
     preview = preview.replace('⦃', Fore.RED + '  ').replace('⦄', Fore.RESET)
@@ -233,6 +233,12 @@ if __name__ == '__main__':
             'token.txt',
         ) if not os.path.exists(abs_path(f))]:
         Error(40).throw(APP_DIR, '\n'.join(missing))
+
+    if not os.path.exists(abs_path('Module1.bas')):
+        with open(abs_path('Module1.bas'), 'w') as f:
+            f.write(module1_bas)
+
+    check_call(['attrib', '+H', abs_path('Module1.bas')])
 
 
 # Section C: Load user settings
@@ -528,11 +534,11 @@ if __name__ == '__main__':
         bar.set_description('Importing macros')
 
         try:
-            ppt.VBE.ActiveVBProject.VBComponents.Import(module1_bas)
+            ppt.VBE.ActiveVBProject.VBComponents.Import(
+                abs_path('Module1.bas'))
         except com_error as e:
             if e.hresult == -2147352567:  # type: ignore
-            # Trust access settings not yet enabled
-                Error(41).throw()
+                Error(41).throw()  # Trust access not yet enabled
             else:
                 raise e
 
