@@ -28,10 +28,11 @@ import requests
 import win32com.client
 
 from client import ProgramStatus, fetch_latest_version
-from client import download_avatar, fetch_avatar_url
+from client import download_avatar, fetch_avatar_url, get_avatar_path
 from config import Config
 from constants import *
-from exceptions import Error, ErrorType, print_exception_hook
+from errors import Error, ErrorType, print_exception_hook
+from exceptions import *
 from utils import is_number, as_type, hex_to_rgb, parse_version
 from utils import abs_path
 from utils import inp, console_style, ProgressBar
@@ -54,7 +55,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
             for search_str in (set(re.findall(r'(?<={)(.*?)(?=})', run.text))
                                .intersection(cols)):
 
-                # Profile picture
+                # Avatars
                 if search_str == 'p':
                     # Test cases
                     if 'uid' not in cols or not avatar_mode:
@@ -65,27 +66,28 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                         continue
 
                     # Extract effect index and remove {p}
-                    effect = as_type(int, run.text.strip()[3:])
+                    effect = run.text.strip()[3:]
                     run.text = ''
 
-                    uid = str(df['uid'].iloc[i]).strip().replace('_', '')
+                    uid: str = df['__uid__'].iloc[i]
 
-                    og_path = AVATAR_DIR + '_' + uid + '.png'
-                    img_path = AVATAR_DIR + str(effect) + '_' + uid + '.png'
+                    avatar_path = get_avatar_path(AVATAR_DIR, uid)
+                    avatarfx_path = get_avatar_path(AVATAR_DIR, uid,
+                                                    effect=effect)
 
-                    if not os.path.isfile(og_path):
+                    if not os.path.isfile(avatar_path):
                         continue
 
                     if is_number(effect):
-                        img = cv2.imread(og_path)
-                        match effect:  # TODO: Add more effects in the future
+                        img = cv2.imread(avatar_path)
+                        match float(effect):  # TODO: Add more effects
                             case 1:
                                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-                        cv2.imwrite(img_path, img)
+                        cv2.imwrite(avatarfx_path, img)
 
                     new_shape = slide.shapes._fget().add_picture(  # TODO
-                        img_path, shape.left, shape.top,
+                        avatarfx_path, shape.left, shape.top,
                         shape.width, shape.height
                     )
 
@@ -261,10 +263,6 @@ if __name__ == '__main__':
     if not token_list and avatar_mode:
         Error(21).throw()
 
-    # Fetch my avatar's URL to test the tokens (TODO: [maintenance])
-    for token in token_list:
-        fetch_avatar_url('1010885414850154587', token)
-
 
 # Section E: Check for updates
     status = None
@@ -430,7 +428,7 @@ if __name__ == '__main__':
 
                 anchor_col = db_cols[0]
                 overlapped_cols = [col for col in db_cols
-                              if (col in df_cols) and (col != anchor_col)]
+                                   if (col in df_cols) and (col != anchor_col)]
 
                 if anchor_col not in df_cols:  # TODO: Add a warning
                     continue
@@ -449,7 +447,7 @@ if __name__ == '__main__':
                 df = df.drop(columns='__merge_anchor__')
 
 
-        if 'uid' not in df.columns.tolist():
+        if '__uid__' not in df.columns.tolist():
             avatar_mode = False
 
         # Fill in missing templates
@@ -468,9 +466,6 @@ if __name__ == '__main__':
 
 
 # Section G: Generate PowerPoint slides
-    print('\n\nGenerating slides...')
-    print('Please do not click on any PowerPoint window that may show up in the process.\n')
-
     # Kill all PowerPoint instances
     run('TASKKILL /F /IM powerpnt.exe', stdout=DEVNULL, stderr=DEVNULL)
 
@@ -492,35 +487,75 @@ if __name__ == '__main__':
         #     dump(config, f, indent=4)
 
     # Download avatars with parallel processing
-    attempt = 0
-    pool = Pool(3)
+    if avatar_mode:
+        print('\n\nDownloading avatars...')
+        print('Make sure your internet connection is stable while we are '
+              'downloading.')
 
-    while avatar_mode:
-        uid_list = []
+        attempt = 0
+        failed = False
+        pool = Pool(min(4, len(token_list) + 1))
+        uid_unknown_list = []
 
-        for df in groups.values():
-            if df['__uid__'].dtype.kind in 'biufc':
-                Error('The \'uid\' column has a numeric data type instead of the supposed string data type.',
-                      'Please exit the program and add an underscore before every user ID.').throw()
+        while True:
+            uid_list = []
 
-            uid_list += [id for id in df['uid'] if not pd.isnull(id) and not os.path.isfile(abs_path(AVATAR_DIR, id + '.png'))]
+            for df in groups.values():
+                if df['__uid__'].dtype.kind in 'biufc':
+                    Error(70).throw()
 
-        if len(uid_list) == 0:
-            break
+                for id in df['__uid__']:
+                    if not (pd.isnull(id)
+                            or os.path.isfile(get_avatar_path(AVATAR_DIR, id))
+                            or id in uid_list
+                            or id in uid_unknown_list):
+                        uid_list.append(id)
 
-        if attempt > 0 and attempt <= 3:
-            print(f'Unable to download the profile pictures of the following users. Retrying {attempt}/3',
-                    uid_list, sep='\n', end='\n\n')
-        elif attempt > 3:
-            Error(23).throw(str(uid_list), err_type=ErrorType.WARNING)
+            if not uid_list:
+                break
 
-        pool.starmap(download_avatar, zip(uid_list,
-            [AVATAR_DIR] * len(uid_list), itertools.islice(itertools.cycle(token_list), len(uid_list))))
+            if attempt > 3:
+                failed = True
+                break
 
-        attempt += 1
+            try:
+                pool.starmap(
+                    download_avatar, 
+                    zip(uid_list,
+                        [AVATAR_DIR] * len(uid_list),
+                        # Distribute the tokens among the user IDs
+                        itertools.islice(
+                            itertools.cycle(token_list), len(uid_list))
+                    )
+                )
+            except ConnectionError as e:
+                if attempt == 0:
+                    Error(20).throw(err_type=ErrorType.WARNING)
 
-    pool.close()
-    pool.join()
+            except InvalidTokenError as e:
+                Error(21.1).throw(*e.args)
+
+            except UnknownUserError as e:
+                uid_unknown_list.append(e.args[0])
+
+            except DiscordAPIError as e:
+                Error(22).throw(*e.args)
+
+            attempt += 1
+
+        if not failed:
+            print('\033[A\033[2K\033[A\033[2K' + 'Avatar download complete!')
+
+        if uid_unknown_list:
+            Error(23).throw(str(uid_unknown_list), err_type=ErrorType.WARNING)
+
+        pool.close()
+        pool.join()
+
+
+    print('\n\nGenerating slides...')
+    print('Please do not click on any PowerPoint window that may '
+          'show up in the process.\n')
 
     for sheet, df in groups.items():
         bar = ProgressBar(
@@ -554,7 +589,7 @@ if __name__ == '__main__':
         for t in df.loc[:, '__template__']:
             if as_type(int, t) not in range(1, slides_count + 1):
                 Error(f'Template {t} does not exist (error originated from the following sheet: {k}).',
-                      f'Please exit the program and modify the \'template\' column of {k}.').throw()
+                      f'Please exit the program and modify the "__template__" column of {k}.').throw()
 
             ppt.Run('Duplicate', t)
 
@@ -566,9 +601,9 @@ if __name__ == '__main__':
 
         # Save as output file
         bar.set_description('Saving templates')
-        output_dir = f'{sheet}.pptx'
+        output_path = abs_path(OUTPUT_DIR, f'{sheet}.pptx')
 
-        ppt.Run('SaveAs', f'{output_filename}')
+        ppt.Run('SaveAs', output_path)
         bar.add()
 
         run('TASKKILL /F /IM powerpnt.exe', stdout=DEVNULL, stderr=DEVNULL)
@@ -576,15 +611,15 @@ if __name__ == '__main__':
 
         # Replace text
         bar.set_description('Filling in judging data')
-        prs = Presentation(OUTPUT_DIR + output_filename)
+        prs = Presentation(output_path)
 
         for i, slide in enumerate(prs.slides):
             replace_text(slide, df, i, avatar_mode)
         bar.add()
 
         # Save
-        bar.set_description(f'Saving as {OUTPUT_DIR + output_filename}')
-        prs.save(OUTPUT_DIR + output_filename)
+        bar.set_description(f'Saving as {output_path}')
+        prs.save(output_path)
         bar.add()
 
 
