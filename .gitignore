@@ -6,6 +6,7 @@ build/
 templates/
 output/
 avatars/
+.temp/
 *.xlsx
 *.pptm
 *.bas
