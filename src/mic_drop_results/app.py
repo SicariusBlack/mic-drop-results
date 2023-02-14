@@ -1,5 +1,4 @@
 import contextlib
-from ctypes import windll
 from io import BytesIO
 import itertools
 from multiprocessing import Pool, freeze_support
@@ -12,7 +11,6 @@ import time
 import webbrowser
 
 from colorama import init, Fore, Style
-import cursor
 import cv2
 import numpy as np
 import pandas as pd
@@ -35,7 +33,8 @@ from errors import Error, ErrorType, print_exception_hook
 from exceptions import *
 from utils import is_number, as_type, hex_to_rgb, parse_version
 from utils import abs_path
-from utils import inp, console_style, ProgressBar
+from utils import inp, disable_console, console_style
+from utils import ProgressBar
 from vba.macros import module1_bas
 
 
@@ -214,28 +213,22 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
 
 
 if __name__ == '__main__':
-    version_tag = '2.3.0'
+    version_tag = '2.9'
 
-# Section A: Fix console issues
+# Section A: Fix console-related issues
     freeze_support()          # Multiprocessing freeze support
     signal(SIGINT, SIG_IGN)   # Handle KeyboardInterrupt
 
-    # Disable QuickEdit and Insert mode
-    kernel32 = windll.kernel32
-    kernel32.SetConsoleMode(
-        kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
+    disable_console()
 
     sys.excepthook = print_exception_hook  # Avoid exiting program on exception
     init()                                 # Enable ANSI escape sequences
-    cursor.hide()                          # Hide cursor
 
 
 # Section B: Check for missing files
     if missing := [f for f in (
-            'settings.ini',
-            'data.xlsx',
-            'template.pptm',
-            'token.txt',
+            'settings.ini', 'token.txt',
+            'template.pptm', 'data.xlsx',
         ) if not os.path.exists(abs_path(f))]:
         Error(40).throw(APP_DIR, '\n'.join(missing))
 
@@ -414,9 +407,9 @@ if __name__ == '__main__':
 
         # Merge contestant database
         if database:
-            alphanumeric = lambda text: re.sub(r'[^\w]', '', text).lower()
+            cleaning_func = lambda text: re.sub(r'\s', '', text).lower()
             process_str = lambda series: (
-                series.apply(alphanumeric) if(series.dtype.kind == 'O')
+                series.apply(cleaning_func) if(series.dtype.kind == 'O')
                 else series)
 
             for table in database.values():
