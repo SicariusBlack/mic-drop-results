@@ -1,5 +1,4 @@
 from collections.abc import Callable, Generator
-import contextlib
 from ctypes import windll
 import os
 import sys
@@ -107,6 +106,22 @@ def abs_path(*rels: str) -> str:
 
 
 # Section C: Console utils
+def enable_console():
+    """Allows text selection and accepts input within the CLI."""
+    cursor.show()
+    kernel32 = windll.kernel32
+    kernel32.SetConsoleMode(
+        kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
+
+
+def disable_console():
+    """Disables all console interactions."""
+    cursor.hide()
+    kernel32 = windll.kernel32
+    kernel32.SetConsoleMode(
+        kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
+
+
 def inp(*args: str, **kwargs) -> str:  # TODO: Add docstring, optimize code
     """A wrapper function of the built-in input function.
 
@@ -118,21 +133,10 @@ def inp(*args: str, **kwargs) -> str:  # TODO: Add docstring, optimize code
     Returns:
         The str value of user input.
     """
-    # Enable QuickEdit, thus allowing the user to copy printed messages
-    kernel32 = windll.kernel32
-    kernel32.SetConsoleMode(
-        kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
-    cursor.show()
-
+    enable_console()  # Allow copying of the error message
     print(*args, **kwargs, end='')
-    contextlib.redirect_stdout(None)
     i = input()
-    contextlib.redirect_stdout(sys.__stdout__)
-
-    # Disable QuickEdit
-    kernel32.SetConsoleMode(
-        kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
-    cursor.hide()
+    disable_console()
 
     return i
 
