@@ -8,11 +8,9 @@ from errors import Error
 
 class ConfigVarTypes:
     update_check: bool
-    ini_version_tag: str
+    avatar_mode: bool
 
     sorting_orders: list[bool]
-
-    avatar_mode: bool
 
     trigger_word: str
     ranges: list[float]
