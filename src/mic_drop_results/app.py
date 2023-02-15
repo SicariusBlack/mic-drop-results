@@ -33,7 +33,7 @@ from errors import Error, ErrorType, print_exception_hook
 from exceptions import *
 from utils import is_number, as_type, hex_to_rgb, parse_version
 from utils import abs_path
-from utils import inp, disable_console, console_style
+from utils import inp, disable_console, enable_console, console_style
 from utils import ProgressBar
 from vba.macros import module1_bas
 
@@ -57,11 +57,11 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                 # Avatars
                 if search_str == 'p':
                     # Test cases
-                    if '__uid__' not in cols or not avatar_mode:
+                    if '__uid' not in cols or not avatar_mode:
                         run.text = ''
                         continue
 
-                    if pd.isnull(df['__uid__'].iloc[i]):
+                    if pd.isnull(df['__uid'].iloc[i]):
                         run.text = ''
                         continue
 
@@ -69,7 +69,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                     effect = run.text.strip()[3:]
                     run.text = ''
 
-                    uid: str = df['__uid__'].iloc[i]
+                    uid: str = df['__uid'].iloc[i]
 
                     avatar_path = get_avatar_path(AVATAR_DIR, uid)
                     avatarfx_path = get_avatar_path(AVATAR_DIR, uid,
@@ -138,7 +138,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                             'usually ends in an image extension like .png.',
                             err_type=ErrorType.WARNING).throw()
 
-                # Color formatting
+                # Conditional formatting
                 if not search_str.startswith(cfg.trigger_word):
                     continue
 
@@ -230,7 +230,8 @@ if __name__ == '__main__':
             'settings.ini', 'token.txt',
             'template.pptm', 'data.xlsx',
         ) if not os.path.exists(abs_path(f))]:
-        Error(40).throw(APP_DIR, '\n'.join(missing))
+        Error(40).throw('- ' + '\n- '.join(missing),
+                        'Working directory: ' + APP_DIR)
 
 
 # Section C: Load user settings
@@ -358,7 +359,7 @@ if __name__ == '__main__':
         if any(df.loc[:, scol].dtype.kind not in 'biufc' for scol in scols):
             # Get list of non-numeric values
             str_vals = (df.loc[:, scols][~df.loc[:, scols].applymap(np.isreal)]
-                .melt(value_name='__value__').dropna()['__value__'].tolist())
+                .melt(value_name='__value').dropna()['__value'].tolist())
 
             Error(60).throw(
                 SORTING_COLUMNS,
@@ -386,7 +387,7 @@ if __name__ == '__main__':
             df.loc[:, scols] = df.loc[:, scols].fillna(0)
 
         # Rank data
-        df['__rank__'] = (
+        df['__rank'] = (
             pd.DataFrame(df.loc[:, scols]            # Select sorting columns
             * (np.array(cfg.sorting_orders)*2 - 1))  # Turn bool 0/1 into -1/1
             .apply(tuple, axis=1)  # type: ignore
@@ -394,15 +395,15 @@ if __name__ == '__main__':
             .astype(int))
 
         # Sort the slides
-        df = df.sort_values(by='__rank__', ascending=True)
+        df = df.sort_values(by='__rank', ascending=True)
 
         # Remove .0 from whole numbers
         format_int = lambda x: str(int(x)) if x % 1 == 0 else str(x)
         df.loc[:, df.dtypes == float] = (
             df.loc[:, df.dtypes == float].applymap(format_int))
 
-        # Replace {__sheet__} with sheet name
-        df['__sheet__'] = sheet
+        # Replace {__sheet} with sheet name
+        df['__sheet'] = sheet
 
 
         # Merge contestant database
@@ -423,26 +424,26 @@ if __name__ == '__main__':
                 if anchor_col not in df_cols:  # TODO: Add a warning
                     continue
 
-                # Copy processed values of anchor column to '__merge_anchor__'
-                df['__merge_anchor__'] = process_str(df[anchor_col])
-                table['__merge_anchor__'] = process_str(table[anchor_col])
+                # Copy processed values of anchor column to '__merge_anchor'
+                df['__merge_anchor'] = process_str(df[anchor_col])
+                table['__merge_anchor'] = process_str(table[anchor_col])
                 table = table.drop(columns=anchor_col)
 
                 # Merge
-                df = df.merge(table, on='__merge_anchor__', how='left')
+                df = df.merge(table, on='__merge_anchor', how='left')
                 for col in overlapped_cols:
                     df[col] = df[f'{col}_y'].fillna(df[f'{col}_x'])
                     df = df.drop(columns=[f'{col}_x', f'{col}_y'])
 
-                df = df.drop(columns='__merge_anchor__')
+                df = df.drop(columns='__merge_anchor')
 
 
-        if '__uid__' not in df.columns.tolist():
+        if '__uid' not in df.columns.tolist():
             avatar_mode = False
 
         # Fill in missing templates
-        df['__template__'] = df['__template__'].fillna(1)
-        df['__uid__'] = df['__uid__'].str.replace('_', '').str.strip()
+        df['__template'] = df['__template'].fillna(1)
+        df['__uid'] = df['__uid'].str.replace('_', '').str.strip()
 
         groups[sheet] = df
 
@@ -507,10 +508,10 @@ if __name__ == '__main__':
             uid_list = []
 
             for df in groups.values():
-                if df['__uid__'].dtype.kind in 'biufc':
+                if df['__uid'].dtype.kind in 'biufc':
                     Error(70).throw()
 
-                for id in df['__uid__']:
+                for id in df['__uid']:
                     if not (pd.isnull(id)
                             or os.path.isfile(get_avatar_path(AVATAR_DIR, id))
                             or id in uid_list
@@ -593,11 +594,11 @@ if __name__ == '__main__':
         slides_count = ppt.Run('Count')
 
         # Duplicate slides
-        for template in df.loc[:, '__template__']:
+        for template in df.loc[:, '__template']:
             if as_type(int, template) not in range(1, slides_count + 1):
                 df_showcase = df[
-                    ['__template__']
-                    + [col for col in df.columns if col != '__template__']]
+                    ['__template']
+                    + [col for col in df.columns if col != '__template']]
 
                 Error(71).throw(
                     f'{Style.BRIGHT}Template ID:{Style.NORMAL}     {template}'
@@ -647,9 +648,7 @@ if __name__ == '__main__':
 # Section H: Launch the file
     print(f'\nExported to {OUTPUT_DIR}')
 
-    # Enable QuickEdit
-    kernel32.SetConsoleMode(
-        kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
+    enable_console()
 
     inp('Press Enter to open the output folder...')
     os.startfile(OUTPUT_DIR)

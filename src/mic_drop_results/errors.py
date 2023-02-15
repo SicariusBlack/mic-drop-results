@@ -11,7 +11,7 @@ from utils import abs_path, inp, console_style
 
 class Tag(Enum):
     DEV = 'DEV'
-    SYS = 'SYS'
+    SYS = 'SYSTEM'
     INTERNET = 'ConnectionError'
     SETTINGS_INI = 'settings.ini'
     TOKEN_TXT = 'token.txt'
@@ -31,7 +31,7 @@ class Traceback:
     }
 
     _err_lookup = {
-    # 0 – 19: Dev-only errors
+    # 0 – 19: Dev errors
         0: [
             Tag.DEV, 'Unhandled error.'
         ],
@@ -47,13 +47,14 @@ class Traceback:
         ],
         21: [
             Tag.TOKEN_TXT, 'No valid API token found.',
-            'Please add a bot token to token.txt or turn off '
+            'Please include a valid token in token.txt or turn off '
             'avatar_mode in settings.ini.'
         ],
         21.1: [
-            Tag.TOKEN_TXT, 'The following API token is invalid.',
+            Tag.TOKEN_TXT, 'Invalid API token.',
+            'The following API token is invalid or has expired. '
             'Please replace the following token in token.txt with a new '
-            'valid one or disable avatar_mode in settings.ini.'
+            'valid one.'
         ],
         22: [
             Tag.DEV, 'Unknown API error.'
@@ -84,12 +85,11 @@ class Traceback:
     # 40 – 59: System errors
         40: [
             Tag.SYS, 'The following files are missing.',
-            'Please download the missing files from the following link.\n'
+            'Please download the missing files from the following source.\n'
             + TEMPLATES_URL
         ],
         41: [
-            Tag.SYS, 'Failed to import VBA macro due to trust access '
-            'settings.',
+            Tag.SYS, 'Failed to import VBA macros due to privacy settings.',
             'Please open PowerPoint, navigate to:\n'
             'File > Options > Trust Center > Trust Center Settings '
             '> Macro Settings, and make sure "Trust access to the VBA '
@@ -98,14 +98,14 @@ class Traceback:
 
     # 60 and above: Data errors
         60: [
-            Tag.DATA_XLSX, 'Invalid data type within the sorting columns.',
+            Tag.DATA_XLSX, 'Sorting column contains invalid data type.',
             'The sorting columns of the following sheet contain text '
             'instead of the expected numeric data type.\n'
             'Have you pasted data in the wrong column by any chance?',
             'The sheet will be excluded if you proceed on.'
         ],
         61: [
-            Tag.DATA_XLSX, 'Empty values within the sorting columns.',
+            Tag.DATA_XLSX, 'Sorting column contains empty value.',
             'The sorting columns of the following sheet contain cells '
             'with empty values.',
             'These empty values will be replaced with 0\'s if you proceed on.'
@@ -122,7 +122,7 @@ class Traceback:
         70: [
             Tag.DATA_XLSX, 'No leading underscore in user IDs.',
             'Please add an underscore (_) before every user ID in the '
-            '"__uid__" column. For example: _1010885414850154587',
+            '"__uid" column. For example: _1010885414850154587',
             'This is to prevent Excel and the program from rounding the UIDs.',
             'Make sure all IDs are still valid before adding the underscores.'
         ],
