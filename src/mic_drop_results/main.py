@@ -164,7 +164,26 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
                n_cols: int, n_cols_ext: int = 5,
                highlight: bool = True,
                words_to_highlight: list[str | None] | None = None) -> str:
+    """Formats and returns a string preview of the dataframe.
 
+    Args:
+        df (pd.DataFrame): the dataframe to format.
+        filter_series (pd.Series, optional): the boolean series used
+            to select rows. Pass None to include all rows in the
+            preview. Defaults to None.
+        n_cols (int): the number of N first columns to format.
+        n_cols_ext (int, optional): the number of extra columns to
+            preview alongside with the formatted columns. Defaults to 5.
+        highlight (bool, optional): enable value highlighting. Defaults
+            to True.
+        words_to_highlight (list[str | None], optional): list of words
+            to highlight in red (only effective to values in formatted
+            columns). List None if the value to highlight is np.nan.
+            Pass None to highlight nothing. Defaults to None.
+
+    Returns:
+        str: the formatted dataframe as a string.
+    """
     if words_to_highlight is None:
         words_to_highlight = []
 
@@ -548,8 +567,8 @@ if __name__ == '__main__':
 
         pool.close()
         pool.join()
+        time.sleep(0.2)
 
-    time.sleep(0.2)
     print('\n\nGenerating slides...')
     print('Please do not click on any PowerPoint window that may '
           'show up in the process.\n')
