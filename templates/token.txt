@@ -3,32 +3,39 @@
 "..."
 
 
+
 HOW TO GET YOUR TOKENS
 -------
-Follow the steps from the link below to get your API
-  token(s). It is important not to invite the bot to
-  any server or post your bot token online.
+Follow the steps here to get your own bot token.
 
-https://mee6.xyz/tutorials/how-to-generate-a-custom-bot-token
+https://github.com/banz04/mic-drop-results/blob/main/docs/token.md
 
-This token will be used to access Discord API for
-  user avatars. You can insert multiple tokens to
-  avoid getting rate-limited.
+This token will be used to access Discord API to
+  retrieve user avatars. You may insert more than
+  one token to avoid rate limits from the API.
 
-Every application cannot have more than one bot; to
-  get multiple tokens, you must therefore create
-  multiple applications.
+
+IS IT SAFE?
+-------
+Certainly. By inserting your bot token(s) here, you
+  accept to authorize Mic Drop Results full access
+  to the bot(s), without any access to your Discord
+  account or any other bot that you currently own.
+
+For extra safety, it is important not to invite the
+  bot to any Discord server.
+
+Do not post your tokens online either, as Discord
+  keeps looking everywhere for your leaked tokens
+  and disables them, thus making your token invalid
+  and unusable for the program.
 
 
 HOW THIS FILE WORKS
 -------
-The program will go through every line in this file,
-  when it meets a line with more than 70 characters,
-  it will recognize such line as a token.
+The program will go through every line in this file.
+  When it meets a line with more than 70 characters,
+  the program will recognize such line as a token.
 
-Understanding the mechanism, you could now paste the
-  tokens inside the pairs of quotation marks, remove
-  or add similar lines if you must.
-
-You may disable avatar_mode in settings.ini if you
-  do not want to use this feature.
+You can disable avatar_mode in settings.ini if you
+  wish not to use this feature.
