@@ -101,7 +101,7 @@ def abs_path(*rels: str) -> str:
         >>> abs_path(AVATAR_DIR, 'avatar.png')
         'D:\\\\parent_dir\\\\src\\\\md_results\\\\avatars\\\\avatar.png'
     """
-    return os.path.join(APP_DIR, *rels)
+    return os.path.join(MAIN_DIR, *rels)
 
 
 # Section C: Console utils
