@@ -12,7 +12,7 @@ from constants import *
 
 # Section A: Basic operations
 def is_number(val: Any) -> bool:
-    """Checks if value can be converted into float."""
+    """Checks if value can be converted to type float."""
     try:
         float(val)
         return True
@@ -24,13 +24,12 @@ T = TypeVar('T')  # Pronounces "typed"
 A = TypeVar('A')  # Pronounces "anything"
 
 
-def as_type(
-        t: Callable[[A], T],
-        val: A) -> T | A:
+def as_type(t: Callable[[A], T], val: A) -> T | A:
     """Returns value as type t if possible, otherwise returns value as it is.
 
     Args:
-        t: the resulting type class to convert.
+        t (Callable): a callable function that outputs value in the
+            desirable type.
         val: the value to convert.
 
     Examples:
@@ -39,8 +38,8 @@ def as_type(
 
         Returns the value as is if it cannot be converted.
 
-        >>> as_type(int, 'banz')
-        'banz'
+        >>> as_type(int, 'lorem ipsum')
+        'lorem ipsum'
     
     Note:
         Please note that a float under str type (e.g. '3.0') cannot be
@@ -145,8 +144,8 @@ def console_style(*style: str) -> None:
     """Sets the color and style in which the next line is printed.
     
     Args:
-        style (optional): an ANSI sequence from the Fore, Back, or Style
-            class of the colorama package.
+        style (optional): a string-type ANSI sequence from the
+            Fore, Back, or Style class of the colorama package.
 
         Pass no argument to reset all formatting.
 
