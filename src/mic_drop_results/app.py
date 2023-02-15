@@ -231,7 +231,7 @@ if __name__ == '__main__':
             'template.pptm', 'data.xlsx',
         ) if not os.path.exists(abs_path(f))]:
         Error(40).throw('- ' + '\n- '.join(missing),
-                        'Working directory: ' + APP_DIR)
+                        'Current working directory: ' + APP_DIR)
 
 
 # Section C: Load user settings
