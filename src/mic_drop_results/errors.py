@@ -20,14 +20,14 @@ class Tag(Enum):
 
 class Traceback:
     templates = {
-        'screenshot': (
-            'Please take a screenshot of everything displayed below '
-            'when filling out a bug report. Thank you for your '
-            'patience in getting the issue resolved.'),
+        'screenshot': [
+            'Please take a screenshot of everything displayed below when '
+            'you fill out a bug report. Thank you for your patience in '
+            'getting this issue resolved.'],
 
-        'cfg_format': (
+        'cfg_format': [
             'Please verify that the config variables are in their '
-            'valid format according to the note above each variable.'),
+            'valid format according to the note above each variable.'],
     }
 
     _err_lookup = {
@@ -46,24 +46,23 @@ class Traceback:
             'Please check your internet connection and try again.'
         ],
         21: [
-            Tag.TOKEN_TXT, 'No valid API token found.',
-            'Please include a valid token in token.txt or turn off '
-            'avatar_mode in settings.ini.'
+            Tag.TOKEN_TXT, 'No valid bot token found.',
+            'Please add a bot token to token.txt or turn off '
+            'avatar_mode completely in settings.ini.'
         ],
         21.1: [
-            Tag.TOKEN_TXT, 'Invalid API token.',
-            'The following API token is invalid or has expired. '
-            'Please replace the following token in token.txt with a new '
-            'valid one.'
+            Tag.TOKEN_TXT, 'Invalid bot token.',
+            'The following bot token is invalid or has expired. '
+            'Please replace the following token from token.txt with a '
+            'new valid one.'
         ],
         22: [
-            Tag.DEV, 'Unknown API error.'
+            Tag.DEV, 'Unknown Discord API error.'
         ],
         23: [
             Tag.DATA_XLSX,
-            'Unable to download the avatars of the following users.',
-            'Please verify that these user IDs are valid and that '
-            'they have not deleted nor deactivated their account.'
+            'Unable to download the avatars of certain users.',
+            'Please make sure the following user IDs are correctly typed.'
         ],
 
     # 30 – 39: Config errors
@@ -75,11 +74,11 @@ class Traceback:
         ],
         31: [
             Tag.SETTINGS_INI, 'Invalid data type for config variable.',
-            templates['cfg_format']
+            *templates['cfg_format']
         ],
         31.1: [
             Tag.SETTINGS_INI, 'Config variable failed requirement check.',
-            templates['cfg_format']
+            *templates['cfg_format']
         ],
 
     # 40 – 59: System errors
@@ -90,10 +89,10 @@ class Traceback:
         ],
         41: [
             Tag.SYS, 'Failed to import VBA macros due to privacy settings.',
-            'Please open PowerPoint, navigate to:\n'
-            'File > Options > Trust Center > Trust Center Settings '
-            '> Macro Settings, and make sure "Trust access to the VBA '
-            'project object model" is enabled.'
+            'Please open PowerPoint and navigate to:\nFile > Options '
+            '> Trust Center > Trust Center Settings > Macro Settings',
+            'Make sure the "Trust access to the VBA project object model" '
+            'option is checked.'
         ],
 
     # 60 and above: Data errors
@@ -120,8 +119,8 @@ class Traceback:
             + TEMPLATES_URL
         ],
         70: [
-            Tag.DATA_XLSX, 'No leading underscore in user IDs.',
-            'Please add an underscore (_) before every user ID in the '
+            Tag.DATA_XLSX, 'No leading underscore before user IDs.',
+            'Please add an underscore (_) before every user ID from the '
             '"__uid" column. For example: _1010885414850154587',
             'This is to prevent Excel and the program from rounding the UIDs.',
             'Make sure all IDs are still valid before adding the underscores.'
@@ -138,7 +137,7 @@ class Traceback:
             res[1] = f'[{res[0].value}] {res[1]}'
 
             if res[0] == Tag.DEV:
-                res.append(self.templates['screenshot'])
+                res += self.templates['screenshot']
 
             return res[1:]
         except KeyError:
