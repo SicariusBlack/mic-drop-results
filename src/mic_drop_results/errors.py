@@ -97,25 +97,24 @@ class Traceback:
 
     # 60 and above: Data errors
         60: [
-            Tag.DATA_XLSX, 'Sorting column contains invalid data type.',
+            Tag.DATA_XLSX, 'Sorting columns contain text.',
             'The sorting columns of the following sheet contain text '
-            'instead of the expected numeric data type.\n'
-            'Have you pasted data in the wrong column by any chance?',
-            'The sheet will be excluded if you proceed on.'
+            'but expects numeric data type.\n'
+            'Have you pasted data in the wrong column, by any chance?'
         ],
         61: [
-            Tag.DATA_XLSX, 'Sorting column contains empty value.',
-            'The sorting columns of the following sheet contain cells '
-            'with empty values.',
-            'These empty values will be replaced with 0\'s if you proceed on.'
+            Tag.DATA_XLSX, 'Sorting columns contain empty value.',
+            'The sorting columns of the following sheet contain empty '
+            'cell values.\n'
+            'These empty values will be replaced with 0 if you proceed on.'
         ],
         68: [
             Tag.DATA_XLSX, 'No valid sheet found.',
             'We have examined every sheet from the following Excel file:\n'
             + abs_path("data.xlsx"),
             'No sheet appears to be in the correct format.',
-            'Please download a sample data.xlsx file from the following link '
-            'and use it as a reference for customizing your own.\n'
+            'Please download a sample data.xlsx file from the following '
+            'URL and use it as a reference for customizing your own.\n'
             + TEMPLATES_URL
         ],
         70: [
