@@ -169,21 +169,23 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
                words_to_highlight: list[str | None] | None = None) -> str:
     """Formats and returns a string preview of the dataframe.
 
-    Args
-    ----
-        df (pd.DataFrame): the dataframe to format.
-        filter_series (pd.Series, optional): the boolean series used
-            to select rows. Pass None to include all rows in the
-            preview. Defaults to None.
-        n_cols (int): the number of N first columns to format.
-        n_cols_ext (int, optional): the number of extra columns to
-            preview alongside with the formatted columns. Defaults to 5.
-        highlight (bool, optional): enable value highlighting. Defaults
-            to True.
-        words_to_highlight (list[str | None], optional): list of words
-            to highlight in red (only effective to values in formatted
-            columns). List None if the value to highlight is np.nan.
-            Pass None to highlight nothing. Defaults to None.
+    Args:
+        df: the dataframe to format.
+        filter_series (optional): the boolean series used to select
+            rows. Pass None to include all rows in the preview. Defaults
+            to None.
+        n_cols: the number columns to format (starts at first column).
+            If n_cols is less than the number of columns in the dataframe,
+            the preview will be a snippet, which shows ellipses at the
+            end of every line).
+        n_cols_ext (optional): the number of extra columns to preview
+            alongside with the formatted columns. Defaults to 5.
+        highlight (optional): enable value highlighting. Defaults to
+            True.
+        words_to_highlight (optional): list of words
+            to highlight in red (only effective to values in the first
+            n_cols columns). List None if the value to highlight is
+            np.nan. Pass None to highlight nothing. Defaults to None.
 
     Returns:
         str: the formatted dataframe as a string.
@@ -192,14 +194,12 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
         words_to_highlight = []
 
     df = df.copy(deep=True)
-    df.index += 2  # reflect row numbers as displayed in Excel
+    if filter_series is not None:
+        df = df[filter_series]
+    df.index += 2  # reflect row index as displayed in Excel
 
     # Only show the first few columns for preview
-    df = df.iloc[:, : min(n_cols + n_cols_ext, len(df.columns))]
-
-    if filter_series:
-        filter_series.index += 2
-        df = df[filter_series]  # TODO: move up before df.index shift
+    df = df.iloc[:, : min(n_cols+n_cols_ext, len(df.columns))]
 
     # Replace values_to_highlight with ⁅values_to_highlight⁆
     prefix, suffix = '⁅', '⁆'  # must be single length
@@ -211,7 +211,6 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
         else:
             df.iloc[:, :n_cols] = df.iloc[:, :n_cols].replace(
                 word, highlight_str(word))
-
 
     preview = repr(df.head(8))
 
@@ -225,7 +224,6 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
         preview = preview.replace(
             ' ' + col, f' {Fore.RED}{col}{Fore.RESET}', 1)
 
-
     # Add ... at the end of each line if preview is a snippet
     if n_cols < len(df.columns):
         preview = preview.replace('\n', '  ...\n') + '  ...'
@@ -233,20 +231,18 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
     # Bold first row
     preview = f'{Style.BRIGHT}' + preview.replace('\n', Style.NORMAL + '\n', 1)
 
-
     if not highlight:
         preview = preview.replace(Fore.RED, '')
     return preview
 
 
 def _import_avatars():
-    attempt = 0
     failed = False
-    has_task = False
+    has_task = False  # skip avatar download banner if no download task exists
     uid_unknown_list = []
     pool = Pool(min(4, len(token_list) + 1))
 
-    while True:
+    for attempt in range(3):
         uid_list = []
 
         for df in groups.values():
@@ -260,10 +256,10 @@ def _import_avatars():
                         or id in uid_unknown_list):
                     uid_list.append(id)
 
-        if not uid_list:
-            break
-        elif attempt == 0:
-            # Show notice on first attempt when there are items to download
+        if not uid_list: break
+
+        if attempt == 0:
+            # Initialize download task
             has_task = True
             print('\n\nDownloading avatars...')
             print('Make sure your internet connection is stable while '
@@ -274,8 +270,8 @@ def _import_avatars():
 
         try:
             pool.starmap(
-                download_avatar, 
-                zip(uid_list,
+                download_avatar, zip(
+                    uid_list,
                     [AVATAR_DIR] * len(uid_list),
                     itertools.islice(  # distribute tokens evenly
                         itertools.cycle(token_list), len(uid_list))
@@ -289,15 +285,13 @@ def _import_avatars():
         except DiscordAPIError as e:
             Error(22).throw(*e.args)
 
-        attempt += 1
-
     if uid_unknown_list:
         Error(23).throw(str(uid_unknown_list), err_type=ErrorType.WARNING)
 
     if has_task and not failed:
         print('\033[A\033[2K\033[A\033[2K' + 'Avatar download complete!')
         pool.close()
-        pool.join()  
+        pool.join()
 
 
 
@@ -429,11 +423,10 @@ if __name__ == '__main__':
 
         # Get sorting columns
         scols = df.columns.tolist()[:n_scols]
-        SORTING_COLUMNS = (
-            f'{Style.BRIGHT}Sheet name:{Style.NORMAL}       {sheet}\n'
-            f'{Style.BRIGHT}Sorting columns:{Style.NORMAL}  {", ".join(scols)}'
-            f'\n\nPlease have a look at the following rows in data.xlsx '
-            f'to find out what caused the problem.'
+        SHEET_INFO = (
+            f'{Style.BRIGHT}Sheet name:{Style.NORMAL}  {sheet}\n\n'
+            f'See the following row(s) in data.xlsx to find out what '
+            f'caused the problem:'
         )
 
 
@@ -444,21 +437,18 @@ if __name__ == '__main__':
                 .melt(value_name='__value').dropna()['__value'].tolist())
 
             Error(60).throw(
-                SORTING_COLUMNS,
+                SHEET_INFO,
 
                 preview_df(
                     df, ~df.loc[:, scols].applymap(np.isreal).all(1),
                     n_cols=n_scols, words_to_highlight=str_vals),
 
-                err_type=ErrorType.WARNING)
-
-            continue
+                err_type=ErrorType.ERROR)
 
         # Fill nan values within the sorting columns
         if df.loc[:, scols].isnull().values.any():
-            print(df.loc[:, scols].isnull().any(axis=1))
             Error(61).throw(
-                SORTING_COLUMNS,
+                SHEET_INFO,
 
                 preview_df(
                     df, df.loc[:, scols].isnull().any(axis=1),
