@@ -127,7 +127,8 @@ class Traceback:
         ],
         71: [
             Tag.DATA_XLSX, 'Template does not exist.',
-            'The following template ID could not be found in template.pptm.'
+            'The following template(s) could not be matched with any '
+            'slide from template.pptm.'
         ],
     }
 
