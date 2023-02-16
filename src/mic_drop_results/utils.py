@@ -20,8 +20,8 @@ def is_number(val: Any) -> bool:
         return False
 
 
-T = TypeVar('T')  # Pronounces "typed"
-A = TypeVar('A')  # Pronounces "anything"
+T = TypeVar('T')  # pronounces "typed"
+A = TypeVar('A')  # pronounces "anything"
 
 
 def as_type(t: Callable[[A], T], val: A) -> T | A:
@@ -121,7 +121,7 @@ def disable_console():
         kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
 
 
-def inp(*args: str, **kwargs) -> str:  # TODO: Add docstring, optimize code
+def inp(*args: str, **kwargs) -> str:  # TODO: add docstring, optimize code
     """A wrapper function of the built-in input function.
 
     This function inherits all the arguments and keyword arguments of
@@ -132,7 +132,7 @@ def inp(*args: str, **kwargs) -> str:  # TODO: Add docstring, optimize code
     Returns:
         The str value of user input.
     """
-    enable_console()  # Allow copying of the error message
+    enable_console()  # allow copying of the error message
     print(*args, **kwargs, end='')
     i = input()
     disable_console()
@@ -202,7 +202,7 @@ class ProgressBar:
         bar = '█' * filled_length + ' ' * (self.bar_length - filled_length)
 
         if self.prog > 0:
-            sys.stdout.write('\033[2K\033[A\r')  # Delete line, move cursor up,
+            sys.stdout.write('\033[2K\033[A\r')  # delete line, move cursor up,
                                                  # ... and to beginning of line
             sys.stdout.flush()
 
@@ -218,8 +218,8 @@ class ProgressBar:
 
 
         if self.prog == self.total:
-            sys.stdout.write('\033[2K\r')        # Delete line and move cursor
-                                                 # ... to beginning of line
+            sys.stdout.write('\033[2K\r')  # delete line and move cursor
+                                           # ... to beginning of line
 
         sys.stdout.flush()
         

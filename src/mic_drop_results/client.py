@@ -52,7 +52,7 @@ def fetch_avatar_url(uid: str, api_token: str) -> str | None:  # TODO: docstring
     except KeyError as e:
         msg = response.json()['message'].lower()
 
-        if '401: unauthorized' in msg:  # Invalid token
+        if '401: unauthorized' in msg:  # invalid token
             raise InvalidTokenError(api_token, response.json()) from e
 
         elif 'rate-limit' in msg:

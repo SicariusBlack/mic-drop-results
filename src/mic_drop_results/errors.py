@@ -204,7 +204,7 @@ class Error(Traceback):
                 class. Defaults to ErrorType.ERROR.
         """
         if content:
-            console_style(Style.BRIGHT)  # Make the error type stand out
+            console_style(Style.BRIGHT)
 
             if err_type == ErrorType.ERROR:
                 console_style(Fore.RED)
