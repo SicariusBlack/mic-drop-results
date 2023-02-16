@@ -130,7 +130,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                         text_frame.margin_left = Inches(5.2)
                     except Exception:
                         Error(
-                            'Could not load the following image from '
+                            'Unable to load the following image from '
                            f'slide {i + 1}, sheet {df["sheet"].iloc[0]}.',
                            f'{img_link[0]}',
                             'Please check your internet connection and verify '
@@ -187,6 +187,7 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
     if words_to_highlight is None:
         words_to_highlight = []
 
+    df = df.copy(deep=True)
     df.index += 2  # reflect row numbers as displayed in Excel
 
     # Only show the first few columns for preview
@@ -198,7 +199,7 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
 
     # Replace values_to_highlight with ⁅values_to_highlight⁆
     prefix, suffix = '⁅', '⁆'  # must be single length
-    highlight_str = lambda x: prefix + x + suffix
+    highlight_str = lambda x: f'{prefix}{x}{suffix}'
     for word in words_to_highlight:
         if word is None:
             df.iloc[:, :n_cols] = df.iloc[:, :n_cols].fillna(
@@ -563,10 +564,9 @@ if __name__ == '__main__':
         if time.time() - last_clear_time > 1800:  # clear cache every hour
             for avatar_path in os.scandir(AVATAR_DIR):
                 os.unlink(avatar_path)
-            
-            # Update last clear time
+
             with open(last_clear_path, 'w') as f:
-                f.write(str(int(time.time())))
+                f.write(str(int(time.time())))  # update last clear time
 
         _import_avatars()
 
@@ -579,15 +579,14 @@ if __name__ == '__main__':
         bar = ProgressBar(
             8, title=sheet, max_title_length=max(map(len, groups.keys())))
 
-        # Open template presentation
+
         bar.set_description('Opening template.pptm')
         ppt = win32com.client.Dispatch('PowerPoint.Application')
         ppt.Presentations.Open(abs_path('template.pptm'))
         bar.add()
 
-        # Import macros
-        bar.set_description('Importing macros')
 
+        bar.set_description('Importing macros')
         try:
             ppt.VBE.ActiveVBProject.VBComponents.Import(
                 abs_path(TEMP_DIR, 'Module1.bas'))
@@ -596,60 +595,53 @@ if __name__ == '__main__':
                 Error(41).throw()
             else:
                 raise e
-
         bar.add()
 
-        # Duplicate slides
+
         bar.set_description('Duplicating slides')
         slides_count = ppt.Run('Count')
 
-        # Duplicate slides
-        for template in df.loc[:, '__template']:
-            if as_type(int, template) not in range(1, slides_count + 1):
-                df_showcase = df[
-                    ['__template']
-                    + [col for col in df.columns if col != '__template']]
+        # Check for invalid template IDs
+        if unknown_templates := [
+            x for x in df['__template']
+            if as_type(int, x) not in range(1, slides_count + 1)
+        ]:
+            showcase_cols = ['__r', '__template']
+            df_showcase = df[
+                showcase_cols
+                + [col for col in df.columns if col not in showcase_cols]]
+            df_showcase = (df_showcase.drop_duplicates('__r')
+                                      .reset_index(drop=True))
 
-                Error(71).throw(
-                    f'{Style.BRIGHT}Template ID:{Style.NORMAL}     {template}'
-                    f'\n'
-                    f'{Style.BRIGHT}Error in sheet:{Style.NORMAL}  {sheet}',
-                    f'Please also inspect merging sheets (signified with '
-                    f'underscores at the beginning) if the problem could '
-                    f'not directly be found in the mentioned sheet.',
+            Error(71).throw(
+                preview_df(
+                    df_showcase, n_cols=2, n_cols_ext=0,
+                    words_to_highlight=unknown_templates))
 
-                    preview_df(df_showcase,
-                               n_cols=1,
-                               words_to_highlight=[template]),
-                )
-
+        # Duplicate template slides
+        for template in df['__template']:
             ppt.Run('Duplicate', template)
-
+        bar.add()
+        ppt.Run(  # delete initial template slides when done
+            'DelSlide', *range(1, slides_count + 1))
         bar.add()
 
-        # Delete template slides when done
-        ppt.Run('DelSlide', *range(1, slides_count + 1))
-        bar.add()
 
-        # Save as output file
         bar.set_description('Saving templates')
         output_path = abs_path(OUTPUT_DIR, f'{sheet}.pptx')
-
         ppt.Run('SaveAs', output_path)
         bar.add()
-
         run('TASKKILL /F /IM powerpnt.exe', stdout=DEVNULL, stderr=DEVNULL)
         bar.add()
 
-        # Replace text
+
         bar.set_description('Filling in judging data')
         prs = Presentation(output_path)
-
         for i, slide in enumerate(prs.slides):
             replace_text(slide, df, i, avatar_mode)
         bar.add()
 
-        # Save
+
         bar.set_description(f'Saving as {output_path}')
         prs.save(output_path)
         bar.add()
