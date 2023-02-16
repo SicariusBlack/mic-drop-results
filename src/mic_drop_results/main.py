@@ -234,6 +234,67 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
     return preview
 
 
+def _import_avatars():
+    attempt = 0
+    failed = False
+    has_task = False
+    uid_unknown_list = []
+    pool = Pool(min(4, len(token_list) + 1))
+
+    while True:
+        uid_list = []
+
+        for df in groups.values():
+            if df['__uid'].dtype.kind in 'biufc':
+                Error(70).throw()
+
+            for id in df['__uid']:
+                if not (pd.isnull(id)
+                        or os.path.isfile(get_avatar_path(AVATAR_DIR, id))
+                        or id in uid_list
+                        or id in uid_unknown_list):
+                    uid_list.append(id)
+
+        if not uid_list:
+            break
+        elif attempt == 0:
+            # Show notice on first attempt when there are items to download
+            has_task = True
+            print('\n\nDownloading avatars...')
+            print('Make sure your internet connection is stable while '
+                  'we are downloading.')
+        elif attempt > 3:
+            failed = True
+            break
+
+        try:
+            pool.starmap(
+                download_avatar, 
+                zip(uid_list,
+                    [AVATAR_DIR] * len(uid_list),
+                    itertools.islice(  # distribute tokens evenly
+                        itertools.cycle(token_list), len(uid_list))
+                ))
+        except (ConnectionError, TimeoutError) as e:
+            if attempt == 3: Error(20).throw(err_type=ErrorType.WARNING)
+        except InvalidTokenError as e:
+            Error(21.1).throw(*e.args)
+        except UnknownUserError as e:
+            uid_unknown_list.append(e.args[0])
+        except DiscordAPIError as e:
+            Error(22).throw(*e.args)
+
+        attempt += 1
+
+    if uid_unknown_list:
+        Error(23).throw(str(uid_unknown_list), err_type=ErrorType.WARNING)
+
+    if has_task and not failed:
+        print('\033[A\033[2K\033[A\033[2K' + 'Avatar download complete!')
+        pool.close()
+        pool.join()  
+
+
 
 if __name__ == '__main__':
     version_tag = '2.9'
@@ -491,86 +552,24 @@ if __name__ == '__main__':
 
 
     if avatar_mode:
-        # Clear avatar cache
-        with open(abs_path(TEMP_DIR, 'last_clear_avatar_cache.txt'), 'w') as f:
-            try:
-                last_clear = int(f.readline())
-            except:
-                last_clear = 0
+        last_clear_path = abs_path(TEMP_DIR, 'last_clear_avatar_cache.txt')
 
-            if time.time() - last_clear > 1800:  # clear cache every hour
-                for avatar_path in os.scandir(AVATAR_DIR):
-                    os.unlink(avatar_path)
-                
-                f.write(str(int(time.time())))  # update last clear time
+        try:
+            with open(last_clear_path, 'r') as f:
+                last_clear_time = int(f.readline())
+        except (FileNotFoundError, ValueError):
+            last_clear_time = 0
 
+        if time.time() - last_clear_time > 1800:  # clear cache every hour
+            for avatar_path in os.scandir(AVATAR_DIR):
+                os.unlink(avatar_path)
+            
+            # Update last clear time
+            with open(last_clear_path, 'w') as f:
+                f.write(str(int(time.time())))
 
-        # Download avatars with parallel processing
-        print('\n\nDownloading avatars...')
-        print('Make sure your internet connection is stable while we are '
-              'downloading.')
+        _import_avatars()
 
-        attempt = 0
-        failed = False
-        pool = Pool(min(4, len(token_list) + 1))
-        uid_unknown_list = []
-
-        while True:
-            uid_list = []
-
-            for df in groups.values():
-                if df['__uid'].dtype.kind in 'biufc':
-                    Error(70).throw()
-
-                for id in df['__uid']:
-                    if not (pd.isnull(id)
-                            or os.path.isfile(get_avatar_path(AVATAR_DIR, id))
-                            or id in uid_list
-                            or id in uid_unknown_list):
-                        uid_list.append(id)
-
-            if not uid_list:
-                break
-
-            if attempt > 3:
-                failed = True
-                break
-
-            try:
-                pool.starmap(
-                    download_avatar, 
-                    zip(uid_list,
-                        [AVATAR_DIR] * len(uid_list),
-                        # Distribute the tokens among the user IDs
-                        itertools.islice(
-                            itertools.cycle(token_list), len(uid_list))
-                    )
-                )
-
-            except (ConnectionError, TimeoutError) as e:
-                if attempt == 3:
-                    Error(20).throw(err_type=ErrorType.WARNING)
-
-            except InvalidTokenError as e:
-                Error(21.1).throw(*e.args)
-
-            except UnknownUserError as e:
-                uid_unknown_list.append(e.args[0])
-
-            except DiscordAPIError as e:
-                Error(22).throw(*e.args)
-
-            attempt += 1
-
-        if not failed:
-            print('\033[A\033[2K\033[A\033[2K' + 'Avatar download complete!')
-
-        if uid_unknown_list:
-            Error(23).throw(str(uid_unknown_list), err_type=ErrorType.WARNING)
-
-        pool.close()
-        pool.join()
-        time.sleep(0.2)
 
     print('\n\nGenerating slides...')
     print('Please do not click on any PowerPoint window that may '
