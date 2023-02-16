@@ -38,7 +38,10 @@ from utils import ProgressBar
 from vba.macros import module1_bas
 
 
-def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
+def replace_text(slide: Slide, df: pd.DataFrame, i: int) -> Slide:
+    df = df.copy()
+
+def replace2_text(slide: Slide, df, i) -> Slide:
     """Replaces and formats text."""
     cols = df.columns.tolist() + ['p']
 
@@ -166,7 +169,8 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
                words_to_highlight: list[str | None] | None = None) -> str:
     """Formats and returns a string preview of the dataframe.
 
-    Args:
+    Args
+    ----
         df (pd.DataFrame): the dataframe to format.
         filter_series (pd.Series, optional): the boolean series used
             to select rows. Pass None to include all rows in the
@@ -638,7 +642,7 @@ if __name__ == '__main__':
         prs = Presentation(output_path)
         bar.add()
         for i, slide in enumerate(prs.slides):
-            replace_text(slide, df, i, avatar_mode)
+            replace_text(slide, i)
         bar.add()
 
 
