@@ -80,7 +80,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
                     if is_number(effect):
                         img = cv2.imread(avatar_path)
-                        match float(effect):  # TODO: Add more effects
+                        match float(effect):  # TODO: add more effects
                             case 1:
                                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -100,7 +100,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
 
                 # Actual text
                 repl = str(df[search_str].iloc[i])
-                repl = repl if repl != 'nan' else ''  # Replace nan with empty
+                repl = repl if repl != 'nan' else ''  # replace nan with empty
 
                 run_text = run.text
 
@@ -110,7 +110,7 @@ def replace_text(slide: Slide, df, i, avatar_mode) -> Slide:
                     run.text = run.text.replace('{' + search_str + '}', repl)
 
                 # Replace image links
-                pattern = r'\<\<(.*?)\>\>'  # Look for <<image_links.{ext}>>
+                pattern = r'\<\<(.*?)\>\>'  # look for <<image_links.{ext}>>
                 img_link = re.findall(pattern, run.text)
 
                 if len(img_link) > 0:
@@ -187,29 +187,32 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
     if words_to_highlight is None:
         words_to_highlight = []
 
-    df.index += 2  # To reflect row numbers as displayed in Excel
+    df.index += 2  # reflect row numbers as displayed in Excel
 
     # Only show the first few columns for preview
     df = df.iloc[:, : min(n_cols + n_cols_ext, len(df.columns))]
 
     if filter_series:
         filter_series.index += 2
-        df = df[filter_series]
+        df = df[filter_series]  # TODO: move up before df.index shift
 
-    # Replace values_to_highlight with ⦃values_to_highlight⦄
-    # The brackets are weird Unicode characters that no one would ever use.
+    # Replace values_to_highlight with ⁅values_to_highlight⁆
+    prefix, suffix = '⁅', '⁆'  # must be single length
+    highlight_str = lambda x: prefix + x + suffix
     for word in words_to_highlight:
         if word is None:
-            df.iloc[:, :n_cols] = df.iloc[:, :n_cols].fillna('⦃NaN⦄')
+            df.iloc[:, :n_cols] = df.iloc[:, :n_cols].fillna(
+                highlight_str('NaN'))
         else:
             df.iloc[:, :n_cols] = df.iloc[:, :n_cols].replace(
-                word, f'⦃{word}⦄')
+                word, highlight_str(word))
 
 
     preview = repr(df.head(8))
 
-    # Highlight ⦃values_to_highlight⦄
-    preview = preview.replace('⦃', Fore.RED + '  ').replace('⦄', Fore.RESET)
+    # Highlight values
+    preview = (preview.replace(prefix, Fore.RED + '  ')
+                      .replace(suffix, Fore.RESET))
 
     # Highlight column names
     for n in range(n_cols):
@@ -236,11 +239,11 @@ if __name__ == '__main__':
     version_tag = '2.9'
 
 # Section A: Fix console-related issues
-    freeze_support()          # Multiprocessing freeze support
-    signal(SIGINT, SIG_IGN)   # Handle KeyboardInterrupt
+    freeze_support()          # multiprocessing freeze support
+    signal(SIGINT, SIG_IGN)   # handle KeyboardInterrupt
     disable_console()
-    sys.excepthook = print_exception_hook  # Avoid exiting program on exception
-    init()                                 # Enable ANSI escape sequences
+    sys.excepthook = print_exception_hook  # avoid exiting program on exception
+    init()                                 # enable ANSI escape sequences
 
 # Section B: Check for missing files
     if missing_files := [f for f in (
@@ -252,8 +255,8 @@ if __name__ == '__main__':
 
 # Section C: Load user configurations
     cfg = Config(abs_path('settings.ini'))
-    n_scols = len(cfg.sorting_orders)
-    avatar_mode = cfg.avatar_mode
+    n_scols = len(cfg.sorting_orders)  # number of sorting columns
+    avatar_mode = cfg.avatar_mode  # is subject to change later
     scheme, scheme_alt = [
         list(map(hex_to_rgb, x)) for x in (cfg.scheme, cfg.scheme_alt)
     ]
@@ -270,8 +273,8 @@ if __name__ == '__main__':
 
 # Section E: Check for updates
     status = None
-    with contextlib.suppress(requests.exceptions.ConnectionError, KeyError):
-        if cfg.update_check:
+    if cfg.update_check:
+        with contextlib.suppress(requests.exceptions.ConnectionError, KeyError):
             # Fetch the latest version and the summary of the update
             latest_tag, summary = fetch_latest_version()
 
@@ -329,18 +332,19 @@ if __name__ == '__main__':
     xls.close()
 
     sheet_names = [re.sub(
-        r'[\\\/:"*?<>|]+', '',  # Forbidden file name characters
+        r'[\\\/:"*?<>|]+', '',  # forbidden file name characters
         str(name)).strip() for name in workbook]
 
     workbook = {name: list(workbook.values())[i]
                 for i, name in enumerate(sheet_names)}
 
 
-    # Extract tables that belong to the database
+    db_prefix = '__'  # signifies database tables
+
     database: dict[str, pd.DataFrame] = {}
     for sheet in sheet_names:
-        if not sheet.startswith('_'):  # Database tables are signified with _
-            continue
+        if not sheet.startswith(db_prefix):
+            continue  # exclude non-database sheets
 
         table = workbook[sheet]
         if table.empty or table.shape < (1, 2):  # (1 row, 2 cols) min
@@ -348,11 +352,10 @@ if __name__ == '__main__':
         database[sheet] = table
 
 
-    # Process non-database sheets
     groups: dict[str, pd.DataFrame] = {}
     for sheet in sheet_names:
-        if sheet.startswith('_'):  # Exclude database tables
-            continue
+        if sheet.startswith(db_prefix):
+            continue  # exclude database tables
 
         df = workbook[sheet]
         if df.empty or df.shape < (1, n_scols):  # (1 row, n sorting cols) min
@@ -401,8 +404,8 @@ if __name__ == '__main__':
 
         # Rank data
         df['__r'] = (
-            pd.DataFrame(df.loc[:, scols]            # Select sorting columns
-            * (np.array(cfg.sorting_orders)*2 - 1))  # Turn bool 0/1 into -1/1
+            pd.DataFrame(df.loc[:, scols]            # select sorting columns
+            * (np.array(cfg.sorting_orders)*2 - 1))  # map bool 0/1 to -1/1
             .apply(tuple, axis=1)  # type: ignore
             .rank(method='min', ascending=False)
             .astype(int))
@@ -434,7 +437,7 @@ if __name__ == '__main__':
                 overlapped_cols = [col for col in db_cols
                                    if (col in df_cols) and (col != anchor_col)]
 
-                if anchor_col not in df_cols:  # TODO: Add a warning
+                if anchor_col not in df_cols:  # TODO: add a warning
                     continue
 
                 # Copy processed values of anchor column to '__merge_anchor'
@@ -470,7 +473,7 @@ if __name__ == '__main__':
 
 
 # Section G: Generate PowerPoint slides
-    run('TASKKILL /F /IM powerpnt.exe',  # Kill all PowerPoint instances
+    run('TASKKILL /F /IM powerpnt.exe',  # kill all PowerPoint instances
         stdout=DEVNULL, stderr=DEVNULL)
 
     OUTPUT_DIR = abs_path('output')
@@ -480,7 +483,7 @@ if __name__ == '__main__':
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     os.makedirs(AVATAR_DIR, exist_ok=True)
     os.makedirs(TEMP_DIR, exist_ok=True)
-    check_call(['attrib', '+H', TEMP_DIR])  # Hide temp folder
+    check_call(['attrib', '+H', TEMP_DIR])  # hide temp folder
 
     # Create Module1.bas
     with open(abs_path(TEMP_DIR, 'Module1.bas'), 'w') as f:
@@ -495,11 +498,11 @@ if __name__ == '__main__':
             except:
                 last_clear = 0
 
-            if time.time() - last_clear > 1800:  # Clear every hour
+            if time.time() - last_clear > 1800:  # clear cache every hour
                 for avatar_path in os.scandir(AVATAR_DIR):
                     os.unlink(avatar_path)
                 
-                f.write(str(int(time.time())))  # Update last clear time
+                f.write(str(int(time.time())))  # update last clear time
 
 
         # Download avatars with parallel processing
@@ -589,9 +592,9 @@ if __name__ == '__main__':
         try:
             ppt.VBE.ActiveVBProject.VBComponents.Import(
                 abs_path(TEMP_DIR, 'Module1.bas'))
-        except com_error as e:
+        except com_error as e:  # trust access not yet enabled
             if e.hresult == -2147352567:  # type: ignore
-                Error(41).throw()  # Trust access not yet enabled
+                Error(41).throw()
             else:
                 raise e
 

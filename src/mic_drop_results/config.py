@@ -18,7 +18,7 @@ class ConfigVarTypes:
     scheme_alt: list[str]
 
 
-class Config(ConfigVarTypes):  # TODO: Add docstrings
+class Config(ConfigVarTypes):  # TODO: add docstrings
     def __init__(self, file_path: str):
         parser = configparser.ConfigParser()
         parser.read(file_path)
@@ -28,28 +28,28 @@ class Config(ConfigVarTypes):  # TODO: Add docstrings
             k: v for d in parser.values() for k, v in d.items()
         }
 
-        self._check_missing_vars()   # Check for missing config variables
-        self._parse_config()         # Get values to their assigned types
-        self.__dict__ = self.config  # Assign config to class attributes
+        self._check_missing_vars()
+        self._parse_config()
+        self.__dict__ = self.config  # assign config to class attributes
 
         try:
-            self._validate()         # Validate special conditions
+            self._validate()  # validate config vars' conditions
         except AssertionError as e:
             Error(31.1).throw(*e.args)
 
     def _validate(self) -> None:
         assert len(self.trigger_word) > 0, (
-            'Config variable trigger_word must not be empty.')
+            'Config variable "trigger_word" must not be empty.')
 
         assert (len(self.ranges) ==
                 len(self.scheme) ==
                 len(self.scheme_alt)), (
-            'Lists from variables ranges, scheme, and scheme_alt must '
-            'all have the same length.')
+            'The "ranges", "scheme", and "scheme_alt" lists must '
+            'have the same and matching length.')
 
-        valid_hex = r'^(?:[0-9a-fA-F]{3}){1,2}$'
+        hex_pattern = r'^(?:[0-9a-fA-F]{3}){1,2}$'
 
-        assert all(re.fullmatch(valid_hex, h)
+        assert all(re.fullmatch(hex_pattern, h)
                    for scheme in [self.scheme, self.scheme_alt]
                    for h in scheme), (
             'Invalid hex codes found in:'
@@ -90,7 +90,7 @@ class Config(ConfigVarTypes):  # TODO: Add docstrings
                 )
 
     def _parse_list(self, list_type: Callable[[str], Any], val: str) -> list:
-        ele_type = list_type.__args__[0]  # Extract the elements' type
+        ele_type = list_type.__args__[0]  # extract the elements' type
                                           # ... e.g. <class 'float'> if
                                           # ... list_type is list[float]
         raw_list = (val
