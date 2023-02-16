@@ -630,13 +630,13 @@ if __name__ == '__main__':
         bar.set_description('Saving templates')
         output_path = abs_path(OUTPUT_DIR, f'{sheet}.pptx')
         ppt.Run('SaveAs', output_path)
-        bar.add()
-        run('TASKKILL /F /IM powerpnt.exe', stdout=DEVNULL, stderr=DEVNULL)
+        ppt.Quit()
         bar.add()
 
 
         bar.set_description('Filling in judging data')
         prs = Presentation(output_path)
+        bar.add()
         for i, slide in enumerate(prs.slides):
             replace_text(slide, df, i, avatar_mode)
         bar.add()
