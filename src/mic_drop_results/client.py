@@ -12,7 +12,7 @@ import numpy as np
 from constants import *
 from errors import Error
 from exceptions import *
-from utils import abs_path, is_number
+from utils import is_number, get_avatar_path
 
 
 # Section A: GitHub API
@@ -83,15 +83,3 @@ def download_avatar(uid: str, api_token: str) -> None:
             cv2.imwrite(str(img_path), img)
     except URLError as e:
         raise ConnectionError from e
-
-
-def get_avatar_path(uid: str | None = None, og_path: Path | None = None, *,
-                    effect: str = '') -> Path:  # TODO: docstring
-    """Returns the local path to the avatar file from user ID."""
-    if uid is None:
-        if og_path is None or og_path.stem == og_path.name:
-            raise ValueError('When uid is None, og_path must be a file.')
-
-        return abs_path(og_path.parent, f'{effect}_{og_path.name.lstrip("_")}')
-
-    return abs_path(AVATAR_DIR, f'{effect}_{uid}.png')

@@ -26,7 +26,7 @@ import requests
 import win32com.client
 
 from client import ProgramStatus, fetch_latest_version
-from client import download_avatar, get_avatar_path
+from client import download_avatar
 from config import Config
 from constants import *
 from errors import Error, ErrorType, print_exception_hook
@@ -34,33 +34,22 @@ from exceptions import *
 from utils import is_number, as_type, hex_to_rgb, parse_version, abs_path
 from utils import inp, disable_console, enable_console, console_style, bold
 from utils import ProgressBar
-from utils import artistic_effect
+from utils import get_avatar_path, artistic_effect
 from vba.macros import module1_bas
 
 
-def _replace_avatar(slide: Slide, shape, run, data: dict[str, str]) -> None:
-    uid = data['uid']
-    eff = run.text.strip()[3:]  # 3 is the length of '{p}'
+def _replace_avatar(slide: Slide, shape, run, *, uid: str) -> None:
+    eff = run.text[3:]  # 3 is the length of '{p}'
     run.text = ''
 
-    original_path = get_avatar_path(uid)
-    avatar_path = get_avatar_path(uid, effect=eff)
-
-    if not os.path.isfile(original_path):
+    og_path = get_avatar_path(uid)
+    if not og_path.is_file():
         return None
 
-    # Create avatar file with effect
-    if is_number(eff):
-        img = cv2.imread(str(original_path))
-        match float(eff):  # TODO: add more effects
-            case 1:
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-        cv2.imwrite(avatar_path, img)
-
     # Add avatar to slide
+    avatar_path = artistic_effect(og_path, effect=eff)
     new_shape = slide.shapes.add_picture(  # type: ignore
-        avatar_path, shape.left, shape.top,
+        str(avatar_path), shape.left, shape.top,
         shape.width, shape.height)
     new_shape.auto_shape_type = MSO_SHAPE.OVAL
     old = shape._element
@@ -69,7 +58,28 @@ def _replace_avatar(slide: Slide, shape, run, data: dict[str, str]) -> None:
     old.getparent().remove(old)
 
 
-def replace_text(slide: Slide, data: dict[str, str]) -> Slide:
+def _replace_text(run, field_name, *, text: str) -> None:
+    if text == 'nan':
+        text = ''
+
+    if field_name.startswith(cfg.trigger_word):  # conditional formatting
+        for ind, seg_point in enumerate(cfg.ranges[::-1]):
+            if not is_number(text):
+                break
+
+            if float(text) >= seg_point:
+                if run.text.strip()[3:] != '1':
+                    run.font.color.rgb = RGBColor(*scheme[::-1][ind])
+                else:
+                    run.font.color.rgb = RGBColor(*scheme_alt[::-1][ind])
+                break
+
+        run.text = text
+    else:
+        run.text = run.text.replace('{'+field_name+'}', text)
+
+
+def fill_slide(slide: Slide, data: dict[str, str]) -> None:
     # https://wiki.python.org/moin/TimeComplexity
     cols = set([*data] + ['p'])
 
@@ -86,27 +96,14 @@ def replace_text(slide: Slide, data: dict[str, str]) -> Slide:
 
                     # Replace {p} with avatar
                     if field_name == 'p':
-                        _replace_avatar(slide, shape, run, data)
+                        _replace_avatar(slide, shape, run,
+                                        uid=data['uid'])
                         break
 
                     # Replace text
-                    text = str(data[field_name])
-                    if text == 'nan': text = ''
-
-                    if field_name.startswith(cfg.trigger_word):
-                        # Conditional formatting
-                        for ind, seg_point in enumerate(cfg.ranges[::-1]):
-                            if is_number(text) and float(text) >= seg_point:
-                                if run.text.strip()[3:] != '1':
-                                    run.font.color.rgb = RGBColor(
-                                        *scheme[::-1][ind])
-                                else:
-                                    run.font.color.rgb = RGBColor(
-                                        *scheme_alt[::-1][ind])
-                                break
-                        run.text = text
-                    else:
-                        run.text = run.text.replace('{'+field_name+'}', text)
+                    _replace_text(run, field_name,
+                                  text=data[field_name])
+                    
 
 
 def replace2_text(slide: Slide, df, i) -> Slide:
@@ -150,7 +147,7 @@ def replace2_text(slide: Slide, df, i) -> Slide:
 
                     if is_number(effect):
                         img = cv2.imread(avatar_path)
-                        match float(effect):  # TODO: add more effects
+                        match float(effect):
                             case 1:
                                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -689,11 +686,11 @@ if __name__ == '__main__':
         bar.add()
 
 
-        bar.set_description('Filling judging data')
+        bar.set_description('Filling in judging data')
         prs = Presentation(str(output_path))
         bar.add()
         for i, slide in enumerate(prs.slides):
-            replace_text(slide, {
+            fill_slide(slide, {
                 k.lstrip('__') : v  # treat program-generated vars as normal
                 for k, v in df.iloc[i].to_dict().items()
             })
