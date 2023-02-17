@@ -38,8 +38,31 @@ from utils import ProgressBar
 from vba.macros import module1_bas
 
 
-def replace_text(slide: Slide, df: pd.DataFrame, i: int) -> Slide:
-    df = df.copy()
+def _replace_avatar(slide: Slide, data: dict[str, str], eff: str) -> None:
+    uid = data['uid']
+
+def replace_text(slide: Slide, data: dict[str, str]) -> Slide:
+    # https://wiki.python.org/moin/TimeComplexity
+    cols = set([*data] + ['p'])
+    print(cols)
+
+    for shape in slide.shapes:  # type: ignore
+        if not shape.has_text_frame:
+            continue
+        text_frame = shape.text_frame
+
+        for p in text_frame.paragraphs:
+            for run in p.runs:
+                for field_name in re.findall(r'(?<={)\S+(?=})', run.text):
+                    if field_name not in cols:  # O(1) time complexity
+                        continue
+
+                    # Replace {p} with avatar
+                    if field_name == 'p':
+                        eff = run.text.strip()[3:]  # 3 is the length of '{p}'
+                        _replace_avatar(slide, data, eff)
+                        run.text = ''
+
 
 def replace2_text(slide: Slide, df, i) -> Slide:
     """Replaces and formats text."""
@@ -394,13 +417,11 @@ if __name__ == '__main__':
     sheet_names = [re.sub(
         r'[\\\/:"*?<>|]+', '',  # forbidden file name characters
         str(name)).strip() for name in workbook]
-
     workbook = {name: list(workbook.values())[i]
                 for i, name in enumerate(sheet_names)}
 
 
     db_prefix = '__'  # signifies database tables
-
     database: dict[str, pd.DataFrame] = {}
     for sheet in sheet_names:
         if not sheet.startswith(db_prefix):
@@ -421,8 +442,7 @@ if __name__ == '__main__':
         if df.empty or df.shape < (1, n_scols):  # (1 row, n sorting cols) min
             continue
 
-        # Get sorting columns
-        scols = df.columns.tolist()[:n_scols]
+        scols = df.columns.tolist()[:n_scols]  # get sorting columns
         SHEET_INFO = (
             f'{Style.BRIGHT}Sheet name:{Style.NORMAL}  {sheet}\n\n'
             f'See the following row(s) in data.xlsx to find out what '
@@ -632,7 +652,10 @@ if __name__ == '__main__':
         prs = Presentation(output_path)
         bar.add()
         for i, slide in enumerate(prs.slides):
-            replace_text(slide, i)
+            replace_text(slide, {
+                k.lstrip('__') : v  # treat program-generated vars like others
+                for k, v in df.iloc[i].to_dict()
+            })
         bar.add()
 
 
