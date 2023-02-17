@@ -1,5 +1,6 @@
 import copy
 from enum import Enum, auto
+import re
 import sys
 from traceback import format_exception
 
@@ -83,7 +84,7 @@ class Traceback:
 
     # 40 – 59: System errors
         40: [
-            Tag.SYS, 'The following files are missing.',
+            Tag.SYS, 'Some required files are missing.',
             'Please download the missing files from the following source.\n'
             + TEMPLATES_URL
         ],
@@ -111,7 +112,7 @@ class Traceback:
         68: [
             Tag.DATA_XLSX, 'No valid sheet found.',
             'We have examined every sheet from the following Excel file:\n'
-            + abs_path("data.xlsx"),
+            + str(abs_path("data.xlsx")),
             'No sheet appears to be in the correct format.',
             'Please download a sample data.xlsx file from the following '
             'URL and use it as a reference for customizing your own.\n'
@@ -181,6 +182,11 @@ class Error(Traceback):
             self, *details: str, err_type: ErrorType = ErrorType.ERROR
         ) -> None:
         self.content += [*details]
+
+        # Redact sensitive information
+        for i, x in enumerate(self.content):
+            self.content[i] = re.sub(r'(?<=Users\\).+?(?=\\)', 'user', x)
+
         self._print(*self.content, err_type=err_type)
 
     def _print(
