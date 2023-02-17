@@ -38,13 +38,37 @@ from utils import ProgressBar
 from vba.macros import module1_bas
 
 
-def _replace_avatar(slide: Slide, data: dict[str, str], eff: str) -> None:
+def _replace_avatar(slide: Slide, shape,
+                    data: dict[str, str], eff: str) -> None:
     uid = data['uid']
+    original_path = get_avatar_path(AVATAR_DIR, uid)
+    avatar_path = get_avatar_path(AVATAR_DIR, uid, effect=eff)
+
+    if not os.path.isfile(original_path):
+        return None
+
+    # Create avatar file with effect
+    if is_number(eff):
+        img = cv2.imread(original_path)
+        match float(eff):  # TODO: add more effects
+            case 1:
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        cv2.imwrite(original_path, img)
+
+    # Add avatar to slide
+    new_shape = slide.shapes.add_picture(  # type: ignore
+        avatar_path, shape.left, shape.top,
+        shape.width, shape.height)
+    new_shape.auto_shape_type = MSO_SHAPE.OVAL
+    old = shape._element
+    new = new_shape._element
+    old.addnext(new)
+    old.getparent().remove(old)
 
 def replace_text(slide: Slide, data: dict[str, str]) -> Slide:
     # https://wiki.python.org/moin/TimeComplexity
     cols = set([*data] + ['p'])
-    print(cols)
 
     for shape in slide.shapes:  # type: ignore
         if not shape.has_text_frame:
@@ -60,8 +84,20 @@ def replace_text(slide: Slide, data: dict[str, str]) -> Slide:
                     # Replace {p} with avatar
                     if field_name == 'p':
                         eff = run.text.strip()[3:]  # 3 is the length of '{p}'
-                        _replace_avatar(slide, data, eff)
+                        _replace_avatar(slide, shape, data, eff)
                         run.text = ''
+                        break
+
+                    # Replace text
+                    text = str(data[field_name])
+                    if text == 'nan':
+                        text = ''
+
+                    if field_name.startswith(cfg.trigger_word):
+                        # Conditional formatting
+                        run.text = text
+                    else:
+                        run.text = run.text.replace('{'+field_name+'}', text)
 
 
 def replace2_text(slide: Slide, df, i) -> Slide:
@@ -653,8 +689,8 @@ if __name__ == '__main__':
         bar.add()
         for i, slide in enumerate(prs.slides):
             replace_text(slide, {
-                k.lstrip('__') : v  # treat program-generated vars like others
-                for k, v in df.iloc[i].to_dict()
+                k.lstrip('__') : v  # treat program-generated vars as normal
+                for k, v in df.iloc[i].to_dict().items()
             })
         bar.add()
 
