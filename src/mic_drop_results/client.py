@@ -1,3 +1,4 @@
+from copy import deepcopy
 from enum import Enum
 import requests
 import time
@@ -82,7 +83,12 @@ def download_avatar(uid: str, avatar_dir: str, api_token: str) -> None:
         raise ConnectionError from e
 
 
-def get_avatar_path(avatar_dir: str, uid: str, *,
-                    effect: str = '') -> str:
+def get_avatar_path(avatar_dir: str, uid: str | None = None, *,
+                    effect: str = '') -> str:  # TODO: docstring
     """Returns the local path to the avatar file from user ID."""
+    if uid is None:
+        original_path = deepcopy(avatar_dir)
+
+        return abs_path(avatar_dir, effect + avatar_dir)
+    
     return abs_path(avatar_dir, f'{effect}_{uid}.png')

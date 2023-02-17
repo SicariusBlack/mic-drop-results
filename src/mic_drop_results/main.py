@@ -31,16 +31,18 @@ from config import Config
 from constants import *
 from errors import Error, ErrorType, print_exception_hook
 from exceptions import *
-from utils import is_number, as_type, hex_to_rgb, parse_version
-from utils import abs_path
+from utils import is_number, as_type, hex_to_rgb, parse_version, abs_path
 from utils import inp, disable_console, enable_console, console_style
 from utils import ProgressBar
+from utils import artistic_effect
 from vba.macros import module1_bas
 
 
-def _replace_avatar(slide: Slide, shape,
-                    data: dict[str, str], eff: str) -> None:
+def _replace_avatar(slide: Slide, shape, run, data: dict[str, str]) -> None:
     uid = data['uid']
+    eff = run.text.strip()[3:]  # 3 is the length of '{p}'
+    run.text = ''
+
     original_path = get_avatar_path(AVATAR_DIR, uid)
     avatar_path = get_avatar_path(AVATAR_DIR, uid, effect=eff)
 
@@ -54,7 +56,7 @@ def _replace_avatar(slide: Slide, shape,
             case 1:
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        cv2.imwrite(original_path, img)
+        cv2.imwrite(avatar_path, img)
 
     # Add avatar to slide
     new_shape = slide.shapes.add_picture(  # type: ignore
@@ -65,6 +67,7 @@ def _replace_avatar(slide: Slide, shape,
     new = new_shape._element
     old.addnext(new)
     old.getparent().remove(old)
+
 
 def replace_text(slide: Slide, data: dict[str, str]) -> Slide:
     # https://wiki.python.org/moin/TimeComplexity
@@ -83,18 +86,24 @@ def replace_text(slide: Slide, data: dict[str, str]) -> Slide:
 
                     # Replace {p} with avatar
                     if field_name == 'p':
-                        eff = run.text.strip()[3:]  # 3 is the length of '{p}'
-                        _replace_avatar(slide, shape, data, eff)
-                        run.text = ''
+                        _replace_avatar(slide, shape, run, data)
                         break
 
                     # Replace text
                     text = str(data[field_name])
-                    if text == 'nan':
-                        text = ''
+                    if text == 'nan': text = ''
 
                     if field_name.startswith(cfg.trigger_word):
                         # Conditional formatting
+                        for ind, seg_point in enumerate(cfg.ranges[::-1]):
+                            if is_number(text) and float(text) >= seg_point:
+                                if run.text.strip()[3:] != '1':
+                                    run.font.color.rgb = RGBColor(
+                                        *scheme[::-1][ind])
+                                else:
+                                    run.font.color.rgb = RGBColor(
+                                        *scheme_alt[::-1][ind])
+                                break
                         run.text = text
                     else:
                         run.text = run.text.replace('{'+field_name+'}', text)
