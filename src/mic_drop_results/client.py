@@ -1,5 +1,6 @@
 from copy import deepcopy
 from enum import Enum
+from pathlib import Path
 import requests
 import time
 from urllib.request import Request, urlopen
@@ -8,6 +9,7 @@ from urllib.error import URLError
 import cv2
 import numpy as np
 
+from constants import *
 from errors import Error
 from exceptions import *
 from utils import abs_path, is_number
@@ -67,8 +69,8 @@ def fetch_avatar_url(uid: str, api_token: str) -> str | None:  # TODO: docstring
             raise DiscordAPIError(api_token, response.json()) from e
 
 
-def download_avatar(uid: str, avatar_dir: str, api_token: str) -> None:
-    img_path = get_avatar_path(avatar_dir, uid)
+def download_avatar(uid: str, api_token: str) -> None:
+    img_path = get_avatar_path(uid)
 
     try:
         if avatar_url := fetch_avatar_url(uid, api_token):
@@ -78,17 +80,18 @@ def download_avatar(uid: str, avatar_dir: str, api_token: str) -> None:
             arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
             img = cv2.imdecode(arr, -1)
 
-            cv2.imwrite(img_path, img)
+            cv2.imwrite(str(img_path), img)
     except URLError as e:
         raise ConnectionError from e
 
 
-def get_avatar_path(avatar_dir: str, uid: str | None = None, *,
-                    effect: str = '') -> str:  # TODO: docstring
+def get_avatar_path(uid: str | None = None, og_path: Path | None = None, *,
+                    effect: str = '') -> Path:  # TODO: docstring
     """Returns the local path to the avatar file from user ID."""
     if uid is None:
-        original_path = deepcopy(avatar_dir)
+        if og_path is None or og_path.stem == og_path.name:
+            raise ValueError('When uid is None, og_path must be a file.')
 
-        return abs_path(avatar_dir, effect + avatar_dir)
-    
-    return abs_path(avatar_dir, f'{effect}_{uid}.png')
+        return abs_path(og_path.parent, f'{effect}_{og_path.name.lstrip("_")}')
+
+    return abs_path(AVATAR_DIR, f'{effect}_{uid}.png')
