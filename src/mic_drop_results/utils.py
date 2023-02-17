@@ -1,9 +1,9 @@
 from collections.abc import Callable, Generator
 from ctypes import windll
-import os
 import sys
 from typing import Any, TypeVar
 
+import cv2
 from colorama import Style
 import cursor
 
@@ -77,7 +77,7 @@ def parse_version(*versions: str) -> Generator[tuple[int, ...], None, None]:
     return (tuple(map(int, v.lstrip('v').split('.'))) for v in versions)
 
 
-def abs_path(*rels: str | Path) -> Path:
+def abs_path(*rels: str | Path) -> Path:  # TODO: update docstring
     """Returns the absolute path from a relative path.
 
     Relative path here uses the path to the running file as a reference
@@ -240,11 +240,33 @@ class ProgressBar:
 
 
 # Section C: Miscellaneous
-def artistic_effect(original_path, eff):
-    if is_number(eff):
-        img = cv2.imread(original_path)
-        match float(eff):  # TODO: add more effects
+def get_avatar_path(uid: str | None = None, *,  # TODO: docstring
+                    og_path: Path | None = None, effect: str = '') -> Path:
+    """Returns the local path to the avatar file from user ID."""
+    if uid is not None:
+        return abs_path(AVATAR_DIR, f'{effect}_{uid}.png')
+
+    # uid is None:
+    if og_path is None or og_path.stem == og_path.name:
+        raise ValueError('When uid is None, og_path must lead to a file.')
+
+    return abs_path(AVATAR_DIR, f'{effect}_{og_path.name.lstrip("_")}')
+
+
+def artistic_effect(og_path: Path, *, effect: str) -> Path:
+    if is_number(effect):
+        img = cv2.imread(str(og_path))
+        match float(effect):  # TODO: add more effects
             case 1:
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        cv2.imwrite(avatar_path, img)
+        effect_path = get_avatar_path(og_path=og_path, effect=effect)
+        cv2.imwrite(str(effect_path), img)
+        return effect_path
+    
+    return og_path
+
+
+def parse_coef(run_text: str) -> int:
+    """Parses the coefficient of a field."""
+    pass
