@@ -32,7 +32,7 @@ from constants import *
 from errors import Error, ErrorType, print_exception_hook
 from exceptions import *
 from utils import is_number, as_type, hex_to_rgb, parse_version, abs_path
-from utils import inp, disable_console, enable_console, console_style
+from utils import inp, disable_console, enable_console, console_style, bold
 from utils import ProgressBar
 from utils import artistic_effect
 from vba.macros import module1_bas
@@ -43,15 +43,15 @@ def _replace_avatar(slide: Slide, shape, run, data: dict[str, str]) -> None:
     eff = run.text.strip()[3:]  # 3 is the length of '{p}'
     run.text = ''
 
-    original_path = get_avatar_path(AVATAR_DIR, uid)
-    avatar_path = get_avatar_path(AVATAR_DIR, uid, effect=eff)
+    original_path = get_avatar_path(uid)
+    avatar_path = get_avatar_path(uid, effect=eff)
 
     if not os.path.isfile(original_path):
         return None
 
     # Create avatar file with effect
     if is_number(eff):
-        img = cv2.imread(original_path)
+        img = cv2.imread(str(original_path))
         match float(eff):  # TODO: add more effects
             case 1:
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -142,9 +142,8 @@ def replace2_text(slide: Slide, df, i) -> Slide:
 
                     uid: str = df['__uid'].iloc[i]
 
-                    avatar_path = get_avatar_path(AVATAR_DIR, uid)
-                    avatarfx_path = get_avatar_path(AVATAR_DIR, uid,
-                                                    effect=effect)
+                    avatar_path = get_avatar_path(uid)
+                    avatarfx_path = get_avatar_path(uid, effect=effect)
 
                     if not os.path.isfile(avatar_path):
                         continue
@@ -319,7 +318,7 @@ def _import_avatars():
 
             for id in df['__uid']:
                 if not (pd.isnull(id)
-                        or os.path.isfile(get_avatar_path(AVATAR_DIR, id))
+                        or get_avatar_path(id).is_file()
                         or id in uid_list
                         or id in uid_unknown_list):
                     uid_list.append(id)
@@ -340,7 +339,6 @@ def _import_avatars():
             pool.starmap(
                 download_avatar, zip(
                     uid_list,
-                    [AVATAR_DIR] * len(uid_list),
                     itertools.islice(  # distribute tokens evenly
                         itertools.cycle(token_list), len(uid_list))
                 ))
@@ -377,12 +375,14 @@ if __name__ == '__main__':
     if missing_files := [f for f in (
             'settings.ini', 'token.txt',
             'template.pptm', 'data.xlsx',
-        ) if not os.path.exists(abs_path(f))]:
-        Error(40).throw('- ' + '\n- '.join(missing_files),
-                        'Current working directory: ' + MAIN_DIR)
+        ) if not abs_path(f).is_file()]:
+        Error(40).throw(
+            f'The following files are missing:{Fore.RED}',
+            '- ' + '\n- '.join(missing_files) + Fore.RESET,
+            f'{bold("Current working directory:")}  {MAIN_DIR}')
 
 # Section C: Load user configurations
-    cfg = Config(abs_path('settings.ini'))
+    cfg = Config(str(abs_path('settings.ini')))
     n_scols = len(cfg.sorting_orders)  # number of sorting columns
     avatar_mode = cfg.avatar_mode  # is subject to change later
     scheme, scheme_alt = [
@@ -489,7 +489,7 @@ if __name__ == '__main__':
 
         scols = df.columns.tolist()[:n_scols]  # get sorting columns
         SHEET_INFO = (
-            f'{Style.BRIGHT}Sheet name:{Style.NORMAL}  {sheet}\n\n'
+            f'{bold("Sheet name:")}  {sheet}\n\n'
             f'See the following row(s) in data.xlsx to find out what '
             f'caused the problem:'
         )
@@ -597,10 +597,6 @@ if __name__ == '__main__':
     run('TASKKILL /F /IM powerpnt.exe',  # kill all PowerPoint instances
         stdout=DEVNULL, stderr=DEVNULL)
 
-    OUTPUT_DIR = abs_path('output')
-    AVATAR_DIR = abs_path('avatars')
-    TEMP_DIR = abs_path('.temp')
-
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     os.makedirs(AVATAR_DIR, exist_ok=True)
     os.makedirs(TEMP_DIR, exist_ok=True)
@@ -688,13 +684,13 @@ if __name__ == '__main__':
 
         bar.set_description('Saving templates')
         output_path = abs_path(OUTPUT_DIR, f'{sheet}.pptx')
-        ppt.Run('SaveAs', output_path)
+        ppt.Run('SaveAs', str(output_path))
         ppt.Quit()
         bar.add()
 
 
-        bar.set_description('Filling in judging data')
-        prs = Presentation(output_path)
+        bar.set_description('Filling judging data')
+        prs = Presentation(str(output_path))
         bar.add()
         for i, slide in enumerate(prs.slides):
             replace_text(slide, {

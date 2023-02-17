@@ -77,8 +77,8 @@ def parse_version(*versions: str) -> Generator[tuple[int, ...], None, None]:
     return (tuple(map(int, v.lstrip('v').split('.'))) for v in versions)
 
 
-def abs_path(*rels: str) -> str:
-    """Returns absolute path from a relative path.
+def abs_path(*rels: str | Path) -> Path:
+    """Returns the absolute path from a relative path.
 
     Relative path here uses the path to the running file as a reference
     point instead of the current working directory.
@@ -100,7 +100,7 @@ def abs_path(*rels: str) -> str:
         >>> abs_path(AVATAR_DIR, 'avatar.png')
         'D:\\\\parent_dir\\\\src\\\\md_results\\\\avatars\\\\avatar.png'
     """
-    return os.path.join(MAIN_DIR, *rels)
+    return MAIN_DIR.joinpath(*rels)
 
 
 # Section B: Console utils
@@ -167,6 +167,11 @@ def console_style(*style: str) -> None:
         print(Style.RESET_ALL, end='')
     else:
         print(*style, sep='', end='')
+
+
+def bold(text: str) -> str:
+    """Returns a bold-formatted string."""
+    return f'{Style.BRIGHT}{text}{Style.NORMAL}'
 
 
 class ProgressBar:
