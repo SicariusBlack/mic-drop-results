@@ -77,7 +77,6 @@ def parse_version(*versions: str) -> Generator[tuple[int, ...], None, None]:
     return (tuple(map(int, v.lstrip('v').split('.'))) for v in versions)
 
 
-# Section B: File path operations
 def abs_path(*rels: str) -> str:
     """Returns absolute path from a relative path.
 
@@ -104,7 +103,7 @@ def abs_path(*rels: str) -> str:
     return os.path.join(MAIN_DIR, *rels)
 
 
-# Section C: Console utils
+# Section B: Console utils
 def enable_console():
     """Allows text selection and accepts input within the CLI."""
     cursor.show()
@@ -233,3 +232,14 @@ class ProgressBar:
         self.prog += increment
         self.prog = min(self.prog, self.total)
         self.refresh()
+
+
+# Section C: Miscellaneous
+def artistic_effect(original_path, eff):
+    if is_number(eff):
+        img = cv2.imread(original_path)
+        match float(eff):  # TODO: add more effects
+            case 1:
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        cv2.imwrite(avatar_path, img)
