@@ -6,8 +6,8 @@ from traceback import format_exception
 
 from colorama import Fore, Style
 
+from compiled_regex import *
 from constants import *
-from patterns import *
 from utils import abs_path, inp, console_style
 
 
