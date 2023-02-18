@@ -33,7 +33,7 @@ def fetch_latest_version() -> tuple[str, str]:
 
 
 # Section B: Discord API
-def fetch_avatar_url(uid: str, api_token: str) -> str | None:  # TODO: docstring
+def fetch_avatar_url(uid: str, api_token: str, *, size: int) -> str | None:  # TODO: docstring
     if not is_number(uid):
         return None
 
@@ -50,17 +50,17 @@ def fetch_avatar_url(uid: str, api_token: str) -> str | None:  # TODO: docstring
 
     # Try extracting the hash and return the complete link if succeed
     try:
-        return 'https://cdn.discordapp.com/avatars/{}/{}.png'.format(
-            uid, response.json()['avatar'])
+        return 'https://cdn.discordapp.com/avatars/{}/{}.png?size={}'.format(
+            uid, response.json()['avatar'], size)
     except KeyError as e:
         msg = response.json()['message'].lower()
 
         if '401: unauthorized' in msg:  # invalid token
             raise InvalidTokenError(api_token, response.json()) from e
 
-        elif 'rate-limit' in msg:
+        elif 'limit' in msg:
             time.sleep(response.json()['retry_after'])
-            fetch_avatar_url(uid, api_token)
+            fetch_avatar_url(uid, api_token, size=size)
 
         elif 'unknown user' in msg:
             raise UnknownUserError(uid, response.json()) from e
@@ -69,11 +69,12 @@ def fetch_avatar_url(uid: str, api_token: str) -> str | None:  # TODO: docstring
             raise DiscordAPIError(api_token, response.json()) from e
 
 
-def download_avatar(uid: str, api_token: str) -> None:
+def download_avatar(uid: str, api_token: str, size: int) -> None:
     img_path = get_avatar_path(uid)
 
     try:
-        if avatar_url := fetch_avatar_url(uid, api_token):
+        time.sleep(0.01)
+        if avatar_url := fetch_avatar_url(uid, api_token, size=size):
             print('\033[A\033[2K' + avatar_url)
             req = urlopen(Request(
                 avatar_url, headers={'User-Agent': 'Mozilla/5.0'}), timeout=10)

@@ -1,4 +1,5 @@
 import contextlib
+from copy import deepcopy
 from io import BytesIO
 import itertools
 from multiprocessing import Pool, freeze_support
@@ -141,127 +142,6 @@ def fill_slide(slide: Slide, data: dict[str, str]) -> None:
                     _insert_image(shape, run)
 
 
-def replace2_text(slide: Slide, df, i) -> Slide:
-    """Replaces and formats text."""
-    cols = df.columns.tolist() + ['p']
-
-    for shape in slide.shapes:  # type: ignore
-        if not shape.has_text_frame or '{' not in shape.text:
-            continue
-
-        text_frame = shape.text_frame
-
-        for run in itertools.chain.from_iterable(
-            [p.runs for p in text_frame.paragraphs]):
-
-            for search_str in (set(re.findall('(?<={)(.*?)(?=})', run.text))
-                               .intersection(cols)):
-
-                # Avatars
-                if search_str == 'p':
-                    # Test cases
-                    if '__uid' not in cols or not avatar_mode:
-                        run.text = ''
-                        continue
-
-                    if pd.isnull(df['__uid'].iloc[i]):
-                        run.text = ''
-                        continue
-
-                    # Extract effect index and remove {p}
-                    effect = run.text.strip()[3:]
-                    run.text = ''
-
-                    uid: str = df['__uid'].iloc[i]
-
-                    avatar_path = get_avatar_path(uid)
-                    avatarfx_path = get_avatar_path(uid, effect=effect)
-
-                    if not os.path.isfile(avatar_path):
-                        continue
-
-                    if is_number(effect):
-                        img = cv2.imread(avatar_path)
-                        match float(effect):
-                            case 1:
-                                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-                        cv2.imwrite(avatarfx_path, img)
-
-                    new_shape = slide.shapes.add_picture(  # type: ignore
-                        avatarfx_path, shape.left, shape.top,
-                        shape.width, shape.height
-                    )
-
-                    new_shape.auto_shape_type = MSO_SHAPE.OVAL
-                    old = shape._element
-                    new = new_shape._element
-                    old.addnext(new)
-                    old.getparent().remove(old)
-                    continue
-
-                # Actual text
-                repl = str(df[search_str].iloc[i])
-                repl = repl if repl != 'nan' else ''  # replace nan with empty
-
-                run_text = run.text
-
-                if search_str.startswith(cfg.trigger_word):
-                    run.text = repl
-                else:
-                    run.text = run.text.replace('{' + search_str + '}', repl)
-
-                # Replace image links
-                pattern = r'\<\<(.*?)\>\>'  # look for <<image_links.{ext}>>
-                img_link = re.findall(pattern, run.text)
-
-                if len(img_link) > 0:
-                    try:
-                        img = BytesIO(requests.get(img_link[0]).content)
-                        pil = Image.open(img)
-
-                        im_width = shape.height / pil.height * pil.width
-                        new_shape = slide.shapes.add_picture(  # type: ignore
-                            img, shape.left + (shape.width - im_width)/2,
-                            shape.top, im_width, shape.height
-                        )
-
-                        old = shape._element.addnext(new_shape._element)
-
-                        run.text = re.sub(pattern, '', run.text)
-                        text_frame.margin_left = Inches(5.2)
-                    except Exception:
-                        Error(
-                            'Unable to load the following image from '
-                           f'slide {i + 1}, sheet {df["sheet"].iloc[0]}.',
-                           f'{img_link[0]}',
-                            'Please check your internet connection and verify '
-                            'that the link directs to an image file, which '
-                            'usually ends in an image extension like .png.',
-                            err_type=ErrorType.WARNING).throw()
-
-                # Conditional formatting
-                if not search_str.startswith(cfg.trigger_word):
-                    continue
-
-                # Check RGB
-                if (run.font.color.type == MSO_COLOR_TYPE.RGB and  # type: ignore
-                    run.font.color.rgb not in [
-                        RGBColor(0, 0, 0), RGBColor(255, 255, 255)]):
-                    continue
-
-                for ind, val in enumerate(cfg.ranges[::-1]):
-                    if is_number(repl) and float(repl) >= val:
-                        if run_text.endswith('1'):
-                            run.font.color.rgb = RGBColor(
-                                *scheme_alt[::-1][ind])
-                        else:
-                            run.font.color.rgb = RGBColor(
-                                *scheme[::-1][ind])
-                        break
-    return slide
-
-
 def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
                n_cols: int, n_cols_ext: int = 5,
                highlight: bool = True,
@@ -311,7 +191,8 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
             df.iloc[:, :n_cols] = df.iloc[:, :n_cols].replace(
                 word, highlight_str(word))
 
-    preview = repr(df.head(8))
+    preview = (repr(df.head(8)) if n_cols < len(df.columns)
+               else repr(df))
 
     # Highlight values
     preview = (preview.replace(prefix, Fore.RED + '  ')
@@ -372,7 +253,8 @@ def _import_avatars():
                 download_avatar, zip(
                     uid_list,
                     itertools.islice(  # distribute tokens evenly
-                        itertools.cycle(token_list), len(uid_list))
+                        itertools.cycle(token_list), len(uid_list)),
+                    [cfg.avatar_resolution] * len(uid_list)
                 ))
         except (ConnectionError, TimeoutError) as e:
             if attempt == 3: Error(20).throw(err_type=ErrorType.WARNING)
@@ -492,8 +374,7 @@ if __name__ == '__main__':
         xls, sheet_name=None)
     xls.close()
 
-    sheet_names = [re.sub(
-        r'[\\\/:"*?<>|]+', '',  # forbidden file name characters
+    sheet_names = [forbidden_char_pattern.sub('',  # Forbidden file name chars
         str(name)).strip() for name in workbook]
     workbook = {name: list(workbook.values())[i]
                 for i, name in enumerate(sheet_names)}
@@ -698,7 +579,7 @@ if __name__ == '__main__':
             df_showcase = df[
                 showcase_cols
                 + [col for col in df.columns if col not in showcase_cols]]
-            df_showcase = (df_showcase.drop_duplicates('__r')
+            df_showcase = (df_showcase.drop_duplicates('__template')
                                       .reset_index(drop=True))
 
             Error(71).throw(

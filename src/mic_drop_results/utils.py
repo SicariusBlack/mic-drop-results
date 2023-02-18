@@ -271,6 +271,6 @@ def artistic_effect(og_path: Path, *, effect: int) -> Path:
 
 def parse_coef(run_text: str, *, field_name: str) -> int:
     """Parses the coefficient of a field from the run text."""
-    pattern = r'(?<={' + field_name + r'})[0-9]'
-    coef = re.findall(pattern, run_text)
+    pattern = re.compile(r'(?<={' + field_name + r'})[0-9]')
+    coef = pattern.findall(run_text)
     return int(*coef) if coef is not None else 0

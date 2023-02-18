@@ -1,14 +1,18 @@
 from collections.abc import Callable
 import configparser
 import re
-from typing import Any, TypeVar
+from typing import Any
 
+from colorama import Fore
+
+from compiled_regex import *
 from errors import Error
 
 
 class ConfigVarTypes:
     update_check: bool
     avatar_mode: bool
+    avatar_resolution: int
 
     sorting_orders: list[bool]
 
@@ -30,30 +34,33 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
 
         self._check_missing_vars()
         self._parse_config()
-        self.__dict__ = self.config  # assign config to class attributes
 
         try:
-            self._validate()  # validate config vars' conditions
+            self._validate(self.config)  # validate config vars' conditions
         except AssertionError as e:
-            Error(31.1).throw(*e.args)
+            Error(31.1).throw(Fore.RED + e.args[0] + Fore.RESET)
 
-    def _validate(self) -> None:
-        assert len(self.trigger_word) > 0, (
+        self.__dict__ = self.config  # assign config vars to class attributes
+
+    def _validate(self, cfg: dict[str, Any]) -> None:
+        assert 16 <= cfg['avatar_resolution'] <= 1024, (
+            'Avatar resolution must be between 16 and 1024.')
+
+        assert len(cfg['trigger_word']) > 0, (
             'Config variable "trigger_word" must not be empty.')
 
-        assert (len(self.ranges) ==
-                len(self.scheme) ==
-                len(self.scheme_alt)), (
+        assert (len(cfg['ranges']) ==
+                len(cfg['scheme']) ==
+                len(cfg['scheme_alt'])), (
             'The "ranges", "scheme", and "scheme_alt" lists must '
             'have the same and matching length.')
 
-        hex_pattern = r'^(?:[0-9a-fA-F]{3}){1,2}$'
-
-        assert all(re.fullmatch(hex_pattern, h)
-                   for scheme in [self.scheme, self.scheme_alt]
+        assert all(hex_pattern.fullmatch(h)
+                   for scheme in [cfg['scheme'], cfg['scheme_alt']]
                    for h in scheme), (
             'Invalid hex codes found in:'
-            + self._show_var('scheme', 'scheme_alt'))
+            + self._show_var('scheme', 'scheme_alt')
+            + '\nPlease note that three-digit hex codes are not accepted.')
 
     def _check_missing_vars(self) -> None:
         if missing_vars := [

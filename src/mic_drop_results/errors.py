@@ -29,7 +29,7 @@ class Traceback:
 
         'cfg_format': [
             'Please verify that the config variables are in their '
-            'valid format according to the note above each variable.'],
+            'valid format according to the note left above each variable.'],
     }
 
     _err_lookup = {
@@ -55,8 +55,8 @@ class Traceback:
         21.1: [
             Tag.TOKEN_TXT, 'Invalid bot token.',
             'The following bot token is invalid or has expired. '
-            'Please replace the following token from token.txt with a '
-            'new valid one.'
+            'Please replace this token from token.txt with a new and '
+            'valid one.'
         ],
         22: [
             Tag.DEV, 'Unknown Discord API error.'
@@ -186,7 +186,7 @@ class Error(Traceback):
 
         # Redact sensitive information
         for i, x in enumerate(self.content):
-            self.content[i] = username_pattern.sub('user', x)
+            self.content[i] = username_pattern.sub('user', str(x))
 
         self._print(*self.content, err_type=err_type)
 
