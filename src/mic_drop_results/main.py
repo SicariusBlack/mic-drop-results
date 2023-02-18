@@ -27,11 +27,11 @@ import win32com.client
 
 from client import ProgramStatus, fetch_latest_version
 from client import download_avatar
+from compiled_regex import *
 from config import Config
 from constants import *
 from errors import Error, ErrorType, print_exception_hook
 from exceptions import *
-from patterns import *
 from utils import is_number, as_type, hex_to_rgb, parse_version, abs_path
 from utils import inp, disable_console, enable_console, console_style, bold
 from utils import ProgressBar
