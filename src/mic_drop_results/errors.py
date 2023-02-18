@@ -7,6 +7,7 @@ from traceback import format_exception
 from colorama import Fore, Style
 
 from constants import *
+from patterns import *
 from utils import abs_path, inp, console_style
 
 
@@ -185,7 +186,7 @@ class Error(Traceback):
 
         # Redact sensitive information
         for i, x in enumerate(self.content):
-            self.content[i] = re.sub(r'(?<=Users\\).+?(?=\\)', 'user', x)
+            self.content[i] = username_pattern.sub('user', x)
 
         self._print(*self.content, err_type=err_type)
 

@@ -31,6 +31,7 @@ from config import Config
 from constants import *
 from errors import Error, ErrorType, print_exception_hook
 from exceptions import *
+from patterns import *
 from utils import is_number, as_type, hex_to_rgb, parse_version, abs_path
 from utils import inp, disable_console, enable_console, console_style, bold
 from utils import ProgressBar
@@ -79,6 +80,39 @@ def _replace_text(run, field_name, *, text: str) -> None:
         run.text = run.text.replace('{'+field_name+'}', text)
 
 
+def _insert_image(shape, run) -> None:
+    if img_url := img_url_pattern.findall(run.text):
+        try:
+            _extracted_from__insert_image_7(shape, run, img_url=img_url)
+        except Exception:
+            Error(
+                'Unable to load the following image from '
+                f'slide {i + 1}, sheet {df["sheet"].iloc[0]}.',
+                f'{img_link[0]}',
+                'Please check your internet connection and verify '
+                'that the link directs to an image file, which '
+                'usually ends in an image extension like .png.',
+                err_type=ErrorType.WARNING).throw()
+
+
+# TODO Rename this here and in `_add_image`
+def _extracted_from__insert_image_7(shape, run, *, img_url) -> None:
+    img = BytesIO(requests.get(img_url[0]).content)
+    pil = Image.open(img)
+
+    img_width = shape.height / pil.height * pil.width
+    new_shape = slide.shapes.add_picture(  # type: ignore
+        img,
+        shape.left + (shape.width - img_width)/2, shape.top,
+        img_width, shape.height
+    )
+
+    shape._element.addnext(new_shape._element)
+
+    run.text = run.text.replace(img_url, '')
+    shape.text_frame.margin_left = Inches(5.2)
+
+
 def fill_slide(slide: Slide, data: dict[str, str]) -> None:
     # https://wiki.python.org/moin/TimeComplexity
     cols = set([*data] + ['p'])
@@ -86,11 +120,11 @@ def fill_slide(slide: Slide, data: dict[str, str]) -> None:
     for shape in slide.shapes:  # type: ignore
         if not shape.has_text_frame:
             continue
-        text_frame = shape.text_frame
 
-        for p in text_frame.paragraphs:
+        for p in shape.text_frame.paragraphs:
             for run in p.runs:
-                for field_name in re.findall(r'(?<={)\S+(?=})', run.text):
+                for field_name in field_name_pattern.findall(run.text):
+                    field_name = field_name.lstrip('__')
                     if field_name not in cols:  # O(1) time complexity
                         continue
 
@@ -103,7 +137,8 @@ def fill_slide(slide: Slide, data: dict[str, str]) -> None:
                     # Replace text
                     _replace_text(run, field_name,
                                   text=data[field_name])
-                    
+
+                    _insert_image(shape, run)
 
 
 def replace2_text(slide: Slide, df, i) -> Slide:
@@ -119,7 +154,7 @@ def replace2_text(slide: Slide, df, i) -> Slide:
         for run in itertools.chain.from_iterable(
             [p.runs for p in text_frame.paragraphs]):
 
-            for search_str in (set(re.findall(r'(?<={)(.*?)(?=})', run.text))
+            for search_str in (set(re.findall('(?<={)(.*?)(?=})', run.text))
                                .intersection(cols)):
 
                 # Avatars
@@ -543,7 +578,7 @@ if __name__ == '__main__':
 
         # Merge contestant database
         if database:
-            cleaning_func = lambda text: re.sub(r'\s', '', text).lower()
+            cleaning_func = lambda text: space_pattern.sub('', text).lower()
             process_str = lambda series: (
                 series.apply(cleaning_func) if(series.dtype.kind == 'O')
                 else series)
