@@ -1,5 +1,6 @@
 from collections.abc import Callable, Generator
 from ctypes import windll
+import re
 import sys
 from typing import Any, TypeVar
 
@@ -241,7 +242,7 @@ class ProgressBar:
 
 # Section C: Miscellaneous
 def get_avatar_path(uid: str | None = None, *,  # TODO: docstring
-                    og_path: Path | None = None, effect: str = '') -> Path:
+                    og_path: Path | None = None, effect: int = 0) -> Path:
     """Returns the local path to the avatar file from user ID."""
     if uid is not None:
         return abs_path(AVATAR_DIR, f'{effect}_{uid}.png')
@@ -250,23 +251,25 @@ def get_avatar_path(uid: str | None = None, *,  # TODO: docstring
     if og_path is None or og_path.stem == og_path.name:
         raise ValueError('When uid is None, og_path must lead to a file.')
 
-    return abs_path(AVATAR_DIR, f'{effect}_{og_path.name.lstrip("_")}')
+    return abs_path(AVATAR_DIR, f'{effect}_{og_path.name[2:]}')
 
 
-def artistic_effect(og_path: Path, *, effect: str) -> Path:
-    if is_number(effect):
+def artistic_effect(og_path: Path, *, effect: int) -> Path:
+    if effect != 0:
         img = cv2.imread(str(og_path))
-        match float(effect):  # TODO: add more effects
+        match effect:  # TODO: add more effects
             case 1:
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        effect_path = get_avatar_path(og_path=og_path, effect=effect)
-        cv2.imwrite(str(effect_path), img)
-        return effect_path
-    
+        fx_path = get_avatar_path(og_path=og_path, effect=effect)
+        cv2.imwrite(str(fx_path), img)
+        return fx_path
+
     return og_path
 
 
-def parse_coef(run_text: str) -> int:
-    """Parses the coefficient of a field."""
-    pass
+def parse_coef(run_text: str, *, field_name: str) -> int:
+    """Parses the coefficient of a field from the run text."""
+    pattern = r'(?<={' + field_name + r'})[0-9]'
+    coef = re.findall(pattern, run_text)
+    return int(*coef) if coef is not None else 0
