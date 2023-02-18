@@ -482,11 +482,15 @@ if __name__ == '__main__':
 
                 # Merge
                 df = df.merge(table, on='__merge_anchor', how='left')
+                # Note: merging on an existing column will produce duplicates
+
                 for col in overlapped_cols:
                     df[col] = df[f'{col}_y'].fillna(df[f'{col}_x'])
                     df = df.drop(columns=[f'{col}_x', f'{col}_y'])
 
                 df = df.drop(columns='__merge_anchor')
+
+            df = df.drop_duplicates()
 
 
         if '__uid' not in df.columns.tolist():
