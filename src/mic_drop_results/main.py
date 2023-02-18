@@ -34,12 +34,12 @@ from exceptions import *
 from utils import is_number, as_type, hex_to_rgb, parse_version, abs_path
 from utils import inp, disable_console, enable_console, console_style, bold
 from utils import ProgressBar
-from utils import get_avatar_path, artistic_effect
+from utils import get_avatar_path, artistic_effect, parse_coef
 from vba.macros import module1_bas
 
 
 def _replace_avatar(slide: Slide, shape, run, *, uid: str) -> None:
-    eff = run.text[3:]  # 3 is the length of '{p}'
+    eff = parse_coef(run.text, field_name='p')
     run.text = ''
 
     og_path = get_avatar_path(uid)
@@ -68,7 +68,7 @@ def _replace_text(run, field_name, *, text: str) -> None:
                 break
 
             if float(text) >= seg_point:
-                if run.text.strip()[3:] != '1':
+                if parse_coef(run.text, field_name=field_name) == 0:
                     run.font.color.rgb = RGBColor(*scheme[::-1][ind])
                 else:
                     run.font.color.rgb = RGBColor(*scheme_alt[::-1][ind])
@@ -399,7 +399,8 @@ if __name__ == '__main__':
 # Section E: Check for updates
     status = None
     if cfg.update_check:
-        with contextlib.suppress(requests.exceptions.ConnectionError, KeyError):
+        with contextlib.suppress(requests.exceptions.ConnectionError,
+                                 requests.exceptions.ReadTimeout, KeyError):
             # Fetch the latest version and the summary of the update
             latest_tag, summary = fetch_latest_version()
 
@@ -691,7 +692,7 @@ if __name__ == '__main__':
         bar.add()
         for i, slide in enumerate(prs.slides):
             fill_slide(slide, {
-                k.lstrip('__') : v  # treat program-generated vars as normal
+                k.lstrip('__') : str(v)  # program-generated vars start with __
                 for k, v in df.iloc[i].to_dict().items()
             })
         bar.add()
