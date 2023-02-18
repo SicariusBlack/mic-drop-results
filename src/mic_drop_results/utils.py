@@ -41,7 +41,7 @@ def as_type(t: Callable[[A], T], val: A) -> T | A:
 
         >>> as_type(int, 'lorem ipsum')
         'lorem ipsum'
-    
+
     Note:
         Please note that a float under str type (e.g. '3.0') cannot be
         convert directly into type int.
@@ -142,7 +142,7 @@ def inp(*args: str, **kwargs) -> str:  # TODO: add docstring, optimize code
 
 def console_style(*style: str) -> None:
     """Sets the color and style in which the next line is printed.
-    
+
     Args:
         style (optional): a string-type ANSI sequence from the
             Fore, Back, or Style class of the colorama package.
@@ -227,7 +227,7 @@ class ProgressBar:
                                            # ... to beginning of line
 
         sys.stdout.flush()
-        
+
     def set_description(self, desc: str = '') -> None:
         """Sets the description shown below the progress bar."""
         self.desc = '\n' + desc
@@ -255,6 +255,7 @@ def get_avatar_path(uid: str | None = None, *,  # TODO: docstring
 
 
 def artistic_effect(og_path: Path, *, effect: int) -> Path:
+    """Creates an image with applied artistic effect and returns the path."""
     if effect != 0:
         img = cv2.imread(str(og_path))
         match effect:  # TODO: add more effects
