@@ -275,8 +275,8 @@ def parse_coef(run_text: str, *, field_name: str) -> int:
     return int(*coef) if coef is not None else 0
 
 
-def clean_name(text: str) -> str:
-    text = unidecode(text)  # simplify special unicode characters
+def clean_name(text) -> str:
+    text = unidecode(str(text))  # simplify special unicode characters
     if t := special_char_pattern.sub('', text):  # remove special characters
         text = t
     text = space_pattern.sub('', text).lower()  # remove space

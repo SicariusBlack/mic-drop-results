@@ -218,11 +218,12 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
 
 def _import_avatars():
     failed = False
+    max_attempt = 5
     has_task = False  # skip avatar download banner if no download task exists
     uid_unknown_list = []
     pool = Pool(min(4, len(token_list) + 1))
 
-    for attempt in range(3):
+    for attempt in range(max_attempt):
         uid_list = []
 
         for df in groups.values():
@@ -244,8 +245,9 @@ def _import_avatars():
             print('\n\nDownloading avatars...')
             print('Make sure your internet connection is stable while '
                   'we are downloading.')
-        elif attempt > 3:
+        elif attempt >= max_attempt - 1:
             failed = True
+            uid_unknown_list += uid_list
             break
 
         try:
@@ -260,8 +262,6 @@ def _import_avatars():
             if attempt == 3: Error(20).throw(err_type=ErrorType.WARNING)
         except InvalidTokenError as e:
             Error(21.1).throw(*e.args)
-        except UnknownUserError as e:
-            uid_unknown_list.append(e.args[0])
         except DiscordAPIError as e:
             Error(22).throw(*e.args)
 
@@ -478,6 +478,7 @@ if __name__ == '__main__':
                 df['__merge_anchor'] = process_str(df[anchor_col])
                 table['__merge_anchor'] = process_str(table[anchor_col])
                 table = table.drop(columns=anchor_col)
+                table = table.drop_duplicates('__merge_anchor')
 
                 # Merge
                 df = df.merge(table, on='__merge_anchor', how='left')
@@ -531,7 +532,7 @@ if __name__ == '__main__':
         except (FileNotFoundError, ValueError):
             last_clear_time = 0
 
-        if time.time() - last_clear_time > 1800:  # clear cache every hour
+        if time.time() - last_clear_time > 1800*12:  # clear every 12 hours
             for avatar_path in os.scandir(AVATAR_DIR):
                 os.unlink(avatar_path)
 

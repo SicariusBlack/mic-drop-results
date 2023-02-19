@@ -4,7 +4,3 @@ class DiscordAPIError(Exception):
 
 class InvalidTokenError(DiscordAPIError):
     pass
-
-
-class UnknownUserError(DiscordAPIError):
-    pass
