@@ -43,8 +43,9 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
         self.__dict__ = self.config  # assign config vars to class attributes
 
     def _validate(self, cfg: dict[str, Any]) -> None:
-        assert 16 <= cfg['avatar_resolution'] <= 1024, (
-            'Avatar resolution must be between 16 and 1024.')
+        resolution_presets = [16, 32, 40, 60, 64, 80, 100, 128, 512, 1024]
+        assert cfg['avatar_resolution'] in resolution_presets, (
+            'Avatar resolution must be taken from the provided presets.')
 
         assert len(cfg['trigger_word']) > 0, (
             'Config variable "trigger_word" must not be empty.')
