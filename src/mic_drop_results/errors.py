@@ -63,8 +63,9 @@ class Traceback:
         ],
         23: [
             Tag.DATA_XLSX,
-            'Unable to download the avatars of certain users.',
-            'Please make sure the following user IDs are correctly typed.'
+            'Unable to download the avatars of the following users.',
+            'Make sure these user IDs are correctly typed and that the owners '
+            'have not deleted nor moved to new accounts with the same name.'
         ],
 
     # 30 – 39: Config errors
@@ -101,7 +102,7 @@ class Traceback:
         60: [
             Tag.DATA_XLSX, 'Sorting columns contain text.',
             'The sorting columns of the following sheet contain text '
-            'but expects numeric data type.\n'
+            'but expect numeric data type.\n'
             'Have you pasted data in the wrong column, by any chance?'
         ],
         61: [
