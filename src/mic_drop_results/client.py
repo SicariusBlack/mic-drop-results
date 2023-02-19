@@ -73,7 +73,7 @@ def download_avatar(uid: str, api_token: str, size: int) -> None:
     img_path = get_avatar_path(uid)
 
     try:
-        time.sleep(0.01)
+        time.sleep(0.02)  # TODO: find another way
         if avatar_url := fetch_avatar_url(uid, api_token):
             print('\033[A\033[2K' + avatar_url)
             avatar_url += f'?size={size}'

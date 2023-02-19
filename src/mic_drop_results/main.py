@@ -35,8 +35,8 @@ from errors import Error, ErrorType, print_exception_hook
 from exceptions import *
 from utils import is_number, as_type, hex_to_rgb, parse_version, abs_path
 from utils import inp, disable_console, enable_console, console_style, bold
+from utils import get_avatar_path, artistic_effect, parse_coef, clean_name
 from utils import ProgressBar
-from utils import get_avatar_path, artistic_effect, parse_coef
 from vba.macros import module1_bas
 
 
@@ -459,9 +459,8 @@ if __name__ == '__main__':
 
         # Merge contestant database
         if database:
-            cleaning_func = lambda text: space_pattern.sub('', text).lower()
             process_str = lambda series: (
-                series.apply(cleaning_func) if(series.dtype.kind == 'O')
+                series.apply(clean_name) if(series.dtype.kind == 'O')
                 else series)
 
             for table in database.values():
@@ -482,15 +481,13 @@ if __name__ == '__main__':
 
                 # Merge
                 df = df.merge(table, on='__merge_anchor', how='left')
-                # Note: merging on an existing column will produce duplicates
+                # Note: merging wtih an existing column will produce duplicates
 
                 for col in overlapped_cols:
                     df[col] = df[f'{col}_y'].fillna(df[f'{col}_x'])
                     df = df.drop(columns=[f'{col}_x', f'{col}_y'])
 
                 df = df.drop(columns='__merge_anchor')
-
-            df = df.drop_duplicates()
 
 
         if '__uid' not in df.columns.tolist():

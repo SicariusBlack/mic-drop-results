@@ -7,11 +7,12 @@ from typing import Any, TypeVar
 import cv2
 from colorama import Style
 import cursor
+from unidecode import unidecode
 
+from compiled_regex import special_char_pattern, space_pattern
 from constants import *
 
 
-# Section A: Basic operations
 def is_number(val: Any) -> bool:
     """Checks if value can be converted to type float."""
     try:
@@ -104,7 +105,6 @@ def abs_path(*rels: str | Path) -> Path:  # TODO: update docstring
     return MAIN_DIR.joinpath(*rels)
 
 
-# Section B: Console utils
 def enable_console():
     """Allows text selection and accepts input within the CLI."""
     cursor.show()
@@ -240,7 +240,6 @@ class ProgressBar:
         self.refresh()
 
 
-# Section C: Miscellaneous
 def get_avatar_path(uid: str | None = None, *,  # TODO: docstring
                     og_path: Path | None = None, effect: int = 0) -> Path:
     """Returns the local path to the avatar file from user ID."""
@@ -274,3 +273,11 @@ def parse_coef(run_text: str, *, field_name: str) -> int:
     pattern = re.compile(r'(?<={' + field_name + r'})[0-9]')
     coef = pattern.findall(run_text)
     return int(*coef) if coef is not None else 0
+
+
+def clean_name(text: str) -> str:
+    text = unidecode(text)  # simplify special unicode characters
+    if t := special_char_pattern.sub('', text):  # remove special characters
+        text = t
+    text = space_pattern.sub('', text).lower()  # remove space
+    return text
