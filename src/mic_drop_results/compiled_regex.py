@@ -24,6 +24,9 @@ forbidden_char_pattern = re.compile(r'[\\\/:"*?<>|]+')
 # Match space characters
 space_pattern = re.compile(r'\s')
 
+# Match special characters
+special_char_pattern = re.compile(r'[^a-z0-9]', re.IGNORECASE)
+
 
 # Section C: Full match
 # Match hex color value
