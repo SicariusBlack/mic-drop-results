@@ -1,10 +1,8 @@
 import contextlib
-from copy import deepcopy
 from io import BytesIO
 import itertools
 from multiprocessing import Pool, freeze_support
 import os
-import re
 from signal import signal, SIGINT, SIG_IGN
 from subprocess import check_call, run, DEVNULL
 import sys
@@ -12,16 +10,15 @@ import time
 import webbrowser
 
 from colorama import init, Fore, Style
-import cv2
 import numpy as np
 import pandas as pd
 from PIL import Image
 from pptx import Presentation
 from pptx.dml.color import RGBColor
-from pptx.enum.dml import MSO_COLOR_TYPE
 from pptx.enum.shapes import MSO_SHAPE  # type: ignore
+from pptx.enum.text import PP_ALIGN  # type: ignore
 from pptx.slide import Slide
-from pptx.util import Inches
+from pptx.util import Cm
 from pywintypes import com_error
 import requests
 import win32com.client
@@ -81,37 +78,33 @@ def _replace_text(run, field_name, *, text: str) -> None:
         run.text = run.text.replace('{'+field_name+'}', text)
 
 
-def _insert_image(shape, run) -> None:
-    if img_url := img_url_pattern.findall(run.text):
-        try:
-            _extracted_from__insert_image_7(shape, run, img_url=img_url)
-        except Exception:
-            Error(
-                'Unable to load the following image from '
-                f'slide {i + 1}, sheet {df["sheet"].iloc[0]}.',
-                f'{img_link[0]}',
-                'Please check your internet connection and verify '
-                'that the link directs to an image file, which '
-                'usually ends in an image extension like .png.',
-                err_type=ErrorType.WARNING).throw()
+def _replace_image_url(shape, p, run) -> None:
+    if img_url := url_pattern.findall(run.text):
+        with contextlib.suppress(Exception):
+            margin_left = _insert_image(shape, img_url=img_url[0])
+            run.text = run.text.replace(img_url[0], '')
+            # After some experiments, I have measured that 12.47 cm = 4490850
+            # Therefore, we have 1 cm = 360132.3175621492
+            shape.text_frame.margin_left = Cm(margin_left/360132.3175621492)
+            p.alignment = PP_ALIGN.LEFT
 
 
-# TODO Rename this here and in `_add_image`
-def _extracted_from__insert_image_7(shape, run, *, img_url) -> None:
-    img = BytesIO(requests.get(img_url[0]).content)
-    pil = Image.open(img)
+def _insert_image(shape, *, img_url: str) -> float:
+    im_bytes = BytesIO(requests.get(img_url).content)
+    img = Image.open(im_bytes)
 
-    img_width = shape.height / pil.height * pil.width
+    height = shape.height
+    width = height/img.height * img.width
+    left = shape.left + (shape.width-width)/2
+    top = shape.top
+
     new_shape = slide.shapes.add_picture(  # type: ignore
-        img,
-        shape.left + (shape.width - img_width)/2, shape.top,
-        img_width, shape.height
+        im_bytes,
+        left, top, width, height
     )
-
     shape._element.addnext(new_shape._element)
 
-    run.text = run.text.replace(img_url, '')
-    shape.text_frame.margin_left = Inches(5.2)
+    return left + width  # left margin for the remaining text
 
 
 def fill_slide(slide: Slide, data: dict[str, str]) -> None:
@@ -139,7 +132,7 @@ def fill_slide(slide: Slide, data: dict[str, str]) -> None:
                     _replace_text(run, field_name,
                                   text=data[field_name])
 
-                    _insert_image(shape, run)
+                    _replace_image_url(shape, p, run)
 
 
 def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
@@ -220,12 +213,11 @@ def _import_avatars():
     failed = False
     max_attempt = 5
     has_task = False  # skip avatar download banner if no download task exists
-    uid_unknown_list = []
+    uids_unknown = []
     pool = Pool(min(4, len(token_list) + 1))
 
-    for attempt in range(max_attempt):
-        uid_list = []
-
+    for attempt in range(1, max_attempt+1):
+        uids = []
         for df in groups.values():
             if df['__uid'].dtype.kind in 'biufc':
                 Error(70).throw()
@@ -233,40 +225,41 @@ def _import_avatars():
             for id in df['__uid']:
                 if not (pd.isnull(id)
                         or get_avatar_path(id).is_file()
-                        or id in uid_list
-                        or id in uid_unknown_list):
-                    uid_list.append(id)
+                        or id in uids
+                        or id in uids_unknown):
+                    uids.append(id)
+        if not uids:
+            break
 
-        if not uid_list: break
-
-        if attempt == 0:
+        queue_len = len(uids)
+        if attempt == 1:
             # Initialize download task
             has_task = True
-            print('\n\nDownloading avatars...')
+            print(f'\n\nDownloading avatars... ({queue_len} in queue)')
             print('Make sure your internet connection is stable while '
                   'we are downloading.')
-        elif attempt >= max_attempt - 1:
+        elif attempt >= max_attempt:
             failed = True
-            uid_unknown_list += uid_list
+            uids_unknown += uids
             break
 
         try:
             pool.starmap(
                 download_avatar, zip(
-                    uid_list,
+                    uids,
                     itertools.islice(  # distribute tokens evenly
-                        itertools.cycle(token_list), len(uid_list)),
-                    [cfg.avatar_resolution] * len(uid_list)
+                        itertools.cycle(token_list), queue_len),
+                    [cfg.avatar_resolution] * queue_len
                 ))
         except (ConnectionError, TimeoutError) as e:
-            if attempt == 3: Error(20).throw(err_type=ErrorType.WARNING)
+            if attempt >= 3: Error(20).throw(err_type=ErrorType.WARNING)
         except InvalidTokenError as e:
             Error(21.1).throw(*e.args)
         except DiscordAPIError as e:
             Error(22).throw(*e.args)
 
-    if uid_unknown_list:
-        Error(23).throw(str(uid_unknown_list), err_type=ErrorType.WARNING)
+    if uids_unknown:
+        Error(23).throw(str(uids_unknown), err_type=ErrorType.WARNING)
 
     if has_task and not failed:
         print('\033[A\033[2K\033[A\033[2K' + 'Avatar download complete!')
