@@ -1,6 +1,5 @@
 from collections.abc import Callable
 import configparser
-import re
 from typing import Any
 
 from colorama import Fore

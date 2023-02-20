@@ -1,6 +1,4 @@
-from copy import deepcopy
 from enum import Enum
-from pathlib import Path
 import requests
 import time
 from urllib.request import Request, urlopen

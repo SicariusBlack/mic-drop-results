@@ -1,6 +1,5 @@
 import copy
 from enum import Enum, auto
-import re
 import sys
 from traceback import format_exception
 
