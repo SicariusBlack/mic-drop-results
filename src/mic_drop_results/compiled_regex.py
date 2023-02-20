@@ -2,10 +2,10 @@ import re
 
 
 # Section A: Find all
-# Match image URLs
-img_url_pattern = re.compile(
-    r'(https?\:\/\/)?[\w\-\.]+\.[a-z]*\/'
-    r'\S*\.(png|jpg|jpeg|gif|svg)',
+# Match valid URLs
+url_pattern = re.compile(
+    r'https?:\/\/(?:www\.)?[-\w@:%.\+~#=]{1,256}\.[\w()]{1,6}'
+    r'\b(?:[-\w()@:%.\+~#?&\/=]*)',
     re.IGNORECASE)
 
 # Match 'field_name' from 'text containing {field_name} with more text behind'
