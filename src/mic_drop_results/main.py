@@ -1,4 +1,5 @@
 import contextlib
+import ctypes
 from io import BytesIO
 import itertools
 from multiprocessing import Pool, freeze_support
@@ -270,6 +271,7 @@ def _import_avatars():
 
 if __name__ == '__main__':
     version_tag = '3.0'
+    ctypes.windll.kernel32.SetConsoleTitleW('Mic Drop Results')
 
 # Section A: Fix console-related issues
     freeze_support()          # multiprocessing freeze support
@@ -484,19 +486,12 @@ if __name__ == '__main__':
                 df = df.drop(columns='__merge_anchor')
 
 
-        if '__uid' not in df.columns.tolist():
+        if '__uid' not in df.columns:
             avatar_mode = False
 
-        # Fill in missing templates
         df['__template'] = df['__template'].fillna(1)
         df['__uid'] = df['__uid'].str.replace('_', '').str.strip()
-
         groups[sheet] = df
-
-        if len(groups) == 1:
-            print('\n\nHere is a snippet of your processed data:')
-
-        print('\n' + preview_df(df, n_cols=len(df.columns), highlight=False))
 
     if not groups:
         Error(68).throw()
