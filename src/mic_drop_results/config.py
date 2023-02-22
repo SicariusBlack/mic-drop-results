@@ -13,7 +13,7 @@ class ConfigVarTypes:
     avatar_mode: bool
     avatar_resolution: int
 
-    sorting_orders: list[bool]
+    sort_orders: list[bool]
 
     trigger_word: str
     ranges: list[float]
@@ -44,23 +44,24 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
     def _validate(self, cfg: dict[str, Any]) -> None:
         resolution_presets = [16, 32, 40, 60, 64, 80, 100, 128, 512, 1024]
         assert cfg['avatar_resolution'] in resolution_presets, (
-            'Avatar resolution must be taken from the provided presets.')
+            'Avatar resolution must be taken from the given presets.')
 
         assert len(cfg['trigger_word']) > 0, (
-            'Config variable "trigger_word" must not be empty.')
+            'Config variable "trigger_word" cannot be empty.')
 
         assert (len(cfg['ranges']) ==
                 len(cfg['scheme']) ==
                 len(cfg['scheme_alt'])), (
-            'The "ranges", "scheme", and "scheme_alt" lists must '
-            'have the same and matching length.')
+            'The "ranges", "scheme", and "scheme_alt" lists must all '
+            'have the same, matching length.')
 
         assert all(hex_pattern.fullmatch(h)
                    for scheme in [cfg['scheme'], cfg['scheme_alt']]
                    for h in scheme), (
-            'Invalid hex codes found in:'
+            'Invalid hex color codes found in:'
             + self._show_var('scheme', 'scheme_alt')
-            + '\nPlease note that three-digit hex codes are not accepted.')
+            + '\nPlease note that hex triplets and any other forms of hex '
+            'color codes are not accepted.')
 
     def _check_missing_vars(self) -> None:
         if missing_vars := [

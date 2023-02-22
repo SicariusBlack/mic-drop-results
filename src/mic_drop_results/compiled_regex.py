@@ -29,5 +29,5 @@ special_char_pattern = re.compile(r'[^a-z0-9]', re.IGNORECASE)
 
 
 # Section C: Full match
-# Match hex color value
-hex_pattern = re.compile(r'^[0-9a-f]{6}$', re.IGNORECASE)
+# Match valid hex color code
+hex_pattern = re.compile(r'^#?[0-9a-f]{6}$', re.IGNORECASE)
