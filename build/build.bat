@@ -1,1 +1,2 @@
-pyinstaller app.spec
+pyinstaller main.spec
+pause
