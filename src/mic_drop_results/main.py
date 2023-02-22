@@ -19,6 +19,7 @@ from pptx.enum.shapes import MSO_SHAPE  # type: ignore
 from pptx.enum.text import PP_ALIGN  # type: ignore
 from pptx.slide import Slide
 from pptx.util import Cm
+from pywintypes import com_error
 import requests
 import win32com.client
 
@@ -553,8 +554,11 @@ if __name__ == '__main__':
         try:
             ppt.VBE.ActiveVBProject.VBComponents.Import(
                 abs_path(TEMP_DIR, 'Module1.bas'))
-        except Exception:  # trust access not yet enabled
-            Error(41).throw()
+        except com_error as e:  # trust access not yet enabled
+            if e.hresult == -2147352567:  # type: ignore
+                Error(41).throw()
+            else:
+                raise e
         bar.add()
 
 
