@@ -19,7 +19,6 @@ from pptx.enum.shapes import MSO_SHAPE  # type: ignore
 from pptx.enum.text import PP_ALIGN  # type: ignore
 from pptx.slide import Slide
 from pptx.util import Cm
-from pywintypes import com_error
 import requests
 import win32com.client
 
