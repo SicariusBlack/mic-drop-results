@@ -11,4 +11,5 @@ avatars/
 *.xlsx
 *.pptm
 *.bas
+*.spec
 token.txt
