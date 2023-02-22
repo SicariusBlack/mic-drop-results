@@ -284,13 +284,13 @@ if __name__ == '__main__':
             'template.pptm', 'data.xlsx',
         ) if not abs_path(f).is_file()]:
         Error(40).throw(
-            f'The following files are missing:{Fore.RED}',
-            '- ' + '\n- '.join(missing_files) + Fore.RESET,
+            'The following files are missing:',
+            '- ' + '\n- '.join(missing_files),
             f'{bold("Current working directory:")}  {MAIN_DIR}')
 
 # Section C: Load user configurations
     cfg = Config(str(abs_path('settings.ini')))
-    n_scols = len(cfg.sorting_orders)  # number of sorting columns
+    n_scols = len(cfg.sort_orders)  # number of sorting columns
     avatar_mode = cfg.avatar_mode  # is subject to change later
     scheme, scheme_alt = [
         list(map(hex_to_rgb, x)) for x in (cfg.scheme, cfg.scheme_alt)
@@ -433,7 +433,7 @@ if __name__ == '__main__':
         # Rank data
         df['__r'] = (
             pd.DataFrame(df.loc[:, scols]            # select sorting columns
-            * (np.array(cfg.sorting_orders)*2 - 1))  # map bool 0/1 to -1/1
+            * (np.array(cfg.sort_orders)*2 - 1))  # map bool 0/1 to -1/1
             .apply(tuple, axis=1)  # type: ignore
             .rank(method='min', ascending=False)
             .astype(int))
@@ -537,7 +537,7 @@ if __name__ == '__main__':
 
     print('\n\nGenerating slides...')
     print('Please do not click on any PowerPoint window that may '
-          'show up in the process.\n')
+          'appear during the process.\n')
 
     for sheet, df in groups.items():
         bar = ProgressBar(

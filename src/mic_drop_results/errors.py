@@ -23,12 +23,12 @@ class Traceback:
     templates = {
         'screenshot': [
             'Please take a screenshot of everything displayed below when '
-            'you fill out a bug report. Thank you for your patience in '
+            'filling out a bug report. Thank you for your patience in '
             'getting this issue resolved.'],
 
         'cfg_format': [
-            'Please verify that the config variables are in their '
-            'valid format according to the note left above each variable.'],
+            'Please verify that these config variables are in their valid '
+            'format according to the notes left above each variable.'],
     }
 
     _err_lookup = {
@@ -42,18 +42,18 @@ class Traceback:
 
     # 20 – 29: API errors
         20: [
-            Tag.INTERNET, 'Failed to communicate with Discord API.',
+            Tag.INTERNET, 'Failed to communicate with the Discord API.',
             'We are unable to download avatars at the moment. '
             'Please check your internet connection and try again.'
         ],
         21: [
             Tag.TOKEN_TXT, 'No valid bot token found.',
-            'Please add a bot token to token.txt or turn off '
-            'avatar_mode completely in settings.ini.'
+            'Please add a bot token to token.txt or turn off avatar '
+            'mode completely in settings.ini.'
         ],
         21.1: [
             Tag.TOKEN_TXT, 'Invalid bot token.',
-            'The following bot token is invalid or has expired. '
+            'The following bot token is either invalid or deactivated. '
             'Please replace this token from token.txt with a new and '
             'valid one.'
         ],
@@ -63,49 +63,49 @@ class Traceback:
         23: [
             Tag.DATA_XLSX,
             'Unable to download the avatars of the following users.',
-            'Make sure these user IDs are correctly typed and that the owners '
-            'have not deleted nor moved to new accounts with the same name.'
+            'Make sure these user IDs are valid and that they have not '
+            'deleted nor moved to new accounts with the same name.'
         ],
 
     # 30 – 39: Config errors
         30: [
             Tag.SETTINGS_INI, 'Missing config variables.',
-            'The following config variables are missing. Please download '
-            'the latest version of settings.ini and try again.\n'
+            'The following config variables are missing. Please download the '
+            'latest version of settings.ini from this link and try again.\n'
             + TEMPLATES_URL
         ],
         31: [
-            Tag.SETTINGS_INI, 'Invalid data type for config variable.',
+            Tag.SETTINGS_INI, 'Invalid data type for a config variable.',
             *templates['cfg_format']
         ],
         31.1: [
-            Tag.SETTINGS_INI, 'Config variable failed requirement check.',
+            Tag.SETTINGS_INI, 'Config variables failed requirement check.',
             *templates['cfg_format']
         ],
 
     # 40 – 59: System errors
         40: [
-            Tag.SYS, 'Some required files are missing.',
+            Tag.SYS, 'Missing required files.',
             'Please download the missing files from the following source.\n'
             + TEMPLATES_URL
         ],
         41: [
-            Tag.SYS, 'Failed to import VBA macros due to privacy settings.',
+            Tag.SYS, 'Failed to import VBA macros due to a privacy setting.',
             'Please open PowerPoint and navigate to:\nFile > Options '
             '> Trust Center > Trust Center Settings > Macro Settings',
-            'Make sure the "Trust access to the VBA project object model" '
-            'option is checked.'
+            'Make sure "Trust access to the VBA project object model" '
+            'is checked.'
         ],
 
     # 60 and above: Data errors
         60: [
             Tag.DATA_XLSX, 'Sorting columns contain text.',
             'The sorting columns of the following sheet contain text '
-            'but expect numeric data type.\n'
+            'but expect numeric data type throughout.\n'
             'Have you pasted data in the wrong column, by any chance?'
         ],
         61: [
-            Tag.DATA_XLSX, 'Sorting columns contain empty value.',
+            Tag.DATA_XLSX, 'Sorting columns contain empty values.',
             'The sorting columns of the following sheet contain empty '
             'cell values.\n'
             'These empty values will be replaced with 0 if you proceed on.'
@@ -116,20 +116,20 @@ class Traceback:
             + str(abs_path("data.xlsx")),
             'No sheet appears to be in the correct format.',
             'Please download a sample data.xlsx file from the following '
-            'URL and use it as a reference for customizing your own.\n'
+            'source and use it as a reference for customizing your own.\n'
             + TEMPLATES_URL
         ],
         70: [
-            Tag.DATA_XLSX, 'No leading underscore before user IDs.',
+            Tag.DATA_XLSX, 'Missing an underscore before every user ID.',
             'Please add an underscore (_) before every user ID from the '
             '"__uid" column. For example: _1010885414850154587',
-            'This is to prevent Excel and the program from rounding the UIDs.',
-            'Make sure all IDs are still valid before adding the underscores.'
+            'This is to prevent Microsoft Excel and the program from '
+            'rounding the UIDs.'
         ],
         71: [
-            Tag.DATA_XLSX, 'Template does not exist.',
-            'The following template(s) could not be matched with any '
-            'slide from template.pptm.'
+            Tag.DATA_XLSX, 'This template does not exist.',
+            'The following template(s) cannot be matched with any slide '
+            'from template.pptm.'
         ],
     }
 
@@ -230,7 +230,7 @@ class Error(Traceback):
             inp('\nPress Enter to exit the program...')
             sys.exit(1)
         else:
-            inp('\nPress Enter to continue...')
+            inp('\nPress Enter to skip this warning...')
 
 
 def print_exception_hook(exc_type, exc_value, tb) -> None:
