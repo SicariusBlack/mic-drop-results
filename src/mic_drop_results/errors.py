@@ -71,7 +71,7 @@ class Traceback:
         30: [
             Tag.SETTINGS_INI, 'Missing config variables.',
             'The following config variables are missing. Please download the '
-            'latest version of settings.ini from this link and try again.\n'
+            'latest version of settings.ini from this link and try again:\n'
             + TEMPLATES_URL
         ],
         31: [
@@ -86,7 +86,7 @@ class Traceback:
     # 40 – 59: System errors
         40: [
             Tag.SYS, 'Missing required files.',
-            'Please download the missing files from the following source.\n'
+            'Please download the missing files from this link:\n'
             + TEMPLATES_URL
         ],
         41: [
@@ -115,8 +115,8 @@ class Traceback:
             'We have examined every sheet from the following Excel file:\n'
             + str(abs_path("data.xlsx")),
             'No sheet appears to be in the correct format.',
-            'Please download a sample data.xlsx file from the following '
-            'source and use it as a reference for customizing your own.\n'
+            'Please download a sample data.xlsx file from this link and '
+            'use it as a reference for customizing your own:\n'
             + TEMPLATES_URL
         ],
         70: [
