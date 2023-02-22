@@ -269,7 +269,7 @@ def _import_avatars():
 
 
 if __name__ == '__main__':
-    version_tag = '2.9'
+    version_tag = '3.0'
 
 # Section A: Fix console-related issues
     freeze_support()          # multiprocessing freeze support
@@ -554,11 +554,8 @@ if __name__ == '__main__':
         try:
             ppt.VBE.ActiveVBProject.VBComponents.Import(
                 abs_path(TEMP_DIR, 'Module1.bas'))
-        except com_error as e:  # trust access not yet enabled
-            if e.hresult == -2147352567:  # type: ignore
-                Error(41).throw()
-            else:
-                raise e
+        except Exception:  # trust access not yet enabled
+            Error(41).throw()
         bar.add()
 
 
