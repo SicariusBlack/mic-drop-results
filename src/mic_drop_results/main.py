@@ -493,6 +493,11 @@ if __name__ == '__main__':
         df['__uid'] = df['__uid'].str.replace('_', '').str.strip()
         groups[sheet] = df
 
+        if len(groups) == 1:
+            print('\n\nHere is a snippet of your processed data:')
+
+        print('\n' + preview_df(df, n_cols=len(df.columns), highlight=False))
+
     if not groups:
         Error(68).throw()
 
