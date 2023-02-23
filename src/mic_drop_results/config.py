@@ -44,10 +44,13 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
     def _validate(self, cfg: dict[str, Any]) -> None:
         resolution_presets = [16, 32, 40, 60, 64, 80, 100, 128, 512, 1024]
         assert cfg['avatar_resolution'] in resolution_presets, (
-            'Avatar resolution must be taken from the given presets.')
+            'Avatar resolution must be taken from the list of available '
+            'resolutions.')
 
         assert len(cfg['trigger_word']) > 0, (
             'Config variable "trigger_word" cannot be empty.')
+        cfg['trigger_word'] = cfg['trigger_word'].replace('"', '')
+        # TODO: remove quotation marks from all str
 
         assert (len(cfg['ranges']) ==
                 len(cfg['scheme']) ==
