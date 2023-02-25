@@ -42,7 +42,7 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
         self.__dict__ = self.config  # assign config vars to class attributes
 
     def _validate(self, cfg: dict[str, Any]) -> None:
-        resolution_presets = [16, 32, 40, 60, 64, 80, 100, 128, 512, 1024]
+        resolution_presets = [16, 32, 64, 80, 100, 128, 256, 512, 1024, 2048]
         assert cfg['avatar_resolution'] in resolution_presets, (
             'Avatar resolution must be taken from the list of available '
             'resolutions.')

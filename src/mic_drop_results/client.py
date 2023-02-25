@@ -40,7 +40,7 @@ def fetch_avatar_url(uid: str, api_token: str) -> str | None:  # TODO: docstring
     try:
         header = {'Authorization': f'Bot {api_token}'}
         response = requests.get(
-            f'https://discord.com/api/v9/users/{uid}', headers=header,
+            f'https://discord.com/api/v10/users/{uid}', headers=header,
             timeout=10
         )
         #if not ('message' in response.json() or 'avatar' in response.json())
@@ -50,10 +50,16 @@ def fetch_avatar_url(uid: str, api_token: str) -> str | None:  # TODO: docstring
 
     # Try extracting the hash and return the complete link if succeed
     try:
-        if response.json()['avatar'] is None:
+        if response.json()['avatar'] is not None:
+            return 'https://cdn.discordapp.com/avatars/{}/{}.png'.format(
+                uid, response.json()['avatar'])
+
+        if response.json()['discriminator'] == '0000':
             return None
-        return 'https://cdn.discordapp.com/avatars/{}/{}.png'.format(
-            uid, response.json()['avatar'])
+        # Return default avatar
+        # https://discord.com/developers/docs/reference#image-formatting-cdn-endpoints
+        return 'https://cdn.discordapp.com/embed/avatars/{}.png'.format(
+            int(response.json()['discriminator']) % 5)
     except KeyError as e:
         msg = response.json()['message'].lower()
         if '401: unauthorized' in msg:  # invalid token
@@ -63,7 +69,7 @@ def fetch_avatar_url(uid: str, api_token: str) -> str | None:  # TODO: docstring
             r = response.json()['retry_after'] + 10
             print(
                 '\033[A\033[2K'
-                f'You are being rate-limited by the API. Retrying in {r}s.')
+                f'You are being rate-limited by the API.')
             time.sleep(r)
             fetch_avatar_url(uid, api_token)
 
