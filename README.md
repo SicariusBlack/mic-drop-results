@@ -8,20 +8,17 @@
 
 <h2 align="center">Installation</h2>
 
-> **Note**<br>
-> This section is solely a placeholder for the time being. More instructions will be added later.
-
 To install, please visit the [latest release](https://github.com/banz04/mic-drop-results/releases/), download, and extract [**mic-drop-results.zip**](https://github.com/banz04/mic-drop-results/releases/latest/download/mic-drop-results.zip).
 
 
 <h2 align="center">Showcase</h2>
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/README/assets/1.png"><img src=".github/README/assets/1.png" width=380></a>
-  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/README/assets/2.png"><img src=".github/README/assets/2.png" width=380></a>
-  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/README/assets/3.png"><img src=".github/README/assets/3.png" width=380></a>
-  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/README/assets/4.png"><img src=".github/README/assets/4.png" width=380></a>
-  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/README/assets/5.png"><img src=".github/README/assets/5.png" width=380></a>
+  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/assets/README/1.png"><img src=".github/assets/README/1.png" width=380></a>
+  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/assets/README/2.png"><img src=".github/assets/README/2.png" width=380></a>
+  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/assets/README/3.png"><img src=".github/assets/README/3.png" width=380></a>
+  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/assets/README/4.png"><img src=".github/assets/README/4.png" width=380></a>
+  <a href="https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/assets/README/5.png"><img src=".github/assets/README/5.png" width=380></a>
 </p>
 
 
