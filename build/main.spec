@@ -5,8 +5,8 @@ block_cipher = None
 
 
 a = Analysis(
-    ['D:/mic_drop_results/main.py'],
-    pathex=['F:/.venv/md_results/Lib/site-packages'],
+    ['main.py'],  # replace with the absolute path to your main.py file
+    pathex=['Lib/site-packages'],  # replace with the absolute path to your venv packages
     binaries=[],
     datas=[],
     hiddenimports=[],
