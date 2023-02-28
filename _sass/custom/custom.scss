@@ -12,6 +12,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+a:not([class]):hover {
+  text-decoration-color: #06c;
+}
+
 code {
   font-family: 'JetBrains Mono', ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;
   letter-spacing: 0.02em;
@@ -25,7 +29,8 @@ pre {
 }
 
 button {
-  border-radius: 100%;
+  font-size: 0.9em;
+  border-radius: 200px;
 }
 
 div.highlighter-rouge, div.highlight {
@@ -35,7 +40,7 @@ div.highlighter-rouge, div.highlight {
 
 .site-title.lh-tight {
   /* title */
-  font-size: 1.2rem;
+  font-size: 1.2em;
   font-weight: 600;
 }
 
