@@ -1,14 +1,11 @@
-# Build settings
-remote_theme: just-the-docs/just-the-docs
-markdown: kramdown
-
-
-# Theme config
 title: Mic Drop Results
+remote_theme: just-the-docs-template
+theme: just-the-docs
 
 favicon_ico: "https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/assets/mdr/icon.ico"
 
 aux_links:
+  Template Repository: https://github.com/just-the-docs/just-the-docs-template
   "View repository on GitHub":
     - "//github.com/banz04/mic-drop-results"
 
