@@ -1,2 +1,4 @@
-$body-font-family: 'Inter';
-$body-letter-spacing: -0.007em;
+@mixin body{
+  font-family: 'Inter';
+  letter-spacing: -0.007em;
+}
