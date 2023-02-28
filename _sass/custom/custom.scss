@@ -1,3 +1,11 @@
+$fill-blue: #0071e3;
+$figure-blue: #06c;
+$background-blue: #d9ebff;
+
+$link-color: $figure-blue;
+$btn-primary-color: $fill-blue;
+$base-button-color: $background-blue;
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300&family=JetBrains+Mono:wght@500&display=swap');
 
 h1, h2, h3, h4, h5, h6 {
@@ -20,24 +28,30 @@ code {
   border-radius: 7px;
 }
 
-pre { line-height: 18px; }
+pre {
+  line-height: 18px;
+}
 
-/* Code blocks */
 div.highlighter-rouge, div.highlight {
+  /* code blocks */
   border-radius: 7px;
 }
 
-/* Title */
 .site-title.lh-tight {
+  /* title */
   font-size: 1.2rem;
   font-weight: 600;
 }
 
 
-/* ---- Miscellaneous ---- */
-p, div, button, .note, .warning { box-shadow: none; }
+/* --- Miscellaneous --- */
+p, div, button, .note, .warning {
+  box-shadow: none;
+}
 
-div.side-bar { left: -8px; }
+div.side-bar {
+  left: -8px;
+}
 
 p.label {
   font-weight: 600;
