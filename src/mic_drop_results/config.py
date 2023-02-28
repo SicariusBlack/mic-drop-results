@@ -102,8 +102,7 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
 
     def _parse_list(self, list_type: Callable[[str], Any], val: str) -> list:
         ele_type = list_type.__args__[0]  # extract the elements' type
-                                          # ... e.g. <class 'float'> if
-                                          # ... list_type is list[float]
+                                          # ... e.g. <class 'float'> if list_type is list[float]
         raw_list = (val
                     .replace('(', '')
                     .replace(')', '')
