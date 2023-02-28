@@ -15,7 +15,7 @@ a:not([class]) {
   text-decoration-color: transparent;
 
   &:focus {
-    outline: 3px solid transparentize($blue-200, 0.4);
+    outline: 3px solid transparentize($blue-100, 0.3);
     outline-offset: 1px;
     text-decoration: none;
   }
