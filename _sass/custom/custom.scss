@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300&family=JetBrains+Mono:wght@600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300&family=JetBrains+Mono:wght@500&display=swap');
 
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
@@ -13,22 +13,34 @@ body {
 }
 
 code {
-  font-family: 'JetBrains Mono';
+  font-family: 'JetBrains Mono', ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;
   letter-spacing: 0.02em;
+  font-weight: 500;
+  border: none;
+  border-radius: 7px;
 }
 
-pre {
-  line-height: 1.3em;
+pre { line-height: 18px; }
+
+/* Code blocks */
+div.highlighter-rouge, div.highlight {
+  border-radius: 7px;
 }
 
+/* Title */
 .site-title.lh-tight {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
-p, button, .note, .warning {
-  box-shadow: none;
-}
 
-div.side-bar {
-  left: -8px;
+/* ---- Miscellaneous ---- */
+p, div, button, .note, .warning { box-shadow: none; }
+
+div.side-bar { left: -8px; }
+
+p.label {
+  font-weight: 600;
+  margin-top: auto;
+  margin-bottom: auto;
 }
