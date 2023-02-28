@@ -1,5 +1,5 @@
-$grey-lt-000: #eaeef2;
-$grey-lt-100: #8c959f;
+$grey-lt-000: #f6f8fa;
+$grey-lt-100: #d0d7de;
 $grey-lt-200: #424a53;  /* #32383f */
 $grey-lt-300: #24292f;
 
@@ -9,7 +9,9 @@ $blue-200: #0969da;
 $blue-300: #0550ae;
 
 
-$code-background-color: $grey-lt-100;
+$sidebar-color: $grey-lt-000;
+$code-background-color: $grey-lt-000;
+$feedback-color: transparentize($grey-lt-100, 0.68);
 $body-text-color: $grey-lt-300;
 $body-heading-color: $grey-lt-300;
 $search-result-preview-color: $grey-lt-200;
@@ -19,7 +21,7 @@ $btn-primary-color: $blue-200;
 $base-button-color: $grey-lt-000;
 
 
-$font-size-3: 14px;
+$font-size-3: 13px;
 $font-size-5: 15px;
 $font-size-7: 21px;
 
