@@ -15,7 +15,7 @@ a {
   text-decoration-color: transparent;
 
   &:focus {
-    outline: 3px solid rgba($blue-100, 0.6);
+    outline: 3px solid transparentize($blue-100, 0.6);
     outline-offset: 1px;
     text-decoration: none;
   }
@@ -42,14 +42,7 @@ button {
 }
 
 .site-title {
-  /* title */
-  font-size: 21px !important;
   font-weight: 600;
-}
-
-.site-button {
-  /* aux link */
-  font-size: 14px !important;
 }
 
 
