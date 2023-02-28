@@ -1,10 +1,23 @@
-/*
-$figure-blue: #06c;
-$fill-gray: #e9e9ea;
-$fill-tinted: #d9ebff;
-$fill-blue: #0071e3;
-*/
+$grey-lt-000: #eaeef2;
+$grey-lt-100: #8c959f;
+$grey-lt-200: #424a53;  /* #32383f */
+$grey-lt-300: #24292f;
 
-$link-color: #06c;
-$btn-primary-color: #06c;
-$base-button-color: #e9e9ea;
+$blue-000: #b6e3ff;
+$blue-100: #218bff;
+$blue-200: #0969da;
+$blue-300: #0550ae;
+
+
+$code-background-color: $grey-lt-100;
+$feedback-color: darken($sidebar-color, 3%) !default;
+$body-text-color: $grey-lt-300;
+$body-heading-color: $grey-lt-300;
+$search-result-preview-color: $grey-lt-200;
+$nav-child-link-color: $grey-lt-200;
+$link-color: $blue-200;
+$btn-primary-color: $blue-200;
+$base-button-color: $grey-lt-000;
+
+
+$font-size-5: 15px;
