@@ -24,8 +24,7 @@ from pywintypes import com_error
 import requests
 import win32com.client
 
-from client import ProgramStatus, fetch_latest_version
-from client import download_avatar
+from client import ProgramStatus, fetch_latest_version, download_avatar
 from compiled_regex import *
 from config import Config
 from constants import *
@@ -174,7 +173,7 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
     # Only show the first few columns for preview
     df = df.iloc[:, : min(n_cols+n_cols_ext, len(df.columns))]
 
-    # Replace values_to_highlight with ⁅values_to_highlight⁆
+    # Replace text_to_highlight with ⁅text_to_highlight⁆
     prefix, suffix = '⁅', '⁆'  # must be single length
     highlight_str = lambda x: f'{prefix}{x}{suffix}'
     for word in words_to_highlight:
@@ -188,7 +187,7 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
     preview = (repr(df.head(8)) if n_cols < len(df.columns)
                else repr(df))
 
-    # Highlight values
+    # Highlight text_to_highlight
     preview = (preview.replace(prefix, Fore.RED + '  ')
                       .replace(suffix, Fore.RESET))
 
@@ -211,28 +210,28 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
 
 
 def _import_avatars():
-    failed = False
-    max_attempt = 5
+    failed = False  # whether the download task has failed
+    max_attempt = 5  # maximum number of attempts
     has_task = False  # skip avatar download banner if no download task exists
-    uids_unknown = []
-    pool = Pool(min(4, len(token_list) + 1))
+    uids_unknown = []  # uids that failed to download
+    pool = Pool(min(4, len(token_list) + 1))  # multiprocessing pool
 
     for attempt in range(1, max_attempt+1):
-        uids = []
+        uids = []  # uids that are not downloaded yet
         for df in groups.values():
-            if df['__uid'].dtype.kind in 'biufc':
+            if df['__uid'].dtype.kind in 'biufc':  # throw if uid column is numeric
                 Error(70).throw()
 
             for id in df['__uid']:
-                if not (pd.isnull(id)
-                        or get_avatar_path(id).is_file()
-                        or id in uids
-                        or id in uids_unknown):
+                if not (pd.isnull(id)  # skip NaN
+                        or get_avatar_path(id).is_file()  # skip if already downloaded
+                        or id in uids  # skip if already in the queue
+                        or id in uids_unknown):  # skip if already in the unknown list
                     uids.append(id)
-        if not uids:
+        if not uids:  # if queue is empty, break the loop
             break
 
-        queue_len = len(uids)
+        queue_len = len(uids)  # number of uids in the queue
         if attempt == 1:
             # Initialize download task
             has_task = True
@@ -241,7 +240,7 @@ def _import_avatars():
                   'we are downloading.')
         elif attempt >= max_attempt:
             failed = True
-            uids_unknown += uids
+            uids_unknown += uids  # add all uids in the queue to the unknown list
             break
 
         try:
@@ -369,7 +368,7 @@ if __name__ == '__main__':
         xls, sheet_name=None)
     xls.close()
 
-    sheet_names = [forbidden_char_pattern.sub('',  # Forbidden file name chars
+    sheet_names = [forbidden_char_pattern.sub('',  # forbidden file name chars
         str(name)).strip() for name in workbook]
     workbook = {name: list(workbook.values())[i]
                 for i, name in enumerate(sheet_names)}
@@ -393,10 +392,10 @@ if __name__ == '__main__':
             continue  # exclude database tables
 
         df = workbook[sheet]
-        if df.empty or df.shape < (1, n_scols):  # (1 row, n sorting cols) min
+        if df.empty or df.shape < (1, n_scols):  # (1 row, n_scols cols) min
             continue
 
-        scols = df.columns.tolist()[:n_scols]  # get sorting columns
+        scols = df.columns.tolist()[:n_scols]  # get sorting cols
         SHEET_INFO = (
             f'{bold("Sheet name:")}  {sheet}\n\n'
             f'See the following row(s) in data.xlsx to find out what '
@@ -404,9 +403,9 @@ if __name__ == '__main__':
         )
 
 
-        # Exclude sheets with non-numeric sorting columns
+        # Exclude sheets with non-numeric sorting cols
         if any(df.loc[:, scol].dtype.kind not in 'biufc' for scol in scols):
-            # Get list of non-numeric values
+            # Get list of non-numeric vals
             str_vals = (df.loc[:, scols][~df.loc[:, scols].applymap(np.isreal)]
                 .melt(value_name='__value').dropna()['__value'].tolist())
 
@@ -419,7 +418,7 @@ if __name__ == '__main__':
 
                 err_type=ErrorType.ERROR)
 
-        # Fill nan values within the sorting columns
+        # Fill nan vals within the sorting cols
         if df.loc[:, scols].isnull().values.any():
             Error(61).throw(
                 SHEET_INFO,
@@ -432,18 +431,18 @@ if __name__ == '__main__':
 
             df.loc[:, scols] = df.loc[:, scols].fillna(0)
 
-        # Rank data
+        # Rank the slides
         df['__r'] = (
-            pd.DataFrame(df.loc[:, scols]            # select sorting columns
+            pd.DataFrame(df.loc[:, scols]  # select sorting cols
             * (np.array(cfg.sort_orders)*2 - 1))  # map bool 0/1 to -1/1
             .apply(tuple, axis=1)  # type: ignore
             .rank(method='min', ascending=False)
             .astype(int))
 
-        # Sort the slides
+        # Sort the slides by rank
         df = df.sort_values(by='__r', ascending=True)
 
-        # Remove .0 from whole numbers
+        # Remove .0 from whole nums
         format_int = lambda x: str(int(x)) if x % 1 == 0 else str(x)
         df.loc[:, df.dtypes == float] = (
             df.loc[:, df.dtypes == float].applymap(format_int))
@@ -469,7 +468,7 @@ if __name__ == '__main__':
                 if anchor_col not in df_cols:  # TODO: add a warning
                     continue
 
-                # Copy processed values of anchor column to '__merge_anchor'
+                # Copy processed vals of anchor col to '__merge_anchor'
                 df['__merge_anchor'] = process_str(df[anchor_col])
                 table['__merge_anchor'] = process_str(table[anchor_col])
                 table = table.drop(columns=anchor_col)
@@ -540,16 +539,16 @@ if __name__ == '__main__':
           'appear during the process.\n')
 
     for sheet, df in groups.items():
-        bar = ProgressBar(
+        bar = ProgressBar(  # initialize progress bar
             8, title=sheet, max_title_length=max(map(len, groups.keys())))
 
-
+    # Open template.pptm
         bar.set_description('Opening template.pptm')
         ppt = win32com.client.Dispatch('PowerPoint.Application')
         ppt.Presentations.Open(abs_path('template.pptm'))
         bar.add()
 
-
+    # Import macros
         bar.set_description('Importing macros')
         try:
             ppt.VBE.ActiveVBProject.VBComponents.Import(
@@ -561,7 +560,7 @@ if __name__ == '__main__':
                 raise e
         bar.add()
 
-
+    # Duplicate slides
         bar.set_description('Duplicating slides')
         slides_count = ppt.Run('Count')
 
@@ -572,52 +571,48 @@ if __name__ == '__main__':
         ]:
             showcase_cols = ['__r', '__template']
             df_showcase = df[
-                showcase_cols
-                + [col for col in df.columns if col not in showcase_cols]]
+                showcase_cols + [col for col in df.columns
+                                 if col not in showcase_cols]]
             df_showcase = (df_showcase.drop_duplicates('__template')
                                       .reset_index(drop=True))
-
             Error(71).throw(
-                preview_df(
-                    df_showcase, n_cols=2, n_cols_ext=0,
-                    words_to_highlight=unknown_templates))
+                preview_df(df_showcase, n_cols=2, n_cols_ext=0,
+                           words_to_highlight=unknown_templates))
 
-        # Duplicate template slides
+        # Duplicate initial template slides
         for template in df['__template']:
             ppt.Run('Duplicate', template)
         bar.add()
-        ppt.Run(  # delete initial template slides when done
-            'DelSlide', *range(1, slides_count + 1))
+        ppt.Run('DelSlide', *range(1, slides_count + 1))  # delete initial template slides
         bar.add()
 
-
+    # Save as .pptx
         bar.set_description('Saving templates')
         output_path = abs_path(OUTPUT_DIR, f'{sheet}.pptx')
         ppt.Run('SaveAs', str(output_path))
         ppt.Quit()
         bar.add()
 
-
+    # Open .pptx file and fill slides with judging data
         bar.set_description('Filling in judging data')
         prs = Presentation(str(output_path))
         bar.add()
         for i, slide in enumerate(prs.slides):
             fill_slide(slide, {
-                k.lstrip('__') : str(v)  # program-generated vars start with __
+                k.lstrip('__') : str(v)  # treat program-domain vars like
+                                         # ... normal vars when replacing
                 for k, v in df.iloc[i].to_dict().items()
             })
         bar.add()
 
-
+    # Save .pptx file
         bar.set_description(f'Saving as {output_path}')
         prs.save(output_path)
         bar.add()
 
 
 # Section H: Launch the file
-    print(f'\nExported to {OUTPUT_DIR}')
-
     enable_console()
-
+    print(f'\nExported to {OUTPUT_DIR}')
     inp('Press Enter to open the output folder...')
     os.startfile(OUTPUT_DIR)
