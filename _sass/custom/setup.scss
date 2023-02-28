@@ -10,7 +10,7 @@ $blue-300: #0550ae;
 
 
 $code-background-color: $grey-lt-100;
-$feedback-color: darken($sidebar-color, 3%) !default;
+$feedback-color: $blue-000;
 $body-text-color: $grey-lt-300;
 $body-heading-color: $grey-lt-300;
 $search-result-preview-color: $grey-lt-200;
@@ -21,3 +21,6 @@ $base-button-color: $grey-lt-000;
 
 
 $font-size-5: 15px;
+
+
+$border-radius: 7px;

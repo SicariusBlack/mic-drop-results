@@ -13,6 +13,12 @@ body {
 
 a {
   text-decoration-color: transparent;
+
+  &:focus {
+    outline: 3px solid rgba($blue-100, 0.6);
+    outline-offset: 1px;
+    text-decoration: none;
+  }
 }
 
 a:not([class]):hover {
@@ -25,7 +31,6 @@ code {
   letter-spacing: 0.02em;
   font-weight: 500;
   border: none;
-  border-radius: 7px;
 }
 
 pre {
@@ -36,15 +41,15 @@ button {
   border-radius: 200px;
 }
 
-div.highlighter-rouge, div.highlight {
-  /* code blocks */
-  border-radius: 7px;
+.site-title {
+  /* title */
+  font-size: 21px !important;
+  font-weight: 600;
 }
 
-.site-title.lh-tight {
-  /* title */
-  font-size: 19px;
-  font-weight: 600;
+.site-button {
+  /* aux link */
+  font-size: 14px !important;
 }
 
 

@@ -4,7 +4,7 @@ remote_theme: just-the-docs/just-the-docs
 favicon_ico: "https://raw.githubusercontent.com/banz04/mic-drop-results/main/.github/assets/mdr/icon.ico"
 
 aux_links:
-  "View repository on GitHub":
+  "Visit repo on GitHub":
     - "//github.com/banz04/mic-drop-results"
 
 aux_links_new_tab: true
