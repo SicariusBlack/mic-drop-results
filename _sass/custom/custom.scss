@@ -14,14 +14,15 @@ body {
 a:not([class]) {
   text-decoration-color: transparent;
 
-  &:focus {
-    outline: 3px solid transparentize($blue-100, 0.22);
-    outline-offset: 1px;
-    text-decoration: none;
-  }
   &:hover {
     color: $blue-100;
     text-decoration-color: $blue-100;
+  }
+  &:focus {
+    color: $blue-200;
+    outline: 3px solid transparentize($blue-100, 0.35);
+    outline-offset: 1px;
+    text-decoration: none;
   }
 }
 
@@ -44,6 +45,30 @@ button {
   font-weight: 600;
 }
 
+/* --- Search box --- */
+#search-results {
+  background-color: rgba(246, 248, 250, 0.9);
+  backdrop-filter: blur(10px) contrast(2) brightness(1.4);
+}
+
+.search-active .search-input-wrap {
+  box-shadow: none;
+}
+
+.search-result-title, .search-result-previews {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  line-height: 17px;
+}
+
+.search-result {
+  height: 42px;
+  overflow: hidden;
+}
+
+.search-results-list {
+  margin-bottom: 0;
+}
 
 /* --- Miscellaneous --- */
 p, div, button, .note, .warning {

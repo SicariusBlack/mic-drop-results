@@ -1,12 +1,12 @@
-$grey-lt-000: #f6f8fa;
-$grey-lt-100: #eaedf1;
-$grey-lt-200: #424a53;  /* #32383f */
-$grey-lt-300: #24292f;
+$grey-lt-000: rgb(246, 248, 250);
+$grey-lt-100: rgb(234, 237, 241);
+$grey-lt-200: rgb(66, 74, 83);  /* #32383f */
+$grey-lt-300: rgb(36, 41, 47);
 
-$blue-000: #ddf4ff;
-$blue-100: #218bff;
-$blue-200: #0969da;
-$blue-300: #0550ae;
+$blue-000: rgb(221, 244, 255);
+$blue-100: rgb(33, 139, 255);
+$blue-200: rgb(9, 105, 218);
+$blue-300: rgb(5, 80, 174);
 
 
 $sidebar-color: $grey-lt-000;
@@ -21,7 +21,7 @@ $btn-primary-color: $blue-200;
 $base-button-color: $grey-lt-000;
 
 
-$font-size-3: 14px;
+$font-size-3: 13px;
 $font-size-5: 15px;
 $font-size-7: 21px;
 
