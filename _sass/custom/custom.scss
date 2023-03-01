@@ -1,13 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300&family=JetBrains+Mono:wght@500&display=swap');
+@mixin noselect {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
 
-h1, h2, h3, h4, h5, h6 {
+h1, h2, h3, h4, h5, h6, .site-title {
+  font-family: 'Playfair Display';
+  letter-spacing: 0.01em;
   font-weight: 600;
-  letter-spacing: -0.018em;
 }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  letter-spacing: -0.022em;
+  letter-spacing: -0.02em;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -42,7 +50,8 @@ button {
 }
 
 .site-title {
-  font-weight: 600;
+  @include noselect();
+  letter-spacing: 0.02em;
 }
 
 /* --- Search box --- */
