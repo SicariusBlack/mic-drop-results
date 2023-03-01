@@ -28,7 +28,7 @@ a:not([class]) {
   }
   &:focus {
     color: $blue-200;
-    outline: 3px solid transparentize($blue-100, 0.35);
+    outline: 3px solid transparentize($blue-100, 0.3);
     outline-offset: 1px;
     text-decoration: none;
   }
@@ -51,7 +51,11 @@ button {
 
 .site-title {
   @include noselect();
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
+}
+
+.site-footer {
+  @include noselect();
 }
 
 /* --- Search box --- */
@@ -75,7 +79,7 @@ button {
 }
 
 .search-result-previews {
-  padding-top: 0px;
+  padding-top: 0;
   margin-top: -1px;
   mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 32px, rgba(0, 0, 0, 0) 32px);
   -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 32px, rgba(0, 0, 0, 0) 32px);
