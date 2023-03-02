@@ -7,21 +7,36 @@
   user-select: none;
 }
 
+@mixin font-display {
+  font-family: $serif;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+}
+
+@mixin font-text {
+  font-family: $san-serif;
+  letter-spacing: -0.01em;
+  font-weight: 400;
+}
+
+@mixin font-monospace {
+  font-family: $monospace;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+}
+
 $san-serif: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
-$serif: 'Playfair Display', Constantia, 'Lucida Bright', Lucidabright, 'Lucida Serif', Lucida, 'DejaVu Serif', 'Bitstream Vera Serif', 'Liberation Serif', Georgia, serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+$serif: 'Source Serif Pro', Constantia, 'Lucida Bright', Lucidabright, 'Lucida Serif', Lucida, 'DejaVu Serif', 'Bitstream Vera Serif', 'Liberation Serif', Georgia, serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
 $monospace: SFMono-Regular, SF Mono, 'JetBrains Mono', ui-monospace, Menlo, Consolas, Liberation Mono, monospace, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
 
 
-h1, h2, h3, h4, h5, h6, .site-title {
-  font-family: $serif;
-  letter-spacing: 0.01em;
-  font-weight: 600;
+h1, h2, h3, h4, h5, h6,
+.site-title {
+  @include font-display();
 }
 
 body {
-  font-family: $san-serif;
-  letter-spacing: -0.02em;
-  -webkit-font-smoothing: antialiased;
+  @include font-text();
 }
 
 a:not([class]) {
@@ -33,16 +48,14 @@ a:not([class]) {
   }
   &:focus {
     color: $blue-200;
-    outline: 3px solid transparentize($blue-100, 0.3);
+    outline: 3px solid transparentize($blue-100, 0.25);
     outline-offset: 1px;
     text-decoration: none;
   }
 }
 
 code {
-  font-family: $monospace;
-  letter-spacing: 0.02em;
-  font-weight: 500;
+  @include font-monospace();
   border: none;
 }
 
@@ -50,13 +63,8 @@ pre {
   line-height: 18px;
 }
 
-button {
-  border-radius: 200px;
-}
-
 .site-title {
   @include noselect();
-  letter-spacing: 0;
 }
 
 .site-footer {
@@ -64,13 +72,14 @@ button {
 }
 
 /* --- Search box --- */
-#search-results {
-  background-color: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(15px) contrast(1.8) brightness(1.2);
-}
-
+#search-results,
 .search-active .search-input-wrap {
   box-shadow: none;
+}
+
+.search-overlay {
+  -webkit-backdrop-filter: blur(2px) saturate(0);
+  backdrop-filter: blur(2px) saturate(0);
 }
 
 .search-result-title,
@@ -86,8 +95,8 @@ button {
 .search-result-previews {
   padding-top: 0;
   margin-top: -1px;
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 32px, rgba(0, 0, 0, 0) 32px);
   -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 32px, rgba(0, 0, 0, 0) 32px);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 32px, rgba(0, 0, 0, 0) 32px);
 }
 
 .search-result {
@@ -99,12 +108,19 @@ button {
   margin-bottom: 0;
 }
 
+.search-label,
+.search-input {
+  transition-duration: 120ms;
+}
+
 /* --- Miscellaneous --- */
-p, div, button, .note, .warning {
+p, div, button,
+.note,
+.warning {
   box-shadow: none;
 }
 
-div.side-bar {
+.side-bar {
   left: -8px;
 }
 
