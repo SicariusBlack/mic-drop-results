@@ -1,26 +1,16 @@
-# Copyright 2023 Phan Nhat Huy
-#
+# Copyright 2023 Phan Huy
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 from collections.abc import Callable, Generator
-from ctypes import windll
+import ctypes
 import re
 import sys
 from typing import Any, TypeVar
 
 import cv2
 from colorama import Style
-import cursor
 from unidecode import unidecode
 
 from compiled_regex import special_char_pattern, space_pattern
@@ -119,18 +109,40 @@ def abs_path(*rels: str | Path) -> Path:  # TODO: update docstring
     return MAIN_DIR.joinpath(*rels)
 
 
+class _CursorInfo(ctypes.Structure):
+    _fields_ = [("size", ctypes.c_int), ("visible", ctypes.c_byte)]
+
+
+def hide_cursor():
+    """Hides the blinking cursor."""
+    ci = _CursorInfo()
+    handle = ctypes.windll.kernel32.GetStdHandle(-11)
+    ctypes.windll.kernel32.GetConsoleCursorInfo(handle, ctypes.byref(ci))
+    ci.visible = False
+    ctypes.windll.kernel32.SetConsoleCursorInfo(handle, ctypes.byref(ci))
+
+
+def show_cursor():
+    """Shows the blinking cursor."""
+    ci = _CursorInfo()
+    handle = ctypes.windll.kernel32.GetStdHandle(-11)
+    ctypes.windll.kernel32.GetConsoleCursorInfo(handle, ctypes.byref(ci))
+    ci.visible = True
+    ctypes.windll.kernel32.SetConsoleCursorInfo(handle, ctypes.byref(ci))
+
+
 def enable_console():
     """Allows text selection and accepts input within the CLI."""
-    cursor.show()
-    kernel32 = windll.kernel32
+    show_cursor()
+    kernel32 = ctypes.windll.kernel32
     kernel32.SetConsoleMode(
         kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x40|0x100))
 
 
 def disable_console():
     """Disables all console interactions."""
-    cursor.hide()
-    kernel32 = windll.kernel32
+    hide_cursor()
+    kernel32 = ctypes.windll.kernel32
     kernel32.SetConsoleMode(
         kernel32.GetStdHandle(-10), (0x4|0x80|0x20|0x2|0x10|0x1|0x00|0x100))
 

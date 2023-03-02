@@ -1,17 +1,9 @@
-# Copyright 2023 Phan Nhat Huy
-#
+# Copyright 2023 Phan Huy
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
+import atexit
 import contextlib
 import ctypes
 from io import BytesIO
@@ -44,9 +36,12 @@ from config import Config
 from constants import *
 from errors import Error, ErrorType, print_exception_hook
 from exceptions import *
-from utils import is_number, as_type, hex_to_rgb, parse_version, abs_path
-from utils import inp, disable_console, enable_console, console_style, bold
-from utils import get_avatar_path, artistic_effect, parse_coef, clean_name
+from utils import (
+    is_number, as_type,
+    hex_to_rgb, parse_version, parse_coef, clean_name,
+    abs_path, get_avatar_path,
+    inp, disable_console, enable_console, console_style, bold, show_cursor,
+    artistic_effect)
 from utils import ProgressBar
 from vba.macros import module1_bas
 
@@ -289,6 +284,7 @@ if __name__ == '__main__':
 # Section A: Fix console-related issues
     freeze_support()          # multiprocessing freeze support
     signal(SIGINT, SIG_IGN)   # handle KeyboardInterrupt
+    atexit.register(show_cursor)
     disable_console()
     sys.excepthook = print_exception_hook  # avoid exiting program on exception
     init()                                 # enable ANSI escape sequences
