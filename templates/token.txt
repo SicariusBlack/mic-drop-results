@@ -1,0 +1,40 @@
+"YOUR_TOKEN_1"
+"YOUR_TOKEN_2"
+"..."
+
+
+HOW TO GET YOUR TOKENS
+-------
+Follow the steps here to get your own bot token:
+
+https://github.com/banz04/mic-drop-results/blob/main/docs/token.md
+
+This token will be used to access Discord API in or-
+  der to retrieve user avatars. You may insert more
+  than one token to avoid rate-limits from the API.
+
+
+IS IT SAFE?
+-------
+Absolutely. By inserting your bot token(s) here, you
+  agree to authorize Mic Drop Results full access
+  to the bot(s), without any access to your Discord
+  account or any other bots that you presently own.
+
+For your extra safety, it is important not to invite
+  the bot(s) to any Discord server.
+
+Do not post your tokens online either, as Discord
+  keeps looking everywhere for your leaked tokens
+  and disables them, thus making your token invalid
+  and unusable for the program.
+
+
+HOW THIS FILE WORKS
+-------
+The program will go through every line in this file.
+  When it meets a line with more than 70 characters,
+  the program will recognize such line as a token.
+
+You can disable avatar_mode in settings.ini if you
+  wish not to use this feature.
