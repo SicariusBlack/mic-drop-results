@@ -56,18 +56,16 @@ a:not([class]) {
   text-decoration: none;
 
   &:hover {
-    color: $blue-300;
     @include link-hover-effect();
   }
   &:focus {
-    color: $blue-200;
-    outline: 3px solid transparentize($blue-100, 0.25);
+    outline: 3px solid transparentize($blue-100, 0.3);
     outline-offset: 1px;
     text-decoration: none;
   }
 }
 
-a.nav-list-link:hover {
+a.nav-list-link, a.nav-list-link.active:hover {
   @include link-hover-effect();
 }
 
