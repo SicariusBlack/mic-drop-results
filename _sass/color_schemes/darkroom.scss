@@ -1,0 +1,28 @@
+@import "./color_schemes/dark";
+
+$grey-dk-200: #21262d;
+$grey-dk-250: #161b22;
+$grey-dk-300: #0d1117;
+$grey-lt-100: #8b949e;
+$grey-lt-200: #c9d1d9;
+$grey-lt-300: #f0f6fc;
+
+$blue-000: #cae8ff;
+$blue-100: #79c0ff;
+$blue-200: #58a6ff;
+$blue-300: #1158c7;
+
+
+$body-background-color: $grey-dk-300;
+$sidebar-color: $grey-dk-250;
+$border-color: $grey-dk-200;
+$body-text-color: $grey-lt-200;
+$body-heading-color: $grey-lt-300;
+$nav-child-link-color: $grey-dk-200;
+$search-result-preview-color: $grey-lt-100;
+$link-color: $blue-200;
+$btn-primary-color: $blue-200;
+$base-button-color: $grey-dk-250;
+$search-background-color: $grey-dk-250;
+$table-background-color: $grey-dk-250;
+$feedback-color: darken($sidebar-color, 3%);
