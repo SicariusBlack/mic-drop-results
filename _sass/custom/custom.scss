@@ -40,7 +40,7 @@
 
 $san-serif: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
 $serif: 'Source Serif Pro', Constantia, 'Lucida Bright', Lucidabright, 'Lucida Serif', Lucida, 'DejaVu Serif', 'Bitstream Vera Serif', 'Liberation Serif', Georgia, serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
-$monospace: SFMono-Regular, SF Mono, 'JetBrains Mono', ui-monospace, Menlo, Consolas, Liberation Mono, monospace, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+$monospace: 'JetBrains Mono', SFMono-Regular, SF Mono, ui-monospace, Menlo, Consolas, Liberation Mono, monospace, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
 
 
 h1, h2, h3, h4, h5, h6,
@@ -53,26 +53,27 @@ body {
 }
 
 a:not([class]) {
-  text-decoration-color: transparent;
+  text-decoration: none;
 
   &:hover {
-    @include link-hover-effect();
     color: $blue-300;
+    @include link-hover-effect();
   }
   &:focus {
-    color: $blue-300;
+    color: $blue-200;
     outline: 3px solid transparentize($blue-100, 0.25);
     outline-offset: 1px;
     text-decoration: none;
   }
 }
 
-a.nav-list-link {
+a.nav-list-link:hover {
   @include link-hover-effect();
 }
 
 code {
   @include font-monospace();
+  font-size: 14px;
   border: none;
 }
 
