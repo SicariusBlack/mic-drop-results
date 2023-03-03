@@ -59,16 +59,19 @@ a:not([class]) {
     @include link-hover-effect();
   }
   &:focus {
-    outline: 3px solid transparentize($blue-100, 0.4);
+    outline: 3px solid transparentize($blue-100, 0.35);
     outline-offset: 1px;
     text-decoration: none;
   }
 }
 
-a.nav-list-link,
-a.nav-list-link.active {
+.nav-list-link,
+.nav-list-link.active {
   &:hover {
     @include link-hover-effect();
+  }
+  &:not(.active):hover {
+    background-image: unset;
   }
 }
 
