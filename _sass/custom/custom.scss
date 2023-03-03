@@ -7,30 +7,35 @@
   user-select: none;
 }
 
-@mixin font-smoothing {
+@mixin antialiasing {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+@mixin link-hover-effect {
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+}
+
 @mixin font-display {
-  @include font-smoothing();
+  @include antialiasing();
   font-family: $serif;
-  letter-spacing: -0.008em;
+  letter-spacing: -0.005em;
   font-weight: 700;
 }
 
 @mixin font-text {
-  @include font-smoothing();
+  @include antialiasing();
   font-family: $san-serif;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.008em;
   font-weight: 400;
 }
 
 @mixin font-monospace {
-  @include font-smoothing();
+  @include antialiasing();
   font-family: $monospace;
-  letter-spacing: 0.02em;
-  font-weight: 500;
+  letter-spacing: 0.018em;
+  font-weight: 600;
 }
 
 $san-serif: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
@@ -51,15 +56,19 @@ a:not([class]) {
   text-decoration-color: transparent;
 
   &:hover {
+    @include link-hover-effect();
     color: $blue-300;
-    text-decoration-color: $blue-300;
   }
   &:focus {
-    color: $blue-200;
+    color: $blue-300;
     outline: 3px solid transparentize($blue-100, 0.25);
     outline-offset: 1px;
     text-decoration: none;
   }
+}
+
+a.nav-list-link {
+  @include link-hover-effect();
 }
 
 code {
