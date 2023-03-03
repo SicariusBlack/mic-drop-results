@@ -14,7 +14,7 @@ $blue-300: #1158c7;
 
 
 $body-background-color: $grey-dk-300;
-$sidebar-color: $grey-dk-250;
+$sidebar-color: darken($grey-dk-300, 2%);;
 $border-color: $grey-dk-200;
 $body-text-color: $grey-lt-200;
 $body-heading-color: $grey-lt-300;
@@ -25,4 +25,4 @@ $btn-primary-color: $blue-200;
 $base-button-color: $grey-dk-250;
 $search-background-color: $grey-dk-250;
 $table-background-color: $grey-dk-250;
-$feedback-color: darken($sidebar-color, 3%);
+$feedback-color: darken($sidebar-color, 2%);

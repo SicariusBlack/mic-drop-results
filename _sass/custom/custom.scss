@@ -7,19 +7,27 @@
   user-select: none;
 }
 
+@mixin font-smoothing {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 @mixin font-display {
+  @include font-smoothing();
   font-family: $serif;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.008em;
   font-weight: 700;
 }
 
 @mixin font-text {
+  @include font-smoothing();
   font-family: $san-serif;
   letter-spacing: -0.01em;
   font-weight: 400;
 }
 
 @mixin font-monospace {
+  @include font-smoothing();
   font-family: $monospace;
   letter-spacing: 0.02em;
   font-weight: 500;
@@ -78,8 +86,8 @@ pre {
 }
 
 .search-overlay {
-  -webkit-backdrop-filter: blur(3px) saturate(0) contrast(0.75) brightness(0.5);
-  backdrop-filter: blur(3px) saturate(0) contrast(0.75) brightness(0.5);
+  -webkit-backdrop-filter: blur(3px) saturate(0.8) contrast(0.75) brightness(0.5);
+  backdrop-filter: blur(3px) saturate(0.8) contrast(0.75) brightness(0.5);
 }
 
 .search-result-title,
