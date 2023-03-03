@@ -59,24 +59,27 @@ a:not([class]) {
     @include link-hover-effect();
   }
   &:focus {
-    outline: 3px solid transparentize($blue-100, 0.3);
+    outline: 3px solid transparentize($blue-100, 0.4);
     outline-offset: 1px;
     text-decoration: none;
   }
 }
 
-a.nav-list-link, a.nav-list-link.active:hover {
-  @include link-hover-effect();
+a.nav-list-link,
+a.nav-list-link.active {
+  &:hover {
+    @include link-hover-effect();
+  }
 }
 
 code {
   @include font-monospace();
-  font-size: 14px;
+  font-size: 12.5px;
   border: none;
 }
 
 pre {
-  line-height: 18px;
+  line-height: 21px;
 }
 
 .site-title {
@@ -94,8 +97,13 @@ pre {
 }
 
 .search-overlay {
-  -webkit-backdrop-filter: blur(3px) saturate(0.8) contrast(0.75) brightness(0.5);
-  backdrop-filter: blur(3px) saturate(0.8) contrast(0.75) brightness(0.5);
+  -webkit-backdrop-filter: blur(8px) saturate(1.2) contrast(0.75) brightness(0.2);
+  backdrop-filter: blur(8px) saturate(1.2) contrast(0.75) brightness(0.2);
+  transition: opacity ease 200ms,width 0s 200ms,height 0s 200ms;
+}
+
+.search-active .search-overlay {
+  transition: opacity ease 200ms,width 0s,height 0s;
 }
 
 .search-result-title,
