@@ -21,14 +21,12 @@
 @mixin font-display {
   @include antialiasing();
   font-family: $serif;
-  letter-spacing: -0.008em;
   font-weight: 700;
 }
 
 @mixin font-text {
   @include antialiasing();
   font-family: $san-serif;
-  letter-spacing: -0.005em;
   font-weight: 400;
 }
 
@@ -39,7 +37,7 @@
   font-weight: 600;
 }
 
-$san-serif: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+$san-serif: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
 $serif: 'Source Serif Pro', Constantia, 'Lucida Bright', Lucidabright, 'Lucida Serif', Lucida, 'DejaVu Serif', 'Bitstream Vera Serif', 'Liberation Serif', Georgia, serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
 $monospace: 'JetBrains Mono', SFMono-Regular, SF Mono, ui-monospace, Menlo, Consolas, Liberation Mono, monospace, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
 
@@ -62,7 +60,8 @@ a:not([class]) {
   &:focus {
     outline: 3px solid transparentize($blue-100, 0.3);
     outline-offset: 1px;
-    text-decoration: none;
+    color: $blue-200 !important;
+    text-decoration: none !important;
   }
 }
 
@@ -77,7 +76,7 @@ a:not([class]) {
 }
 
 .nav-list .nav-list-item .nav-list-link {
-  color: $grey-lt-200 !important;
+  color: $grey-lt-100 !important;
 }
 
 .nav-list .nav-list-item .nav-list-link.active {
