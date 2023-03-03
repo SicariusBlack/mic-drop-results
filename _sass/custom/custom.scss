@@ -13,21 +13,22 @@
 }
 
 @mixin link-hover-effect {
-  text-decoration: underline;
-  text-decoration-color: currentColor;
+  color: $blue-300;
+  text-decoration: underline !important;
+  text-decoration-color: currentColor !important;
 }
 
 @mixin font-display {
   @include antialiasing();
   font-family: $serif;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.008em;
   font-weight: 700;
 }
 
 @mixin font-text {
   @include antialiasing();
   font-family: $san-serif;
-  letter-spacing: -0.008em;
+  letter-spacing: -0.005em;
   font-weight: 400;
 }
 
@@ -59,20 +60,28 @@ a:not([class]) {
     @include link-hover-effect();
   }
   &:focus {
-    outline: 3px solid transparentize($blue-100, 0.35);
+    outline: 3px solid transparentize($blue-100, 0.3);
     outline-offset: 1px;
     text-decoration: none;
   }
 }
 
-.nav-list-link,
-.nav-list-link.active {
+.nav-list .nav-list-item .nav-list-link,
+.nav-list .nav-list-item .nav-list-link.active {
   &:hover {
     @include link-hover-effect();
   }
   &:not(.active):hover {
-    background-image: unset;
+    background-image: none !important;
   }
+}
+
+.nav-list .nav-list-item .nav-list-link {
+  color: $grey-lt-200 !important;
+}
+
+.nav-list .nav-list-item .nav-list-link.active {
+  color: $grey-lt-300 !important;
 }
 
 code {
