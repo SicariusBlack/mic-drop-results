@@ -49,7 +49,7 @@ h1, h2,
   &:not(.text-delta,.site-title):hover {
     text-decoration: underline dotted transparentize($body-heading-color, 0.5);
     text-decoration-thickness: 2px;
-    text-underline-offset: 17%;
+    text-underline-offset: 16%;
   }
 }
 
@@ -98,22 +98,18 @@ a:not([class]) {
   }
 }
 
-.nav-list-link:not(.active) {
+.nav-list-link {
+  color: $grey-lt-100 !important;
   width: fit-content !important;
 
   &:hover {
     @include link-hover-effect();
-    background-image: none !important;
   }
-}
-
-.nav-list-link {
-  color: $grey-lt-100 !important;
 }
 
 .nav-list-link.active {
   color: $grey-lt-300 !important;
-  cursor: pointer;
+  font-weight: 700 !important;
 }
 
 code {
