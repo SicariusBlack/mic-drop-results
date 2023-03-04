@@ -101,21 +101,22 @@ a:not([class]) {
 .nav-list-link {
   width: fit-content !important;
   padding-right: 0 !important;
+  background-image: none !important;
+
+  margin-left: 1rem;
+  padding-left: 1rem !important;
 
   &:not(.active) {
     color: $grey-lt-100 !important;
-    margin-left: 2rem;
-    padding-left: 0 !important;
+    border-left: 2px solid $grey-dk-200;
+  }
+  &.active {
+    color: $grey-lt-300 !important;
+    border-left: 2px solid $grey-lt-300;
   }
   &:hover {
     @include link-hover-effect();
   }
-}
-
-.nav-list-link.active {
-  color: $grey-lt-300 !important;
-  border-left: 2px solid white;
-  background-image: none !important;
 }
 
 code {
