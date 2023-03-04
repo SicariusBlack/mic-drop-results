@@ -46,8 +46,8 @@ h1, h2,
   @include font-display-title();
   width: fit-content !important;
 
-  &:hover {
-    text-decoration: underline dotted transparentize($body-heading-color, 0.3);
+  &:not(.text-delta,.site-title):hover {
+    text-decoration: underline dotted transparentize($body-heading-color, 0.6);
     text-decoration-thickness: 2px;
     text-underline-offset: 17%;
   }
@@ -58,7 +58,7 @@ h3, h4, h5, h6,
   @include font-display();
 
   & svg {
-    display: none;
+    display: none !important;
   }
 }
 
@@ -98,21 +98,18 @@ a:not([class]) {
   }
 }
 
-.nav-list .nav-list-item .nav-list-link,
-.nav-list .nav-list-item .nav-list-link.active {
+.nav-list-link:not(.active) {
   &:hover {
-    @include link-hover-effect();
-  }
-  &:not(.active):hover {
+    width: fit-content !important;
     background-image: none !important;
   }
 }
 
-.nav-list .nav-list-item .nav-list-link {
+.nav-list-link {
   color: $grey-lt-100 !important;
 }
 
-.nav-list .nav-list-item .nav-list-link.active {
+.nav-list-link.active {
   color: $grey-lt-300 !important;
 }
 
