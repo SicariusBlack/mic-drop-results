@@ -47,7 +47,7 @@ h1, h2,
   width: fit-content !important;
 
   &:not(.text-delta,.site-title):hover {
-    text-decoration: underline dotted transparentize($body-heading-color, 0.6);
+    text-decoration: underline dotted transparentize($body-heading-color, 0.5);
     text-decoration-thickness: 2px;
     text-underline-offset: 17%;
   }
@@ -99,8 +99,10 @@ a:not([class]) {
 }
 
 .nav-list-link:not(.active) {
+  width: fit-content !important;
+
   &:hover {
-    width: fit-content !important;
+    @include link-hover-effect();
     background-image: none !important;
   }
 }
@@ -111,6 +113,7 @@ a:not([class]) {
 
 .nav-list-link.active {
   color: $grey-lt-300 !important;
+  cursor: pointer;
 }
 
 code {
