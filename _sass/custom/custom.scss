@@ -101,6 +101,9 @@ a:not([class]) {
 .nav-list-link {
   color: $grey-lt-100 !important;
   width: fit-content !important;
+  margin-left: 2rem;
+  padding-left: 0;
+  padding-right: 0;
 
   &:hover {
     @include link-hover-effect();
@@ -109,7 +112,8 @@ a:not([class]) {
 
 .nav-list-link.active {
   color: $grey-lt-300 !important;
-  font-weight: 700 !important;
+  border-radius: 999px;
+  background-color: darken($sidebar-color, 1%);
 }
 
 code {
