@@ -102,8 +102,8 @@ a:not([class]) {
   color: $grey-lt-100 !important;
   width: fit-content !important;
   margin-left: 2rem;
-  padding-left: 0;
-  padding-right: 0;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 
   &:hover {
     @include link-hover-effect();
