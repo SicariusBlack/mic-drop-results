@@ -7,44 +7,63 @@
   user-select: none;
 }
 
-@mixin antialiasing {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 @mixin link-hover-effect {
   color: $blue-300;
   text-decoration: underline !important;
   text-decoration-color: currentColor !important;
 }
 
-@mixin font-display {
-  @include antialiasing();
-  font-family: $serif;
+@mixin font-display-title {
+  font-family: $display-title;
   font-weight: 700;
 }
 
-@mixin font-text {
-  @include antialiasing();
-  font-family: $san-serif;
-  font-weight: 400;
-}
-
-@mixin font-monospace {
-  @include antialiasing();
-  font-family: $monospace;
-  letter-spacing: 0.018em;
+@mixin font-display {
+  font-family: $display;
   font-weight: 600;
 }
 
-$san-serif: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
-$serif: 'Source Serif Pro', Constantia, 'Lucida Bright', Lucidabright, 'Lucida Serif', Lucida, 'DejaVu Serif', 'Bitstream Vera Serif', 'Liberation Serif', Georgia, serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
-$monospace: 'JetBrains Mono', SFMono-Regular, SF Mono, ui-monospace, Menlo, Consolas, Liberation Mono, monospace, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+@mixin font-text {
+  font-family: $text;
+  font-weight: 400;
+}
+
+@mixin font-monospaced {
+  font-family: $monospaced;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.018em;
+}
+
+$text: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+$display-title: 'Source Serif Pro', Constantia, 'Lucida Bright', Lucidabright, 'Lucida Serif', Lucida, 'DejaVu Serif', 'Bitstream Vera Serif', 'Liberation Serif', Georgia, serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+$display: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+$monospaced: 'JetBrains Mono', SFMono-Regular, SF Mono, ui-monospace, Menlo, Consolas, Liberation Mono, monospace, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
 
 
-h1, h2, h3, h4, h5, h6,
+h1, h2,
 .site-title {
+  @include font-display-title();
+  width: fit-content !important;
+
+  &:hover {
+    text-decoration: underline dotted transparentize($body-heading-color, 0.3);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 17%;
+  }
+}
+
+h3, h4, h5, h6,
+.text-delta {
   @include font-display();
+
+  & svg {
+    display: none;
+  }
+}
+
+body {
+  @include font-text();
 }
 
 @media (min-width: 31.25rem) {
@@ -53,20 +72,16 @@ h1, h2, h3, h4, h5, h6,
   }
 
   h2 {
-    font-size: 30px !important;
+    font-size: 24px !important;
   }
 
   h3 {
-    font-size: 22px !important;
+    font-size: 15px !important;
   }
 
   h4 {
-    font-size: 14px !important;
+    font-size: 12px !important;
   }
-}
-
-body {
-  @include font-text();
 }
 
 a:not([class]) {
@@ -102,8 +117,7 @@ a:not([class]) {
 }
 
 code {
-  @include font-monospace();
-  font-size: 12px;
+  @include font-monospaced();
   border: none;
 }
 
