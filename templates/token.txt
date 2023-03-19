@@ -3,38 +3,110 @@
 "..."
 
 
-HOW TO GET YOUR TOKENS
--------
-Follow the steps here to get your own bot token:
 
-https://github.com/banz04/mic-drop-results/blob/main/docs/token.md
+I. GETTING YOUR BOT TOKEN
+—————————————————————————
+Follow the instructions from this guide to
+  obtain your bot token(s):
 
-This token will be used to access Discord API in or-
-  der to retrieve user avatars. You may insert more
-  than one token to avoid rate-limits from the API.
+https://banz04.github.io/mic-drop-results/docs/token.html
 
+We use these token(s) to access Discord’s
+  API and retrieve the URLs to contestants’
+  avatars.
 
-IS IT SAFE?
--------
-Absolutely. By inserting your bot token(s) here, you
-  agree to authorize Mic Drop Results full access
-  to the bot(s), without any access to your Discord
-  account or any other bots that you presently own.
-
-For your extra safety, it is important not to invite
-  the bot(s) to any Discord server.
-
-Do not post your tokens online either, as Discord
-  keeps looking everywhere for your leaked tokens
-  and disables them, thus making your token invalid
-  and unusable for the program.
+You may insert more than one token to avoid
+  rate limits from the API.
 
 
-HOW THIS FILE WORKS
--------
-The program will go through every line in this file.
-  When it meets a line with more than 70 characters,
-  the program will recognize such line as a token.
+IMPORTANT NOTICE: YOU DO NOT HAVE TO INVITE
+  THE BOTS TO ANY SERVER ON DISCORD.
 
-You can disable avatar_mode in settings.ini if you
-  wish not to use this feature.
+
+II. AVATAR-DOWNLOADING SERVICE
+    TERMS AND CONDITIONS OF USE
+———————————————————————————————
+
+(Last modified on March 18, 2023.)
+
+Before  proceeding,  we suggest you take  a
+brief overview of Discord’s Developer Terms
+of Service and Developer Policy at:
+
+https://discord.com/developers/docs/legal
+
+By  adding  your  bot token  or  bot tokens
+(“Tokens”)  to  this file, you  have  fully
+acknowledged and agree that you:
+
+   (i)  authorize  the Mic Drop  Results
+        program   and   its  maintainers
+        (collectively,  “we,”  “us,”  or
+        “our”)  FULL ACCESS to the  bots
+        associated  with the Tokens (the
+        “Bots”), together with all  data
+        collected  using  these  Tokens;
+        and
+  (ii)  entrust us with the authority to
+        access and use Discord’s APIs on
+        your behalf.
+
+For the avoidance of doubt, the Tokens  you
+provide  us do not grant us any access  to,
+control  over,  or   information  of   your
+Discord user account and bots that have  no
+direct association with these Tokens.
+
+
+OUR OBLIGATIONS
+
+Despite having full access to your Bots and
+data, we pledge the following conditions by
+which  we must abide when we access or  use
+your  Tokens, Bots, and data (in compliance
+with  Section 12(a) of Discord’s  Developer
+Terms of Service):
+
+   1. First, we guarantee that your  Tokens
+      and  all  data obtained by  means  of
+      these  Tokens (altogether referred to
+      as  your  “data”) will always  remain
+      inside  and within the bounds of your
+      local  machine  and never  be  shared
+      with us or sent anywhere else without
+      your  active and deliberate  will  to
+      share these data.
+
+   2. We  also guarantee to only access and
+      use Discord’s APIs in compliance with
+      Discord’s Developer Terms of Service,
+      Developer      Policy,      Community
+      Guidelines,   and   all    applicable
+      regulations imposed by Discord Inc.
+
+   3. We  guarantee  that we use your  data
+      for  no other purpose than to  assist
+      the sole process of downloading  user
+      avatars.
+
+You  may request us to stop using your data
+and  taking  actions on your behalf at  any
+time  by  withdrawing all tokens from  this
+file  and resetting your Bots’  tokens  via
+Discord Developer Portal.
+
+Thank you for using our service!
+
+END OF TERMS AND CONDITIONS
+
+
+III. HOW THIS FILE WORKS
+————————————————————————
+The program will iterate through every line
+  from this file. When it comes across a line
+  with more than 70 characters, the program
+  will recognize such a line as a bot token.
+
+All quotation marks and redundant space
+  characters will be trimmed from the final
+  result.
