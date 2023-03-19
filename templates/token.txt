@@ -4,28 +4,25 @@
 
 
 
-I. GETTING YOUR BOT TOKEN
-—————————————————————————
+I.  GETTING YOUR BOT TOKEN
+––––––––––––––––––––––––––
 Follow the instructions from this guide to
-  obtain your bot token(s):
+obtain your bot token(s):
 
-https://banz04.github.io/mic-drop-results/docs/token.html
-
-We use these token(s) to access Discord’s
-  API and retrieve the URLs to contestants’
-  avatars.
+  https://banz04.github.io/mic-drop-results/docs/token.html
 
 You may insert more than one token to avoid
-  rate limits from the API.
+rate limits from the API.
 
 
 IMPORTANT NOTICE: YOU DO NOT HAVE TO INVITE
-  THE BOTS TO ANY SERVER ON DISCORD.
+THE BOTS TO ANY DISCORD SERVER IN ORDER FOR
+THIS TO WORK.
 
 
-II. AVATAR-DOWNLOADING SERVICE
-    TERMS AND CONDITIONS OF USE
-———————————————————————————————
+II.  AVATAR-DOWNLOADING SERVICE
+     TERMS AND CONDITIONS OF USE
+––––––––––––––––––––––––––––––––
 
 (Last modified on March 18, 2023.)
 
@@ -33,7 +30,7 @@ Before  proceeding,  we suggest you take  a
 brief overview of Discord’s Developer Terms
 of Service and Developer Policy at:
 
-https://discord.com/developers/docs/legal
+  https://discord.com/developers/docs/legal
 
 By  adding  your  bot token  or  bot tokens
 (“Tokens”)  to  this file, you  have  fully
@@ -54,8 +51,8 @@ acknowledged and agree that you:
 For the avoidance of doubt, the Tokens  you
 provide  us do not grant us any access  to,
 control  over,  or   information  of   your
-Discord user account and bots that have  no
-direct association with these Tokens.
+Discord  account or bots you own that  have
+no direct association with these Tokens.
 
 
 OUR OBLIGATIONS
@@ -70,7 +67,7 @@ Terms of Service):
    1. First, we guarantee that your  Tokens
       and  all  data obtained by  means  of
       these  Tokens (altogether referred to
-      as  your  “data”) will always  remain
+      as  your “data”) shall always  remain
       inside  and within the bounds of your
       local  machine  and never  be  shared
       with us or sent anywhere else without
@@ -84,10 +81,9 @@ Terms of Service):
       Guidelines,   and   all    applicable
       regulations imposed by Discord Inc.
 
-   3. We  guarantee  that we use your  data
-      for  no other purpose than to  assist
-      the sole process of downloading  user
-      avatars.
+   3. We  shall use your data for no  other
+      purpose than to assist the process of
+      downloading user avatars.
 
 You  may request us to stop using your data
 and  taking  actions on your behalf at  any
@@ -100,13 +96,12 @@ Thank you for using our service!
 END OF TERMS AND CONDITIONS
 
 
-III. HOW THIS FILE WORKS
-————————————————————————
+III.  HOW THIS FILE WORKS
+–––––––––––––––––––––––––
 The program will iterate through every line
-  from this file. When it comes across a line
-  with more than 70 characters, the program
-  will recognize such a line as a bot token.
+from  this file. When it comes upon a  line
+longer  than 70 characters, we'll recognize
+such a line as a bot token.
 
-All quotation marks and redundant space
-  characters will be trimmed from the final
-  result.
+All  quotation  marks and  redundant  space
+will be trimmed from the final result.
