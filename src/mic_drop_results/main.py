@@ -14,6 +14,7 @@ from signal import signal, SIGINT, SIG_IGN
 from subprocess import check_call, run, DEVNULL
 import sys
 import time
+import warnings
 import webbrowser
 
 from colorama import init, Fore, Style
@@ -285,6 +286,7 @@ if __name__ == '__main__':
     freeze_support()          # multiprocessing freeze support
     signal(SIGINT, SIG_IGN)   # handle KeyboardInterrupt
     atexit.register(show_cursor)
+    warnings.simplefilter(action='ignore', category=UserWarning)
     disable_console()
     sys.excepthook = print_exception_hook  # avoid exiting program on exception
     init()                                 # enable ANSI escape sequences
@@ -292,7 +294,7 @@ if __name__ == '__main__':
 # Section B: Check for missing files
     if missing_files := [f for f in (
             'settings.ini', 'token.txt',
-            'template.pptm', 'data.xlsx',
+            'template.pptm', 'data.xlsm',
         ) if not abs_path(f).is_file()]:
         Error(40).throw(
             'The following files are missing:',
@@ -308,7 +310,7 @@ if __name__ == '__main__':
     ]
 
 # Section D: Parse and test tokens
-    with open(abs_path('token.txt')) as f:
+    with open(abs_path('token.txt'), 'r', encoding='utf-8') as f:
         lines = f.read().splitlines()
         token_list = [line.replace('"', '').strip()
                       for line in lines if len(line) > 70]
@@ -372,8 +374,8 @@ if __name__ == '__main__':
         print(REPO_URL)
 
 
-# Section F: Read and process data.xlsx
-    xls = pd.ExcelFile(abs_path('data.xlsx'))
+# Section F: Read and process the data file
+    xls = pd.ExcelFile(abs_path('data.xlsm'))
     workbook: dict[int | str, pd.DataFrame] = pd.read_excel(
         xls, sheet_name=None)
     xls.close()
@@ -384,7 +386,7 @@ if __name__ == '__main__':
                 for i, name in enumerate(sheet_names)}
 
 
-    db_prefix = '__'  # signifies database tables
+    db_prefix = '('  # signifies database tables
     database: dict[str, pd.DataFrame] = {}
     for sheet in sheet_names:
         if not sheet.startswith(db_prefix):
@@ -408,7 +410,7 @@ if __name__ == '__main__':
         scols = df.columns.tolist()[:n_scols]  # get sorting cols
         SHEET_INFO = (
             f'{bold("Sheet name:")}  {sheet}\n\n'
-            f'See the following row(s) in data.xlsx to find out what '
+            f'See the following row(s) in data.xlsm to find out what '
             f'caused the problem:'
         )
 

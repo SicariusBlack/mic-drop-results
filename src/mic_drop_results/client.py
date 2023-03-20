@@ -35,7 +35,7 @@ def fetch_latest_version() -> tuple[str, str]:
     return (tag, summary)
 
 
-# Section B: Discord API
+# Section B: Discord's API
 def fetch_avatar_url(uid: str, api_token: str) -> str | None:  # TODO: docstring
     if not is_number(uid):
         return None

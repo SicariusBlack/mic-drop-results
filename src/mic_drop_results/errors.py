@@ -19,9 +19,9 @@ class Tag(Enum):
     DEV = 'DEV'
     SYS = 'SYSTEM'
     INTERNET = 'ConnectionError'
-    SETTINGS_INI = 'settings.ini'
-    TOKEN_TXT = 'token.txt'
-    DATA_XLSX = 'data.xlsx'
+    FILE_SETTINGS = 'settings.ini'
+    FILE_TOKEN = 'token.txt'
+    FILE_DATA = 'data.xlsm'
 
 
 class Traceback:
@@ -47,26 +47,26 @@ class Traceback:
 
     # 20 – 29: API errors
         20: [
-            Tag.INTERNET, 'Failed to communicate with the Discord API.',
+            Tag.INTERNET, 'Failed to communicate with Discord\'s API.',
             'We are unable to download avatars at the moment. '
             'Please check your internet connection and try again.'
         ],
         21: [
-            Tag.TOKEN_TXT, 'No valid bot token found.',
-            'Please add a bot token to token.txt or turn off avatar '
-            'mode completely in settings.ini.'
+            Tag.FILE_TOKEN, 'No valid bot token found.',
+            'Please add a token to token.txt or turn avatar mode in '
+            'settings.ini off entirely.'
         ],
         21.1: [
-            Tag.TOKEN_TXT, 'Invalid bot token.',
-            'The following bot token is either invalid or deactivated. '
-            'Please replace this token from token.txt with a new and '
-            'valid one.'
+            Tag.FILE_TOKEN, 'Invalid bot token.',
+            'The following token is either invalid or has been '
+            'deactivated by Discord. Please replace this token from '
+            'token.txt with a new and valid one.'
         ],
         22: [
-            Tag.DEV, 'Unknown Discord API error.'
+            Tag.DEV, 'Unknown Discord\'s API error.'
         ],
         23: [
-            Tag.DATA_XLSX,
+            Tag.FILE_DATA,
             'Unable to download the avatars of the following users.',
             'Make sure these user IDs are valid and that they have not '
             'deleted nor moved to new accounts with the same name.'
@@ -74,17 +74,17 @@ class Traceback:
 
     # 30 – 39: Config errors
         30: [
-            Tag.SETTINGS_INI, 'Missing config variables.',
+            Tag.FILE_SETTINGS, 'Missing config variables.',
             'The following config variables are missing. Please download the '
             'latest version of settings.ini from this link and try again:\n'
             + TEMPLATES_URL
         ],
         31: [
-            Tag.SETTINGS_INI, 'Invalid data type for a config variable.',
+            Tag.FILE_SETTINGS, 'Invalid data type for a config variable.',
             *templates['cfg_format']
         ],
         31.1: [
-            Tag.SETTINGS_INI, 'Config variables failed requirement check.',
+            Tag.FILE_SETTINGS, 'Config variables failed requirement check.',
             *templates['cfg_format']
         ],
 
@@ -104,35 +104,35 @@ class Traceback:
 
     # 60 and above: Data errors
         60: [
-            Tag.DATA_XLSX, 'Sorting columns contain text.',
+            Tag.FILE_DATA, 'Sorting columns contain text.',
             'The sorting columns of the following sheet contain text '
             'but expect numeric data type throughout.\n'
             'Have you pasted data in the wrong column, by any chance?'
         ],
         61: [
-            Tag.DATA_XLSX, 'Sorting columns contain empty values.',
+            Tag.FILE_DATA, 'Sorting columns contain empty values.',
             'The sorting columns of the following sheet contain empty '
             'cell values.\n'
             'These empty values will be replaced with 0 if you proceed on.'
         ],
         68: [
-            Tag.DATA_XLSX, 'No valid sheet found.',
+            Tag.FILE_DATA, 'No valid sheet found.',
             'We have examined every sheet from the following Excel file:\n'
-            + str(abs_path("data.xlsx")),
+            + str(abs_path("data.xlsm")),
             'No sheet appears to be in the correct format.',
-            'Please download a sample data.xlsx file from this link and '
+            'Please download a sample data.xlsm file from this link and '
             'use it as a reference for customizing your own:\n'
             + TEMPLATES_URL
         ],
         70: [
-            Tag.DATA_XLSX, 'Missing an underscore before every user ID.',
+            Tag.FILE_DATA, 'Missing an underscore before every user ID.',
             'Please add an underscore (_) before every user ID from the '
             '"__uid" column. For example: _1010885414850154587',
             'This is to prevent Microsoft Excel and the program from '
             'rounding the UIDs.'
         ],
         71: [
-            Tag.DATA_XLSX, 'This template does not exist.',
+            Tag.FILE_DATA, 'This template does not exist.',
             'The following template(s) cannot be matched with any slide '
             'from template.pptm.'
         ],
