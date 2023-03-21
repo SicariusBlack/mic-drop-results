@@ -27,114 +27,135 @@ class Tag(Enum):
 class Traceback:
     templates = {
         'screenshot': [
-            'Please take a screenshot of everything displayed below when '
-            'filling out a bug report. Thank you for your patience in '
-            'getting this issue resolved.'],
+            'Please take a screenshot of everything displayed below'
+            + ' when you fill out a bug report. Thank you for your'
+            + ' patience in getting this issue resolved.'],
 
         'cfg_format': [
-            'Please verify that these config variables are in their valid '
-            'format according to the notes left above each variable.'],
+            'Please verify that these config variables are in their'
+            + ' valid format according to the notes left above each'
+            + ' variable.'],
     }
 
     _err_lookup = {
     # 0 – 19: Dev errors
-        0: [
-            Tag.DEV, 'Unhandled error.'
-        ],
-        1: [
-            Tag.DEV, 'Traceback ID lookup error.'
-        ],
+        0: [Tag.DEV, 'Unhandled error.'],
+        1: [Tag.DEV, 'Traceback ID lookup error.'],
 
     # 20 – 29: API errors
         20: [
             Tag.INTERNET, 'Failed to communicate with Discord\'s API.',
-            'We are unable to download avatars at the moment. '
-            'Please check your internet connection and try again.'
+
+            'We are unable to download avatars at the moment.'
+            + ' Please check your internet connection and try again.'
         ],
         21: [
             Tag.FILE_TOKEN, 'No valid bot token found.',
-            'Please add a token to token.txt or turn avatar mode in '
-            'settings.ini off entirely.'
+
+            'Please add a token to token.txt or turn avatar mode in'
+            + ' settings.ini off entirely.'
         ],
         21.1: [
             Tag.FILE_TOKEN, 'Invalid bot token.',
-            'The following token is either invalid or has been '
-            'deactivated by Discord. Please replace this token from '
-            'token.txt with a new and valid one.'
+
+            'The following token is either invalid or has been'
+            + ' deactivated by Discord. Please replace this token from'
+            + ' token.txt with a new and valid one.'
         ],
-        22: [
-            Tag.DEV, 'Unknown Discord\'s API error.'
-        ],
+        22: [Tag.DEV, 'Unknown Discord\'s API error.'],
         23: [
-            Tag.FILE_DATA,
-            'Unable to download the avatars of the following users.',
-            'Make sure these user IDs are valid and that they have not '
-            'deleted nor moved to new accounts with the same name.'
+            Tag.FILE_DATA, 'Failed to fetch the data of certain users.',
+
+            'We are unable to download the avatars of the following'
+            + ' users:',
+
+            'Make sure these user IDs are valid and that they have not'
+            + ' deleted nor moved to a new account with the same name.'
         ],
 
     # 30 – 39: Config errors
         30: [
             Tag.FILE_SETTINGS, 'Missing config variables.',
-            'The following config variables are missing. Please download the '
-            'latest version of settings.ini from this link and try again:\n'
+
+            'The following config variables do not exist in the current'
+            + ' settings file:',
+
+            'Please download the latest version of settings.ini from'
+            + ' this source and try again:\n'
             + TEMPLATES_URL
         ],
         31: [
-            Tag.FILE_SETTINGS, 'Invalid data type for a config variable.',
+            Tag.FILE_SETTINGS, 'Invalid data type for config variable.',
+
             *templates['cfg_format']
         ],
         31.1: [
-            Tag.FILE_SETTINGS, 'Config variables failed requirement check.',
+            Tag.FILE_SETTINGS, 'Config variable failed requirement check.',
+
             *templates['cfg_format']
         ],
 
     # 40 – 59: System errors
         40: [
-            Tag.SYS, 'Missing required files.',
-            'Please download the missing files from this link:\n'
+        Tag.SYS, 'Missing required files for program\'s functionality.',
+
+            'Please download the missing files at:\n'
             + TEMPLATES_URL
         ],
         41: [
             Tag.SYS, 'Failed to import VBA macros due to a privacy setting.',
-            'Please open PowerPoint and navigate to:\nFile > Options '
-            '> Trust Center > Trust Center Settings > Macro Settings',
-            'Make sure "Trust access to the VBA project object model" '
-            'is checked.'
+
+            'Please open PowerPoint and navigate to:\nFile > Options'
+            + ' > Trust Center > Trust Center Settings > Macro Settings',
+
+            'Make sure "Trust access to the VBA project object model"'
+            + ' option is checked.'
         ],
 
     # 60 and above: Data errors
         60: [
-            Tag.FILE_DATA, 'Sorting columns contain text.',
-            'The sorting columns of the following sheet contain text '
-            'but expect numeric data type throughout.\n'
+            Tag.FILE_DATA, 'Sorting columns cannot contain text.',
+
+            'The sorting columns of the following sheet contain text'
+            + ' but expect numeric data throughout.',
+
             'Have you pasted data in the wrong column, by any chance?'
         ],
         61: [
-            Tag.FILE_DATA, 'Sorting columns contain empty values.',
-            'The sorting columns of the following sheet contain empty '
-            'cell values.\n'
-            'These empty values will be replaced with 0 if you proceed on.'
+            Tag.FILE_DATA, 'Sorting columns cannot contain empty values.',
+
+            'The sorting columns of the following sheet contain empty'
+            + ' cell values.',
+
+            'These empty values will be filled by 0\'s if you proceed'
+            + ' onwards.'
         ],
         68: [
             Tag.FILE_DATA, 'No valid sheet found.',
+
             'We have examined every sheet from the following Excel file:\n'
             + str(abs_path("data.xlsm")),
-            'No sheet appears to be in the correct format.',
-            'Please download a sample data.xlsm file from this link and '
-            'use it as a reference for customizing your own:\n'
+
+            'No sheet appears to be in the correct and usable format.',
+
+            'Please download a sample data.xlsm file from this source'
+            + ' and use it as a reference for customizing your own:\n'
             + TEMPLATES_URL
         ],
         70: [
             Tag.FILE_DATA, 'Missing an underscore before every user ID.',
-            'Please add an underscore (_) before every user ID from the '
-            '"__uid" column. For example: _1010885414850154587',
-            'This is to prevent Microsoft Excel and the program from '
-            'rounding the UIDs.'
+
+            'Please add an underscore (_) before every user ID from the'
+            + ' "__uid" column. For example: _1010885414850154587',
+
+            'This is intended to prevent Microsoft Excel and the'
+            + ' program froms undesirably rounding the UIDs.'
         ],
         71: [
             Tag.FILE_DATA, 'This template does not exist.',
-            'The following template(s) cannot be matched with any slide '
-            'from template.pptm.'
+
+            'The following template(s) cannot be matched with any slide'
+            + ' from template.pptm.'
         ],
     }
 
@@ -157,7 +178,6 @@ class Traceback:
                 f'Perhaps you are looking for: {tb_list}'
             )
             return []
-
 
 class ErrorType(Enum):
     ERROR = auto()

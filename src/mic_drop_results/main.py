@@ -93,8 +93,8 @@ def _replace_image_url(shape, p, run) -> None:
         with contextlib.suppress(Exception):
             margin_left = _insert_image(shape, img_url=img_url[0])
             run.text = run.text.replace(img_url[0], '')
-            # After some experiments, I have measured that 12.47 cm = 4490850
-            # Therefore, we have 1 cm = 360132.3175621492
+            # 12.47 cm = 4490850
+            # 1 cm = 360132.3175621492
             shape.text_frame.margin_left = Cm(margin_left/360132.3175621492)
             p.alignment = PP_ALIGN.LEFT
 

@@ -8,8 +8,6 @@ build/
 output/
 avatars/
 .temp/
-#*.xlsm
+*.xlsm
 *.pptm
-*.bas
-*.spec
 token.txt
