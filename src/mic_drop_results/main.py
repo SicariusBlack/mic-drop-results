@@ -279,7 +279,7 @@ def _import_avatars():
 
 
 if __name__ == '__main__':
-    version_tag = '2.9'
+    version_tag = '3.0'
     ctypes.windll.kernel32.SetConsoleTitleW('Mic Drop Results')
 
 # Section A: Fix console-related issues
@@ -293,8 +293,8 @@ if __name__ == '__main__':
 
 # Section B: Check for missing files
     if missing_files := [f for f in (
+            'data.xlsm', 'template.pptm',
             'settings.ini', 'token.txt',
-            'template.pptm', 'data.xlsm',
         ) if not abs_path(f).is_file()]:
         Error(40).throw(
             'The following files are missing:',
@@ -624,7 +624,7 @@ if __name__ == '__main__':
 
 
 # Section H: Launch the file
-    enable_console()
+    show_cursor()
     print(f'\nExported to {OUTPUT_DIR}')
     inp('Press Enter to open the output folder...')
     os.startfile(OUTPUT_DIR)
