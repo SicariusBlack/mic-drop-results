@@ -49,27 +49,23 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
     def _validate(self, cfg: dict[str, Any]) -> None:
         resolution_presets = [16, 32, 64, 80, 100, 128, 256, 512, 1024, 2048]
         assert cfg['avatar_resolution'] in resolution_presets, (
-            'Avatar resolution must be taken from the list of available '
-            'resolutions.')
+            'Avatar resolution must be taken from the list of available'
+            + ' resolutions.')
 
         assert len(cfg['trigger_word']) > 0, (
             'Config variable "trigger_word" cannot be empty.')
-        cfg['trigger_word'] = cfg['trigger_word'].replace('"', '')
-        # TODO: remove quotation marks from all str
 
         assert (len(cfg['ranges']) ==
                 len(cfg['scheme']) ==
                 len(cfg['scheme_alt'])), (
-            'The "ranges", "scheme", and "scheme_alt" lists must all '
-            'have the same, matching length.')
+            'The "ranges", "scheme", and "scheme_alt" lists must all'
+            + ' have the same, matching length.')
 
         assert all(hex_pattern.fullmatch(h)
                    for scheme in [cfg['scheme'], cfg['scheme_alt']]
                    for h in scheme), (
-            'Invalid hex color codes found in:'
-            + self._show_var('scheme', 'scheme_alt')
-            + '\nPlease note that hex triplets and any other forms of hex '
-            'color codes are not accepted.')
+            'Invalid hex color code found in:'
+            + self._show_var('scheme', 'scheme_alt'))
 
     def _check_missing_vars(self) -> None:
         if missing_vars := [
@@ -81,8 +77,11 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
         for name, var_type in ConfigVarTypes.__annotations__.items():
             try:
                 match var_type():
-                    case str() | float():
-                        self.config[name] = var_type(self.config[name])
+                    case str():
+                        self.config[name] = str(self.config[name]).strip('"')
+
+                    case float():
+                        self.config[name] = float(self.config[name])
 
                     case int() | bool():
                     # Fix conversion issues such as '0' == True
@@ -100,18 +99,15 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
                     type_name = var_type.__name__
 
                 Error(31).throw(
-                    f'Failed to convert the following '
-                    f'variable into type: <{type_name}>'
-                    f'{self._show_var(name)}'
+                    'Failed to convert the following'
+                    + f' variable into type: <{type_name}>'
+                    + self._show_var(name)
                 )
 
     def _parse_list(self, list_type: Callable[[str], Any], val: str) -> list:
         ele_type = list_type.__args__[0]  # extract the elements' type
                                           # ... e.g. <class 'float'> if list_type is list[float]
-        raw_list = (val
-                    .replace('(', '')
-                    .replace(')', '')
-                    .split(','))
+        raw_list = val.strip('[]').split(',')
 
         match ele_type():
             case bool():

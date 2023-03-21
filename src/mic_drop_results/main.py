@@ -246,8 +246,8 @@ def _import_avatars():
             # Initialize download task
             has_task = True
             print(f'\n\nDownloading avatars... ({queue_len} in queue)')
-            print('Make sure your internet connection is stable while '
-                  'we are downloading.')
+            print('Make sure your internet connection is stable while'
+                  + ' we are downloading.')
         elif attempt >= max_attempt:
             failed = True
             uids_unknown += uids  # add all uids in the queue to the unknown list
@@ -410,8 +410,8 @@ if __name__ == '__main__':
         scols = df.columns.tolist()[:n_scols]  # get sorting cols
         SHEET_INFO = (
             f'{bold("Sheet name:")}  {sheet}\n\n'
-            f'See the following row(s) in data.xlsm to find out what '
-            f'caused the problem:'
+            + 'See the following row(s) in data.xlsm to find out what'
+            + ' has caused the problem:'
         )
 
 
@@ -547,8 +547,8 @@ if __name__ == '__main__':
 
 
     print('\n\nGenerating slides...')
-    print('Please do not click on any PowerPoint window that may '
-          'appear during the process.\n')
+    print('Please do not click on any PowerPoint window that may appear'
+          + ' during the process.\n')
 
     for sheet, df in groups.items():
         bar = ProgressBar(  # initialize progress bar

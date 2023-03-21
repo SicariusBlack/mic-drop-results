@@ -243,8 +243,8 @@ class Error(Traceback):
             elif err_type == ErrorType.WARNING:
                 console_style(Fore.YELLOW)
 
-            print(f'\n\n{err_type.name}:{Style.NORMAL} {content[0]} '
-                  f'(Traceback code: {self.tb_code})')
+            print(f'\n\n{err_type.name}:{Style.NORMAL} {content[0]}'
+                  + f' (Traceback code: {self.tb_code})')
             console_style()
 
         if len(content) > 1:
