@@ -97,7 +97,7 @@ class Traceback:
 
     # 40 – 59: System errors
         40: [
-        Tag.SYS, 'Missing required files for program\'s functionality.',
+        Tag.SYS, 'Missing required files.',
 
             'Please download the missing files at:\n'
             + TEMPLATES_URL
@@ -152,7 +152,7 @@ class Traceback:
             + ' program froms undesirably rounding the UIDs.'
         ],
         71: [
-            Tag.FILE_DATA, 'This template does not exist.',
+            Tag.FILE_DATA, 'Template does not exist.',
 
             'The following template(s) cannot be matched with any slide'
             + ' from template.pptm.'
