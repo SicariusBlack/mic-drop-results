@@ -279,7 +279,7 @@ def _import_avatars():
 
 
 if __name__ == '__main__':
-    version_tag = '3.0'
+    version_tag = '2.9'
     ctypes.windll.kernel32.SetConsoleTitleW('Mic Drop Results')
 
 # Section A: Fix console-related issues
