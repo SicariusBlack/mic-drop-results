@@ -31,20 +31,22 @@ from pywintypes import com_error
 import requests
 import win32com.client
 
-from client import ProgramStatus, fetch_latest_version, download_avatar
-from compiled_regex import *
-from config import Config
-from constants import *
-from errors import Error, ErrorType, print_exception_hook
-from exceptions import *
-from utils import (
-    is_number, as_type,
+from mic_drop_results.client import (
+    ProgramStatus, fetch_latest_version, download_avatar
+)
+from mic_drop_results.compiled_regex import *
+from mic_drop_results.config import Config
+from mic_drop_results.constants import *
+from mic_drop_results.errors import Error, ErrorType, print_exception_hook
+from mic_drop_results.exceptions import *
+from mic_drop_results.utils import (
+    ProgressBar, is_number, as_type,
     hex_to_rgb, parse_version, parse_coef, clean_name,
     abs_path, get_avatar_path,
     inp, disable_console, enable_console, console_style, bold, show_cursor,
-    artistic_effect)
-from utils import ProgressBar
-from vba.macros import module1_bas
+    artistic_effect
+)
+from mic_drop_results.vba.macros import module1_bas
 
 
 def _replace_avatar(slide: Slide, shape, run, *, uid: str) -> None:
@@ -245,8 +247,8 @@ def _import_avatars():
         if attempt == 1:
             # Initialize download task
             has_task = True
-            print(f'\n\nDownloading avatars... ({queue_len} in queue)')
-            print('Make sure your internet connection is stable while'
+            console.print(f'\n\nDownloading avatars... ({queue_len} in queue)')
+            console.print('Make sure your internet connection is stable while'
                   + ' we are downloading.')
         elif attempt >= max_attempt:
             failed = True
@@ -272,13 +274,15 @@ def _import_avatars():
         Error(23).throw(str(uids_unknown), err_type=ErrorType.WARNING)
 
     if has_task and not failed:
-        print('\033[A\033[2K\033[A\033[2K' + 'Avatar download complete!')
+        console.print('\033[A\033[2K\033[A\033[2K' + 'Avatar download complete!')
         pool.close()
         pool.join()
 
 
 
 if __name__ == '__main__':
+    # TODO: Check merging algorithm
+    # TODO: Avatar download task progress
     version_tag = '3.0'
     ctypes.windll.kernel32.SetConsoleTitleW('Mic Drop Results')
 
@@ -335,13 +339,13 @@ if __name__ == '__main__':
                 status = ProgramStatus.UPDATE_AVAILABLE
 
                 console_style(Fore.YELLOW, Style.BRIGHT)
-                print(f'Update v{latest_tag}')
+                console.print(f'Update v{latest_tag}')
 
                 console_style(Style.NORMAL)
-                print(summary)
+                console.print(summary)
 
-                print(LATEST_RELEASE_URL)
-                print()
+                console.print(LATEST_RELEASE_URL)
+                console.print()
                 console_style()
 
                 webbrowser.open(LATEST_RELEASE_URL, new=2)
@@ -363,15 +367,13 @@ if __name__ == '__main__':
     #
     #               Mic Drop Results (v3.10) [update available]
 
-    console_style(Style.BRIGHT)
     status_msg = f' [{status.value}]' if status else ''
-    print(f'Mic Drop Results (v{version_tag}){status_msg}')
-    console_style()
+    console.print(f'Mic Drop Results (v{version_tag}){status_msg}', style='b')
 
     if status != ProgramStatus.UPDATE_AVAILABLE:
     # When an update is available, the download link is already shown above.
     # To avoid confusion, we only print one link at a time.
-        print(REPO_URL)
+        console.print(REPO_URL)
 
 
 # Section F: Read and process the data file
@@ -505,9 +507,9 @@ if __name__ == '__main__':
         groups[sheet] = df
 
         if len(groups) == 1:
-            print('\n\nHere is a snippet of your processed data:')
+            console.print('\n\nHere is a snippet of your processed data:')
 
-        print('\n' + preview_df(df, n_cols=len(df.columns), highlight=False))
+        console.print('\n' + preview_df(df, n_cols=len(df.columns), highlight=False))
 
     if not groups:
         Error(68).throw()
@@ -546,8 +548,8 @@ if __name__ == '__main__':
         _import_avatars()
 
 
-    print('\n\nGenerating slides...')
-    print('Please do not click on any PowerPoint window that may appear'
+    console.print('\n\nGenerating slides...')
+    console.print('Please do not click on any PowerPoint window that may appear'
           + ' during the process.\n')
 
     for sheet, df in groups.items():
@@ -625,6 +627,6 @@ if __name__ == '__main__':
 
 # Section H: Launch the file
     show_cursor()
-    print(f'\nExported to {OUTPUT_DIR}')
+    console.print(f'\nExported to {OUTPUT_DIR}')
     inp('Press Enter to open the output folder...')
     os.startfile(OUTPUT_DIR)

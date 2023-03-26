@@ -12,10 +12,9 @@ from urllib.error import URLError
 import cv2
 import numpy as np
 
-from constants import *
-from errors import Error
-from exceptions import *
-from utils import is_number, get_avatar_path
+from mic_drop_results.constants import *
+from mic_drop_results.exceptions import *
+from mic_drop_results.utils import is_number, get_avatar_path
 
 
 # Section A: GitHub API

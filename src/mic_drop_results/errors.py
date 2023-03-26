@@ -10,9 +10,9 @@ from traceback import format_exception
 
 from colorama import Fore, Style
 
-from compiled_regex import *
-from constants import *
-from utils import abs_path, inp, console_style
+from mic_drop_results.compiled_regex import *
+from mic_drop_results.constants import *
+from mic_drop_results.utils import abs_path, inp, console_style
 
 
 class Tag(Enum):
