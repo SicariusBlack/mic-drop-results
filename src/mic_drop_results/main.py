@@ -43,7 +43,7 @@ from utils import (
     ProgressBar, is_number, as_type,
     hex_to_rgb, parse_version, parse_coef, clean_name,
     abs_path, get_avatar_path,
-    inp, disable_console, enable_console, console_style, bold, show_cursor,
+    inp, disable_console, enable_console, show_cursor,
     artistic_effect
 )
 from vba.macros import module1_bas
@@ -303,7 +303,7 @@ if __name__ == '__main__':
         Error(40).throw(
             'The following files are missing:',
             '- ' + '\n- '.join(missing_files),
-            f'{bold("Current working directory:")}  {MAIN_DIR}')
+            f'[b]Current working directory:[/b]  {MAIN_DIR}')
 
 # Section C: Load user configurations
     cfg = Config(str(abs_path('settings.ini')))
@@ -406,9 +406,9 @@ if __name__ == '__main__':
 
         scols = df.columns.tolist()[:n_scols]  # get sorting cols
         SHEET_INFO = (
-            f'{bold("Sheet name:")}  {sheet}\n\n'
-            + 'See the following row(s) in data.xlsm to find out what'
-            + ' has caused the problem:'
+            f'[b]Sheet name:[/b]  {sheet}\n\n'
+            'See the following row(s) in data.xlsm to find out what'
+            + ' caused the problem:'
         )
 
 

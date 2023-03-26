@@ -159,46 +159,11 @@ def inp(*args: str, **kwargs) -> str:  # TODO: add docstring, optimize code
         The str value of user input.
     """
     enable_console()  # allow copying of the error message
-    print(*args, **kwargs, end='')
+    console.print(*args, **kwargs, end='')
     i = input()
     disable_console()
 
     return i
-
-
-def console_style(*style: str) -> None:
-    """Sets the color and style in which the next line is printed.
-
-    Args:
-        style (optional): a string-type ANSI sequence from the
-            Fore, Back, or Style class of the colorama package.
-
-        Pass no argument to reset all formatting.
-
-    Examples:
-        Please note that formatting will stack instead of starting anew
-        every time you call the function, which means:
-
-        >>> console_style(Fore.RED)
-        >>> console_style(Style.BRIGHT)
-
-        ...is equivalent to:
-
-        >>> console_style(Fore.RED, Style.BRIGHT)
-
-        To reset the formatting to default:
-
-        >>> console_style()
-    """
-    if not style:
-        print(Style.RESET_ALL, end='')
-    else:
-        print(*style, sep='', end='')
-
-
-def bold(text: str) -> str:
-    """Returns a bold-formatted string."""
-    return f'{Style.BRIGHT}{text}{Style.NORMAL}'
 
 
 class ProgressBar:

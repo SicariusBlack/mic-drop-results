@@ -12,7 +12,7 @@ from colorama import Fore, Style
 
 from compiled_regex import *
 from constants import *
-from utils import abs_path, inp, console_style
+from utils import abs_path, inp
 
 
 class Tag(Enum):
@@ -45,27 +45,23 @@ class Traceback:
     # 20 – 29: API errors
         20: [
             Tag.INTERNET, 'Failed to communicate with Discord\'s API.',
-
             'We are unable to download avatars at the moment.'
             + ' Please check your internet connection and try again.'
         ],
         21: [
             Tag.FILE_TOKEN, 'No valid bot token found.',
-
-            'Please add a token to token.txt or turn avatar mode in'
-            + ' settings.ini off entirely.'
+            'Please add your token(s) to token.txt or turn avatar mode'
+            + ' in settings.ini off entirely.'
         ],
         21.1: [
             Tag.FILE_TOKEN, 'Invalid bot token.',
-
-            'The following token is either invalid or has been'
-            + ' deactivated by Discord. Please replace this token from'
-            + ' token.txt with a new and valid one.'
+            'The following bot token either is invalid or has been'
+            + ' reset/deactivated. Please replace the following token'
+            + ' from token.txt with a new and valid one.'
         ],
         22: [Tag.DEV, 'Unknown Discord\'s API error.'],
         23: [
             Tag.FILE_DATA, 'Failed to fetch the data of certain users.',
-
             'We are unable to download the avatars of the following'
             + ' users:',
 
@@ -76,7 +72,6 @@ class Traceback:
     # 30 – 39: Config errors
         30: [
             Tag.FILE_SETTINGS, 'Missing config variables.',
-
             'The following config variables do not exist in the current'
             + ' settings file:',
 
@@ -86,25 +81,21 @@ class Traceback:
         ],
         31: [
             Tag.FILE_SETTINGS, 'Invalid data type for config variable.',
-
             *templates['cfg_format']
         ],
         31.1: [
             Tag.FILE_SETTINGS, 'Config variable failed requirement check.',
-
             *templates['cfg_format']
         ],
 
     # 40 – 59: System errors
         40: [
         Tag.SYS, 'Missing required files.',
-
             'Please download the missing files at:\n'
             + TEMPLATES_URL
         ],
         41: [
             Tag.SYS, 'Failed to import VBA macros due to a privacy setting.',
-
             'Please open PowerPoint and navigate to:\nFile > Options'
             + ' > Trust Center > Trust Center Settings > Macro Settings',
 
@@ -115,7 +106,6 @@ class Traceback:
     # 60 and above: Data errors
         60: [
             Tag.FILE_DATA, 'Sorting columns cannot contain text.',
-
             'The sorting columns of the following sheet contain text'
             + ' but expect numeric data throughout.',
 
@@ -123,16 +113,14 @@ class Traceback:
         ],
         61: [
             Tag.FILE_DATA, 'Sorting columns cannot contain empty values.',
-
             'The sorting columns of the following sheet contain empty'
             + ' cell values.',
 
-            'These empty values will be filled by 0\'s if you proceed'
-            + ' onwards.'
+            'These empty values will be replaced by 0\'s if you proceed'
+            + ' onward.'
         ],
         68: [
             Tag.FILE_DATA, 'No valid sheet found.',
-
             'We have examined every sheet from the following Excel file:\n'
             + str(abs_path("data.xlsm")),
 
@@ -144,7 +132,6 @@ class Traceback:
         ],
         70: [
             Tag.FILE_DATA, 'Missing an underscore before every user ID.',
-
             'Please add an underscore (_) before every user ID from the'
             + ' "__uid" column. For example: _1010885414850154587',
 
@@ -153,7 +140,6 @@ class Traceback:
         ],
         71: [
             Tag.FILE_DATA, 'Template does not exist.',
-
             'The following template(s) cannot be matched with any slide'
             + ' from template.pptm.'
         ],
@@ -247,8 +233,8 @@ class Error(Traceback):
                           style=style)
 
         if len(content) > 1:
-            print()
-            print(*content[1:], sep='\n\n')
+            console.print()
+            console.print(*content[1:], sep='\n\n')
 
         if err_type == ErrorType.ERROR:
             inp('\nPress Enter to exit the program...')

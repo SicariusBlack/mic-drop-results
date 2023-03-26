@@ -67,11 +67,11 @@ def fetch_avatar_url(uid: str, api_token: str) -> str | None:  # TODO: docstring
     except KeyError as e:
         msg = response.json()['message'].lower()
         if '401: unauthorized' in msg:  # invalid token
-            raise InvalidTokenError(api_token, response.json()) from e
+            raise InvalidTokenError(api_token) from e
 
         elif 'limit' in msg:
             r = response.json()['retry_after'] + 10
-            print(
+            console.print(
                 '\033[A\033[2K'
                 f'You are being rate-limited by the API.')
             time.sleep(r)
@@ -86,7 +86,7 @@ def download_avatar(uid: str, api_token: str, size: int) -> None:
 
     try:
         if avatar_url := fetch_avatar_url(uid, api_token):
-            print('\033[A\033[2K' + avatar_url)
+            console.print('\033[A\033[2K' + avatar_url)
             avatar_url += f'?size={size}'
             req = urlopen(Request(
                 avatar_url, headers={'User-Agent': 'Mozilla/5.0'}))
