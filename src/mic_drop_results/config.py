@@ -9,8 +9,8 @@ from typing import Any
 
 from colorama import Fore
 
-from mic_drop_results.compiled_regex import *
-from mic_drop_results.errors import Error
+from compiled_regex import *
+from errors import Error
 
 
 class ConfigVarTypes:

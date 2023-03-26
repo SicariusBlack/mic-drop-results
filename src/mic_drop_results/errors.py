@@ -10,9 +10,9 @@ from traceback import format_exception
 
 from colorama import Fore, Style
 
-from mic_drop_results.compiled_regex import *
-from mic_drop_results.constants import *
-from mic_drop_results.utils import abs_path, inp, console_style
+from compiled_regex import *
+from constants import *
+from utils import abs_path, inp, console_style
 
 
 class Tag(Enum):
@@ -236,16 +236,15 @@ class Error(Traceback):
                 class. Defaults to ErrorType.ERROR.
         """
         if content:
-            console_style(Style.BRIGHT)
-
+            style = None
             if err_type == ErrorType.ERROR:
-                console_style(Fore.RED)
+                style = 'red'
             elif err_type == ErrorType.WARNING:
-                console_style(Fore.YELLOW)
+                style = 'yellow'
 
-            print(f'\n\n{err_type.name}:{Style.NORMAL} {content[0]}'
-                  + f' (Traceback code: {self.tb_code})')
-            console_style()
+            console.print(f'\n\n[b]{err_type.name}:[/b] {content[0]}'
+                          + f' (Traceback code: {self.tb_code})',
+                          style=style)
 
         if len(content) > 1:
             print()

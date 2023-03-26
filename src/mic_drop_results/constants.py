@@ -17,4 +17,4 @@ OUTPUT_DIR = MAIN_DIR / 'output'
 AVATAR_DIR = MAIN_DIR / 'avatars'
 TEMP_DIR = MAIN_DIR / '.temp'
 
-console = Console()
+console = Console(highlight=False)

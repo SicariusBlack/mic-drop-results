@@ -31,22 +31,22 @@ from pywintypes import com_error
 import requests
 import win32com.client
 
-from mic_drop_results.client import (
+from client import (
     ProgramStatus, fetch_latest_version, download_avatar
 )
-from mic_drop_results.compiled_regex import *
-from mic_drop_results.config import Config
-from mic_drop_results.constants import *
-from mic_drop_results.errors import Error, ErrorType, print_exception_hook
-from mic_drop_results.exceptions import *
-from mic_drop_results.utils import (
+from compiled_regex import *
+from config import Config
+from constants import *
+from errors import Error, ErrorType, print_exception_hook
+from exceptions import *
+from utils import (
     ProgressBar, is_number, as_type,
     hex_to_rgb, parse_version, parse_coef, clean_name,
     abs_path, get_avatar_path,
     inp, disable_console, enable_console, console_style, bold, show_cursor,
     artistic_effect
 )
-from mic_drop_results.vba.macros import module1_bas
+from vba.macros import module1_bas
 
 
 def _replace_avatar(slide: Slide, shape, run, *, uid: str) -> None:
@@ -214,7 +214,7 @@ def preview_df(df: pd.DataFrame, filter_series: pd.Series | None = None, *,
         preview = preview.replace('\n', '  ...\n') + '  ...'
 
     # Bold first row
-    preview = f'{Style.BRIGHT}' + preview.replace('\n', Style.NORMAL + '\n', 1)
+    preview = '[b]' + preview.replace('\n', '[/b]\n', 1)
 
     if not highlight:
         preview = preview.replace(Fore.RED, '')
@@ -338,15 +338,10 @@ if __name__ == '__main__':
             if latest > current:
                 status = ProgramStatus.UPDATE_AVAILABLE
 
-                console_style(Fore.YELLOW, Style.BRIGHT)
-                console.print(f'Update v{latest_tag}')
-
-                console_style(Style.NORMAL)
+                console.print(f'Update v{latest_tag}', style='bold yellow')
                 console.print(summary)
-
                 console.print(LATEST_RELEASE_URL)
                 console.print()
-                console_style()
 
                 webbrowser.open(LATEST_RELEASE_URL, new=2)
 
@@ -549,8 +544,8 @@ if __name__ == '__main__':
 
 
     console.print('\n\nGenerating slides...')
-    console.print('Please do not click on any PowerPoint window that may appear'
-          + ' during the process.\n')
+    console.print('Please do not click on any PowerPoint window that'
+          + ' may appear during the process.\n')
 
     for sheet, df in groups.items():
         bar = ProgressBar(  # initialize progress bar

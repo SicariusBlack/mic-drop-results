@@ -13,8 +13,8 @@ import cv2
 from colorama import Style
 from unidecode import unidecode
 
-from mic_drop_results.compiled_regex import special_char_pattern, space_pattern
-from mic_drop_results.constants import *
+from compiled_regex import special_char_pattern, space_pattern
+from constants import *
 
 
 def is_number(val: Any) -> bool:
