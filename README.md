@@ -8,7 +8,7 @@
 
 <h2 align="center">Installation</h2>
 
-To install, please visit the [latest release](https://github.com/banz04/mic-drop-results/releases/), download, and extract [**mic-drop-results.zip**](https://github.com/banz04/mic-drop-results/releases/latest/download/mic-drop-results.zip).
+To install, visit the [latest release](https://github.com/banz04/mic-drop-results/releases/), download, and extract [**mic-drop-results.zip**](https://github.com/banz04/mic-drop-results/releases/latest/download/mic-drop-results.zip) to a folder of choice. This folder will be your automated-slides workstation from now on.
 
 
 <h2 align="center">Showcase</h2>
@@ -22,10 +22,8 @@ To install, please visit the [latest release](https://github.com/banz04/mic-drop
 </p>
 
 
-<h2 align="center">Contributing</h2>
 
-All contributions are appreciated. Make sure you follow [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html) for consistency when making changes to the code.
 
-#### Additional contributions
-- Report a bug or suggest a feature [(here)](https://github.com/banz04/mic-drop-results/issues/new/choose)
-- Contact me on Discord for bug reports, suggestions, and support [(here)](https://discord.com/users/1010885414850154587)
+<h2 align="center">Report a Problem</h2>
+
+All bug reports should be directed to [@sicariusblack](https://discord.com/users/1104424999365918841) on Discord. We apologize in advance for any trouble the program may cause!
