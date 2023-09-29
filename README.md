@@ -26,4 +26,4 @@ To install, click here to download [**mic-drop-results.zip**](https://github.com
 
 <h2 align="center">Report a Problem</h2>
 
-All bug reports should be directed to [SicariusBlack](https://discord.com/users/1104424999365918841) on Discord. We apologize in advance for any trouble the program may cause!
+All bug reports should be directed to [SicariusBlack](https://discord.com/users/1104424999365918841) on Discord. We apologize for any trouble the program may cause.
