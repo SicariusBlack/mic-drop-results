@@ -2,7 +2,7 @@
 
 <p align="center">
   A program that generates result slides from judging data<br>
-  <a href="https://discord.gg/ZeGWzgvFcR"><b>More info about Mic Drop here</b></a>
+  <a href="https://discord.gg/X9hteAdVCH"><b>More info about Mic Drop here</b></a>
 </p>
 
 
