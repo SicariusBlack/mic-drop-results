@@ -14,11 +14,11 @@ To install, click here to download [**mic-drop-results.zip**](https://github.com
 <h2 align="center">Showcase</h2>
 
 <p align="center">
-  <picture><img src=".github/assets/README/1.png" width=380></picture>&hairsp;
-  <picture><img src=".github/assets/README/2.png" width=380></picture>&hairsp;
-  <picture><img src=".github/assets/README/3.png" width=380></picture>&hairsp;
-  <picture><img src=".github/assets/README/4.png" width=380></picture>&hairsp;
-  <picture><img src=".github/assets/README/5.png" width=380></picture>&hairsp;
+  <picture><img src=".github/assets/README/1.png" width=380></picture>
+  <picture><img src=".github/assets/README/2.png" width=380></picture>
+  <picture><img src=".github/assets/README/3.png" width=380></picture>
+  <picture><img src=".github/assets/README/4.png" width=380></picture>
+  <picture><img src=".github/assets/README/5.png" width=380></picture>
 </p>
 
 
