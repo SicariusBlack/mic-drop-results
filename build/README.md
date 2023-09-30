@@ -50,7 +50,7 @@ Make sure you are in the `Scripts` folder, run the following commands to activat
 pip install -r requirements.txt
 ```
 
-> [!NOTE]  
+> [!IMPORTANT]  
 > If you face any error during this phase, kindly run the following command and try again:
 > 
 >     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
