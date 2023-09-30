@@ -49,4 +49,8 @@ Make sure you are in the `Scripts` folder, run the following commands to activat
 ```
 pip install -r requirements.txt
 ```
+
+> [!IMPORTANT]  
+> Test
+
 It will take a few minutes to install.
