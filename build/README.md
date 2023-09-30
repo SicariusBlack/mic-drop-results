@@ -26,7 +26,7 @@ Here is our directory tree after creating your virtual environment.
 >         └── pyvenv.cfg
 
 ### Installing dependencies
-After creating the virtual environment, navigate to `.\md_results\Scripts`, download [**requirements.txt**](build/requirements.txt), and paste it there.
+After creating the virtual environment, navigate to `.\md_results\Scripts`, download [**requirements.txt**](requirements.txt), and paste it there.
 
 > ##### Preview
 >
