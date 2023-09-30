@@ -14,11 +14,11 @@ To install, click here to download [**mic-drop-results.zip**](https://github.com
 <h2 align="center">Showcase</h2>
 
 <p align="center">
-  <picture><img src=".github/assets/README/1.png" width=380></picture>
-  <picture><img src=".github/assets/README/2.png" width=380></picture>
-  <picture><img src=".github/assets/README/3.png" width=380></picture>
-  <picture><img src=".github/assets/README/4.png" width=380></picture>
-  <picture><img src=".github/assets/README/5.png" width=380></picture>
+  <picture><img src=".github/assets/README/1.png" width=380></picture>&hairsp;
+  <picture><img src=".github/assets/README/2.png" width=380></picture>&hairsp;
+  <picture><img src=".github/assets/README/3.png" width=380></picture>&hairsp;
+  <picture><img src=".github/assets/README/4.png" width=380></picture>&hairsp;
+  <picture><img src=".github/assets/README/5.png" width=380></picture>&hairsp;
 </p>
 
 
@@ -26,4 +26,4 @@ To install, click here to download [**mic-drop-results.zip**](https://github.com
 
 <h2 align="center">Report a Problem</h2>
 
-All bug reports should be directed to [SicariusBlack](https://discord.com/users/1104424999365918841) on Discord. We apologize in advance for any inconvenience the program may cause.
+All bug reports should be directed to [@SicariusBlack](https://discord.com/users/1104424999365918841) on Discord. We apologize in advance for any inconvenience the program may cause.
