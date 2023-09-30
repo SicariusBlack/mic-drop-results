@@ -1,7 +1,9 @@
-## Setting up a virtual environment
+# Builder's Guide
+
+## 1. Setting up a virtual environment
 
 ### Creating a virtual environment
-Open Terminal in a folder of choice and run the following commands:
+Open Terminal in a folder of choice and run the following command:
 
 ```
 pip install virtualenv
@@ -14,32 +16,32 @@ python -m venv md_results
 
 Here is our directory tree after creating your virtual environment.
 
-> **Preview**
+> ##### Preview
 > 
->     .
->     └── md_results
->         ├── Include
->         ├── Lib
->         ├── Scripts
+>     ▼
+>     └── ▼ md_results
+>         ├── ▶ Include
+>         ├── ▶ Lib
+>         ├── ▶ Scripts
 >         └── pyvenv.cfg
 
 ### Installing dependencies
-Then, navigate to `.\md_results\Scripts` and paste the [**requirements.txt**](build/requirements.txt) file here.
+After creating the virtual environment, navigate to `.\md_results\Scripts`, download [**requirements.txt**](build/requirements.txt), and paste it there.
 
-> **Preview**
+> ##### Preview
 >
->     .
->     └── md_results
->         ├── Include
->         ├── Lib
->         ├── Scripts
+>     ▼
+>     └── ▼ md_results
+>         ├── ▶ Include
+>         ├── ▶ Lib
+>         ├── ▼ Scripts
 >         │   ├── activate
 >         │   ├── activate.bat
 >         │   ├── ...
 >         │   └── requirements.txt
 >         └── pyvenv.cfg
 
-Make sure you are now in the `Scripts` folder, run the following command to switch to venv and install all dependencies:
+Make sure you are in the `Scripts` folder, run the following commands to activate the virtual environment and install all dependencies:
 
 ```
 .\activate
