@@ -27,9 +27,9 @@ class ConfigVarTypes:
 
 
 class Config(ConfigVarTypes):  # TODO: add docstrings
-    def __init__(self, file_path: str):
+    def __init__(self, file_dir: str):
         parser = configparser.ConfigParser()
-        parser.read(file_path)
+        parser.read(file_dir)
 
         # Flatten config dict
         self.config: dict[str, Any] = {
@@ -48,24 +48,25 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
 
     def _validate(self, cfg: dict[str, Any]) -> None:
         resolution_presets = [16, 32, 64, 80, 100, 128, 256, 512, 1024, 2048]
-        assert cfg['avatar_resolution'] in resolution_presets, (
-            'Avatar resolution must be taken from the list of available'
-            + ' resolutions.')
+        assert cfg["avatar_resolution"] in resolution_presets, (
+            "Avatar resolution must be taken from the list of available"
+            + " resolutions."
+        )
 
-        assert len(cfg['trigger_word']) > 0, (
-            'Config variable "trigger_word" cannot be empty.')
+        assert (
+            len(cfg["trigger_word"]) > 0
+        ), 'Config variable "trigger_word" cannot be empty.'
 
-        assert (len(cfg['ranges']) ==
-                len(cfg['scheme']) ==
-                len(cfg['scheme_alt'])), (
+        assert len(cfg["ranges"]) == len(cfg["scheme"]) == len(cfg["scheme_alt"]), (
             'The "ranges", "scheme", and "scheme_alt" lists must all'
-            + ' have the same, matching length.')
+            + " have the same, matching length."
+        )
 
-        assert all(hex_pattern.fullmatch(h)
-                   for scheme in [cfg['scheme'], cfg['scheme_alt']]
-                   for h in scheme), (
-            'Invalid hex color code found in:'
-            + self._show_var('scheme', 'scheme_alt'))
+        assert all(
+            match_hex.fullmatch(h)
+            for scheme in [cfg["scheme"], cfg["scheme_alt"]]
+            for h in scheme
+        ), "Invalid hex color code found in:" + self._show_var("scheme", "scheme_alt")
 
     def _check_missing_vars(self) -> None:
         if missing_vars := [
@@ -84,30 +85,30 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
                         self.config[name] = float(self.config[name])
 
                     case int() | bool():
-                    # Fix conversion issues such as '0' == True
+                        # Fix conversion issues such as '0' == True
                         self.config[name] = var_type(float(self.config[name]))
 
                     case list():
                         self.config[name] = self._parse_list(
-                            var_type,
-                            self.config[name])
+                            var_type, self.config[name]
+                        )
 
             except ValueError:
                 if var_type() == list():
-                    type_name = f'list of {var_type.__args__[0].__name__}'
+                    type_name = f"list of {var_type.__args__[0].__name__}"
                 else:
                     type_name = var_type.__name__
 
                 Error(31).throw(
-                    'Failed to convert the following'
-                    + f' variable into type: <{type_name}>'
+                    "Failed to convert the following"
+                    + f" variable into type: <{type_name}>"
                     + self._show_var(name)
                 )
 
     def _parse_list(self, list_type: Callable[[str], Any], val: str) -> list:
         ele_type = list_type.__args__[0]  # extract the elements' type
-                                          # ... e.g. <class 'float'> if list_type is list[float]
-        raw_list = val.strip('[]').split(',')
+        # ... e.g. <class 'float'> if list_type is list[float]
+        raw_list = val.strip("[]").split(",")
 
         match ele_type():
             case bool():
@@ -118,5 +119,5 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
         return [ele_type(element.strip()) for element in raw_list]
 
     def _show_var(self, *vars: str) -> str:
-        l = [f'    {name} = {self.config[name]}' for name in vars]
-        return '\n\n' + '\n'.join(l) + '\n'
+        l = [f"    {name} = {self.config[name]}" for name in vars]
+        return "\n\n" + "\n".join(l) + "\n"
