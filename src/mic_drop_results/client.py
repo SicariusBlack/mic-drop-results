@@ -29,8 +29,9 @@ def fetch_latest_version() -> tuple[str, str]:
         "https://api.github.com/repos/SicariusBlack/mic-drop-results/releases/latest",
         timeout=3,
     )
+    print(response)
     tag = response.json()["tag_name"].lstrip("v")
-    summary = response.json()["body"].partition("\n")[0]
+    summary = response.json()["body"].partition("\n")[0].lstrip("# ")
     return (tag, summary)
 
 

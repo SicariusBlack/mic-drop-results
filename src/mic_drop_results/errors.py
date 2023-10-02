@@ -27,14 +27,16 @@ class Tag(Enum):
 class Traceback:
     templates = {
         "screenshot": [
-            "Please take a screenshot of everything displayed below"
-            + " when you fill out a bug report. Thank you for your"
-            + " patience in getting this issue resolved."
+            "Please take a screenshot of everything displayed below when filling out a bug report."
+            " Thank you for your patience in getting this issue resolved."
         ],
-        "cfg_format": [
-            "Please verify that these config variables are in their"
-            + " valid format according to the notes left above each"
-            + " variable."
+        "invalid_config": [
+            "Please verify that these config variables are in their valid formats"
+            " as specified in the notes from settings.ini."
+        ],
+        "developer_portal": [
+            "You can follow this link to Discord's Developer Portal and create your token.\n"
+            "https://discord.com/developers/applications"
         ],
     }
 
@@ -46,21 +48,21 @@ class Traceback:
         20: [
             Tag.INTERNET,
             "Failed to communicate with Discord's API.",
-            "We are unable to download avatars at the moment."
-            + " Please check your internet connection and try again.",
+            "We are unable to download avatars at the moment.",
+            "Please check your internet connection and try again.",
         ],
         21: [
             Tag.FILE_TOKEN,
             "No valid bot token found.",
-            "Please add your token(s) to token.txt or turn avatar mode"
-            + " in settings.ini off entirely.",
+            "Please add your token(s) to token.txt or turn avatar mode in settings.ini off entirely.",
+            *templates["developer_portal"],
         ],
         21.1: [
             Tag.FILE_TOKEN,
             "Invalid bot token.",
-            "The following bot token either is invalid or has been"
-            + " reset/deactivated. Please replace the following token"
-            + " from token.txt with a new and valid one.",
+            "The following bot token is either invalid, has been reset, or deactivated by Discord.",
+            "Please replace the following token from token.txt with a new, valid one.",
+            *templates["developer_portal"],
         ],
         22: [Tag.DEV, "Unknown Discord's API error."],
         23: [
@@ -83,12 +85,12 @@ class Traceback:
         31: [
             Tag.FILE_SETTINGS,
             "Invalid data type for config variable.",
-            *templates["cfg_format"],
+            *templates["invalid_config"],
         ],
         31.1: [
             Tag.FILE_SETTINGS,
             "Config variable failed requirement check.",
-            *templates["cfg_format"],
+            *templates["invalid_config"],
         ],
         # 40 – 59: System errors
         40: [
@@ -226,11 +228,14 @@ class Error(Traceback):
                 f"\n\n[b]{err_type.name}:[/b] {content[0]}"
                 + f" (Traceback code: {self.tb_code})",
                 style=style,
-            )
+            )  # error details
 
         if len(content) > 1:
             console.print()
-            console.print(*content[1:], sep="\n\n")
+            console.print(content[1])  # steps to resolve
+
+            if len(content) > 2:
+                console.print(*content[2:], sep="\n\n    ")  # extra details
 
         if err_type == ErrorType.ERROR:
             inp("\nPress Enter to exit the program...")

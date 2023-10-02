@@ -109,17 +109,26 @@ def _replace_text(run, field_name, *, text: str) -> None:
 
 
 def _replace_image_url(shape, p, run) -> None:
-    if img_url := match_url.findall(run.text):
+    if img_url := match_url.findall(run.text):  # find image urls
         with contextlib.suppress(Exception):
             margin_left = _insert_image(shape, img_url=img_url[0])
             run.text = run.text.replace(img_url[0], "")
-            # 12.47 cm = 4490850
+            # With some measurements we can obtain 12.47 cm = 4490850
             # 1 cm = 360132.3175621492
             shape.text_frame.margin_left = Cm(margin_left / 360132.3175621492)
             p.alignment = PP_ALIGN.LEFT
 
 
 def _insert_image(shape, *, img_url: str) -> float:
+    """Inserts an image on top of a shape on slide.
+
+    Args:
+        shape: the shape to fit the image.
+        img_url (str): the URL of the image on the internet.
+
+    Returns:
+        float: the left margin to indent the remaining text.
+    """
     im_bytes = BytesIO(requests.get(img_url).content)
     img = Image.open(im_bytes)
 
@@ -238,35 +247,34 @@ def preview_df(
 def _import_avatars():
     failed = False  # whether the download task has failed
     max_attempt = 5  # maximum number of attempts
-    has_task = False  # skip avatar download banner if no download task exists
+    has_task = False  # whether a download task exists (to skip avatar download banner)
     uids_unknown = []  # uids that failed to download
-    pool = Pool(min(4, len(token_list) + 1))  # multiprocessing pool
+    pool = Pool(min(4, len(token_list) + 1))
 
     for attempt in range(1, max_attempt + 1):
         uids = []  # uids that are not downloaded yet
         for df in groups.values():
-            if df["__uid"].dtype.kind in "biufc":  # throw if uid column is numeric
+            if df["__uid"].dtype.kind in "biufc":  # if uid column is numeric
                 Error(70).throw()
 
             for id in df["__uid"]:
                 if not (
-                    pd.isnull(id)  # skip NaN
+                    pd.isnull(id)  # skip nan values
                     or get_avatar_dir(id).is_file()  # skip if already downloaded
-                    or id in uids  # skip if already in the queue
-                    or id in uids_unknown
-                ):  # skip if already in the unknown list
+                    or id in uids  # skip if uid already in queue
+                    or id in uids_unknown  # skip if already in the unknown list
+                ):
                     uids.append(id)
-        if not uids:  # if queue is empty, break the loop
+        if not uids:  # if queue is empty, break and finish the task
             break
 
         queue_len = len(uids)  # number of uids in the queue
         if attempt == 1:
-            # Initialize download task
+            # Initialize the download task
             has_task = True
             console.print(f"\n\nDownloading avatars... ({queue_len} in queue)")
             console.print(
-                "Make sure your internet connection is stable while"
-                + " we are downloading."
+                "Make sure your internet connection is stable while we are downloading."
             )
         elif attempt >= max_attempt:
             failed = True
@@ -278,7 +286,7 @@ def _import_avatars():
                 download_avatar,
                 zip(
                     uids,
-                    itertools.islice(  # distribute tokens evenly
+                    itertools.islice(  # distribute tokens evenly between pools
                         itertools.cycle(token_list), queue_len
                     ),
                     [cfg.avatar_resolution] * queue_len,
@@ -430,8 +438,7 @@ if __name__ == "__main__":
         scols = df.columns.tolist()[:n_scols]  # get sorting cols
         SHEET_INFO = (
             f"[b]Sheet name:[/b]  {sheet}\n\n"
-            "See the following row(s) in data.xlsm to find out what"
-            + " caused the problem:"
+            "See the following row(s) in data.xlsm to find out what caused the problem:"
         )
 
         # Exclude sheets with non-numeric sorting cols
@@ -578,8 +585,7 @@ if __name__ == "__main__":
 
     console.print("\n\nGenerating slides...")
     console.print(
-        "Please do not click on any PowerPoint window that"
-        + " may appear during the process.\n"
+        "Please do not click on any PowerPoint window that may appear during the process.\n"
     )
 
     for sheet, df in groups.items():
