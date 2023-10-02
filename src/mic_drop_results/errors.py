@@ -12,7 +12,7 @@ from colorama import Fore, Style
 
 from compiled_regex import *
 from constants import *
-from utils import abs_dir, inp
+from utils import inp, abs_dir
 
 
 class Tag(Enum):
@@ -235,13 +235,18 @@ class Error(Traceback):
             console.print(content[1])  # steps to resolve
 
             if len(content) > 2:
-                console.print(*content[2:], sep="\n\n    ")  # extra details
+                self._print_indent(*content[2:], sep="\n\n    ")  # extra details
 
         if err_type == ErrorType.ERROR:
-            inp("\nPress Enter to exit the program...")
+            inp("\nPress Enter to exit the program...", hide_text=True)
             sys.exit(1)
         else:
-            inp("\nPress Enter to skip this warning...")
+            inp("\nPress Enter to skip this warning...", hide_text=True)
+
+    def _print_indent(self, *content, sep, indent=4) -> None:
+        console.print(
+            *[v.replace("\n", "\n" + " " * indent) for v in content], sep=sep
+        )  # TODO: use regex
 
 
 def print_exception_hook(exc_type, exc_value, tb) -> None:

@@ -13,6 +13,7 @@ import os
 from signal import signal, SIGINT, SIG_IGN
 from subprocess import check_call, run, DEVNULL
 import sys
+import threading
 import time
 import warnings
 import webbrowser
@@ -39,6 +40,9 @@ from errors import Error, ErrorType, print_exception_hook
 from exceptions import *
 from utils import (
     ProgressBar,
+    inp,
+    enable_console,
+    disable_console,
     is_number,
     as_type,
     hex_to_rgb,
@@ -47,9 +51,6 @@ from utils import (
     clean_name,
     abs_dir,
     get_avatar_dir,
-    inp,
-    disable_console,
-    show_cursor,
     artistic_effect,
 )
 from vba.macros import module1_bas
@@ -197,7 +198,7 @@ def preview_df(
         words_to_highlight (optional): list of words
             to highlight in red (only effective to values in the first
             n_cols columns). List None if the value to highlight is
-            np.nan. Pass None to highlight nothing. Defaults to None.
+            numpy.nan. Pass None to highlight nothing. Defaults to None.
 
     Returns:
         str: the formatted dataframe as a string.
@@ -214,7 +215,7 @@ def preview_df(
     df = df.iloc[:, : min(n_cols + n_cols_ext, len(df.columns))]
 
     # Replace text_to_highlight with ⁅text_to_highlight⁆
-    prefix, suffix = "⁅", "⁆"  # must be single length
+    prefix, suffix = "⁅", "⁆"  # arbitrary symbols, must be single length
     highlight_str = lambda x: f"{prefix}{x}{suffix}"
     for word in words_to_highlight:
         if word is None:
@@ -313,14 +314,15 @@ if __name__ == "__main__":
     # TODO: Check merging algorithm
     # TODO: Avatar download task progress
     version_tag = "3.0"
-    ctypes.windll.kernel32.SetConsoleTitleW("Mic Drop Results")
+    console.clear()
+    console.set_window_title("Mic Drop Results")
+    disable_console()
 
     # Section A: Fix console-related issues
     freeze_support()  # multiprocessing freeze support
     signal(SIGINT, SIG_IGN)  # handle KeyboardInterrupt
-    atexit.register(show_cursor)
+    atexit.register(enable_console)
     warnings.simplefilter(action="ignore", category=UserWarning)
-    disable_console()
     sys.excepthook = print_exception_hook  # avoid exiting program on exception
     init()  # enable ANSI escape sequences
 
@@ -541,11 +543,6 @@ if __name__ == "__main__":
         df["__uid"] = df["__uid"].str.replace("_", "").str.strip()
         groups[sheet] = df
 
-        if len(groups) == 1:
-            console.print("\n\nHere is a snippet of your processed data:")
-
-        console.print("\n" + preview_df(df, n_cols=len(df.columns), highlight=False))
-
     if not groups:
         Error(68).throw()
 
@@ -565,6 +562,7 @@ if __name__ == "__main__":
     with open(abs_dir(TEMP_DIR, "Module1.bas"), "w") as f:
         f.write(module1_bas)
 
+    thread_avatar = threading.Thread(target=_import_avatars, args=())
     if avatar_mode:
         last_clear_dir = abs_dir(TEMP_DIR, "last_clear_avatar_cache.txt")
 
@@ -581,7 +579,8 @@ if __name__ == "__main__":
             with open(last_clear_dir, "w") as f:
                 f.write(str(int(time.time())))  # update last clear time
 
-        _import_avatars()
+        # Download avatars while generating slides
+        thread_avatar.start()
 
     console.print("\n\nGenerating slides...")
     console.print(
@@ -655,6 +654,9 @@ if __name__ == "__main__":
         bar.add()
 
         # Open .pptx file and fill slides with judging data
+        bar.set_description("Waiting for avatars")
+        if avatar_mode:
+            thread_avatar.join()
         bar.set_description("Filling in judging data")
         prs = Presentation(str(output_dir))
         bar.add()
@@ -662,8 +664,9 @@ if __name__ == "__main__":
             fill_slide(
                 slide,
                 {
-                    k.lstrip("__"): str(v)  # treat program-domain vars like
-                    # ... normal vars when replacing
+                    k.lstrip("__"): str(
+                        v
+                    )  # treat program-domain vars like normal vars when replacing
                     for k, v in df.iloc[i].to_dict().items()
                 },
             )
@@ -675,7 +678,6 @@ if __name__ == "__main__":
         bar.add()
 
     # Section H: Launch the file
-    show_cursor()
     console.print(f"\nExported to {OUTPUT_DIR}")
-    inp("Press Enter to open output folder...")
+    inp("Press Enter to open output folder...", hide_text=True)
     os.startfile(OUTPUT_DIR)

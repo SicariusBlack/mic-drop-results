@@ -48,19 +48,17 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
 
     def _validate(self, cfg: dict[str, Any]) -> None:
         resolution_presets = [16, 32, 64, 80, 100, 128, 256, 512, 1024, 2048]
-        assert cfg["avatar_resolution"] in resolution_presets, (
-            "Avatar resolution must be taken from the list of available"
-            + " resolutions."
-        )
+        assert (
+            cfg["avatar_resolution"] in resolution_presets
+        ), "Avatar resolution must be taken from the list of available resolutions."
 
         assert (
             len(cfg["trigger_word"]) > 0
         ), 'Config variable "trigger_word" cannot be empty.'
 
-        assert len(cfg["ranges"]) == len(cfg["scheme"]) == len(cfg["scheme_alt"]), (
-            'The "ranges", "scheme", and "scheme_alt" lists must all'
-            + " have the same, matching length."
-        )
+        assert (
+            len(cfg["ranges"]) == len(cfg["scheme"]) == len(cfg["scheme_alt"])
+        ), 'The "ranges", "scheme", and "scheme_alt" lists must all have the same, matching length.'
 
         assert all(
             match_hex.fullmatch(h)
@@ -106,8 +104,9 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
                 )
 
     def _parse_list(self, list_type: Callable[[str], Any], val: str) -> list:
-        ele_type = list_type.__args__[0]  # extract the elements' type
-        # ... e.g. <class 'float'> if list_type is list[float]
+        ele_type = list_type.__args__[
+            0
+        ]  # extract the types of individual elements, e.g. <class 'float'> if list_type = list[float]
         raw_list = val.strip("[]").split(",")
 
         match ele_type():

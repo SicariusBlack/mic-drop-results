@@ -63,7 +63,7 @@ def as_type(t: Callable[[A], T], val: A) -> T | A:
         return val
 
 
-def hex_to_rgb(hex_val: str) -> tuple[int, int, int]:
+def hex_to_rgb(hex_val: str) -> tuple[int, ...]:
     return tuple(int(hex_val.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4))
 
 
@@ -109,31 +109,9 @@ def abs_dir(*rels: str | Path) -> Path:  # TODO: update docstring
     return MAIN_DIR.joinpath(*rels)
 
 
-class _CursorInfo(ctypes.Structure):
-    _fields_ = [("size", ctypes.c_int), ("visible", ctypes.c_byte)]
-
-
-def hide_cursor():
-    """Hides the blinking cursor."""
-    ci = _CursorInfo()
-    handle = ctypes.windll.kernel32.GetStdHandle(-11)
-    ctypes.windll.kernel32.GetConsoleCursorInfo(handle, ctypes.byref(ci))
-    ci.visible = False
-    ctypes.windll.kernel32.SetConsoleCursorInfo(handle, ctypes.byref(ci))
-
-
-def show_cursor():
-    """Shows the blinking cursor."""
-    ci = _CursorInfo()
-    handle = ctypes.windll.kernel32.GetStdHandle(-11)
-    ctypes.windll.kernel32.GetConsoleCursorInfo(handle, ctypes.byref(ci))
-    ci.visible = True
-    ctypes.windll.kernel32.SetConsoleCursorInfo(handle, ctypes.byref(ci))
-
-
 def enable_console():
-    """Allows text selection and accepts input within the CLI."""
-    show_cursor()
+    """Shows cursor and allows text selection."""
+    console.show_cursor(True)
     kernel32 = ctypes.windll.kernel32
     kernel32.SetConsoleMode(
         kernel32.GetStdHandle(-10),
@@ -143,7 +121,7 @@ def enable_console():
 
 def disable_console():
     """Disables all console interactions."""
-    hide_cursor()
+    console.show_cursor(False)
     kernel32 = ctypes.windll.kernel32
     kernel32.SetConsoleMode(
         kernel32.GetStdHandle(-10),
@@ -151,20 +129,22 @@ def disable_console():
     )
 
 
-def inp(*args: str, **kwargs) -> str:  # TODO: add docstring, optimize code
-    """A wrapper function of the built-in input function.
+def inp(
+    *args: str, hide_text=False, **kwargs
+) -> str:  # TODO: add docstring, optimize code
+    """Wrapper function for rich.console.Console.input().
 
     This function inherits all the arguments and keyword arguments of
-    the built-in print function. Besides, it also enables QuickEdit to
-    allow the user to copy printed messages, which are usually error
-    details, and disables it thereafter.
+    the built-in print function. It also enables QuickEdit to allow
+    the user to copy printed messages, which are usually error details,
+    and disables it afterwards.
 
     Returns:
-        The str value of user input.
+        The string value of user input.
     """
     enable_console()  # allow copying of the error message
     console.print(*args, **kwargs, end="")
-    i = input()
+    i = console.input(password=hide_text)
     disable_console()
 
     return i
@@ -203,8 +183,9 @@ class ProgressBar:
         bar = "█" * filled_length + " " * (self.bar_length - filled_length)
 
         if self.prog > 0:
-            sys.stdout.write("\033[2K\033[A\r")  # delete line, move cursor up,
-            # ... and to beginning of line
+            sys.stdout.write(
+                "\033[2K\033[A\r"
+            )  # delete line, move cursor up, and to beginning of line
             sys.stdout.flush()
 
         title_right_padding = self.max_title_length - len(self.title) + 1
@@ -219,8 +200,9 @@ class ProgressBar:
         #               Filling in judging data
 
         if self.prog == self.total:
-            sys.stdout.write("\033[2K\r")  # delete line and move cursor
-            # ... to beginning of line
+            sys.stdout.write(
+                "\033[2K\r"
+            )  # delete line and move cursor to beginning of line
 
         sys.stdout.flush()
 
@@ -238,10 +220,10 @@ class ProgressBar:
 
 def get_avatar_dir(
     uid: str | None = None,
-    *,  # TODO: docstring
+    *,
     og_dir: Path | None = None,
     effect: int = 0,
-) -> Path:
+) -> Path:  # TODO: docstring
     """Returns the local path to the avatar file from user ID."""
     if uid is not None:
         return abs_dir(AVATAR_DIR, f"{effect}_{uid}.png")
