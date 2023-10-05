@@ -95,20 +95,17 @@ def _download(avatar_url: str, img_dir: Path) -> None:
         raise ConnectionError from e
 
 
-def fetch_avatar(uid, api_token, size, progress, task):
+def fetch_avatar(uid, api_token, size, status):
     if avatar_url := _fetch_avatar_url(uid, api_token):
-        progress.update(
-            task,
-            advance=1,
-            description=_get_download_banner(avatar_url),
-        )
+        constants.downloaded += 1
+        status.update(_get_download_banner(avatar_url))
         avatar_url += f"?size={size}"
         constants.avatar_urls.append((uid, avatar_url))
 
 
 def download_avatars():
     while constants.is_downloading:
-        with ThreadPoolExecutor(max_workers=4) as pool:
+        with ThreadPoolExecutor(max_workers=2) as pool:
             while len(constants.avatar_urls) > 0:
                 uid, avatar_url = constants.avatar_urls[0]
                 img_dir = get_avatar_dir(uid)
@@ -119,4 +116,7 @@ def download_avatars():
 
 
 def _get_download_banner(desc: str) -> str:
-    return f"Downloading avatars... ({constants.queue_len} in queue)\n{desc}"
+    return (
+        "[bold yellow]Downloading avatars...[/bold yellow] "
+        f"({constants.downloaded} of {constants.queue_len} in queue)\n  {desc}"
+    )

@@ -277,39 +277,28 @@ def _import_avatars():
         if not uids:  # if queue is empty, break and finish the task
             break
 
+        constants.downloaded = 0
         constants.queue_len = len(uids)  # number of uids in the queue
         if attempt == 1:
             # Initialize the download task
             has_task = True
-            # console.print(f"\n\nDownloading avatars... ({constants.queue_len} in queue)")
-            # console.print(
-            #     "Make sure your internet connection is stable while we are downloading."
-            # )
         elif attempt >= max_attempt:
             failed = True
             uids_unknown += uids  # add all uids in the queue to the unknown list
             break
 
         try:
-            with Progress(transient=True) as progress:
-                task_avatar = progress.add_task(
-                    _get_download_banner(
-                        "Make sure your internet connection is stable while we are downloading."
-                    ),
-                    total=constants.queue_len,
+            with console.status(
+                _get_download_banner(
+                    "Make sure your internet connection is stable while we are downloading."
                 )
-                # constants.status_avatar = Status(
-                #     get_download_banner(
-                #         "Make sure your internet connection is stable while we are downloading."
-                #     )
-                # )
-
+            ) as status:
                 constants.is_downloading = True
                 thread_download = threading.Thread(target=download_avatars)
                 thread_download.start()  # download while fetching avatars
 
                 with ThreadPoolExecutor(
-                    max_workers=min(32, (os.cpu_count() or 1))
+                    max_workers=min(32, (os.cpu_count() or 1) + 2)
                 ) as pool:
                     for uid, api_token in zip(
                         uids,
@@ -318,12 +307,7 @@ def _import_avatars():
                         ),
                     ):
                         pool.submit(
-                            fetch_avatar,
-                            uid,
-                            api_token,
-                            cfg.avatar_resolution,
-                            progress,
-                            task_avatar,
+                            fetch_avatar, uid, api_token, cfg.avatar_resolution, status
                         )
 
                 constants.is_downloading = False
@@ -341,7 +325,14 @@ def _import_avatars():
         Error(23).throw(str(uids_unknown), err_type=ErrorType.WARNING)
 
     if has_task and not failed:
-        console.print("\033[A\033[2K\033[A\033[2K" + "Avatar download complete!")
+        console.print(
+            "\033[A\033[2K",
+            Padding(
+                "[bold yellow]Avatar download complete![bold yellow]", (0, 2, 2, 2)
+            ),
+            sep="",
+        )
+    # TODO: Fix while loop
 
 
 if __name__ == "__main__":
@@ -436,7 +427,7 @@ if __name__ == "__main__":
     #               Mic Drop Results (v3.10) [update available]
 
     status_msg = f" [{status.value}]" if status else ""
-    console.print(f"Mic Drop Results (v{version_tag}){status_msg}", style="b")
+    console.print(f"Mic Drop Results (v{version_tag}){status_msg}", style="bold")
 
     if status != ProgramStatus.UPDATE_AVAILABLE:
         # When an update is available, the download link is already shown above.
@@ -600,6 +591,14 @@ if __name__ == "__main__":
         f.write(module1_bas)
 
     ### Main body
+    console.print(
+        Padding(
+            "[bold yellow]Generating slides...[/bold yellow]\n"
+            "Please do not click on any PowerPoint window that may appear during the process.",
+            2,
+        )
+    )
+
     thread_avatar = threading.Thread(target=_import_avatars)
     if avatar_mode:
         last_clear_dir = abs_dir(TEMP_DIR, "last_clear_avatar_cache.txt")
@@ -619,14 +618,6 @@ if __name__ == "__main__":
 
         # Download avatars while generating slides
         thread_avatar.start()
-
-    console.print(
-        Padding(
-            "[bold yellow]Generating slides...[/bold yellow]\n"
-            "Please do not click on any PowerPoint window that may appear during the process.\n",
-            (2, 2, 0, 2),
-        )
-    )
 
     for sheet, df in groups.items():
         bar = ProgressBar(  # initialize progress bar
@@ -722,8 +713,8 @@ if __name__ == "__main__":
     inp(
         Padding(
             f"[bold yellow]Exported to {OUTPUT_DIR}[/bold yellow]\n"
-            "Press Enter to open output folder...",
-            (2, 2, 0, 2),
+            "Press Enter to open the output folder...",
+            (0, 2, 0, 2),
         ),
         hide_text=True,
     )
