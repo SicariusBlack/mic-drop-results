@@ -131,9 +131,7 @@ def disable_console():
     )
 
 
-def inp(
-    *args: str, hide_text=False, **kwargs
-) -> str:  # TODO: add docstring, optimize code
+def inp(*args, hide_text=False, **kwargs) -> str:  # TODO: add docstring, optimize code
     """Wrapper function for rich.console.Console.input().
 
     This function inherits all the arguments and keyword arguments of

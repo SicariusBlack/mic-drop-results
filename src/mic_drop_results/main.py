@@ -30,6 +30,7 @@ from pptx.enum.text import PP_ALIGN  # type: ignore
 from pptx.slide import Slide
 from pptx.util import Cm
 from pywintypes import com_error
+from rich.padding import Padding
 import requests
 import win32com.client
 
@@ -408,10 +409,13 @@ if __name__ == "__main__":
             if latest > current:
                 status = ProgramStatus.UPDATE_AVAILABLE
 
-                console.print(f"Update v{latest_tag}", style="bold yellow")
-                console.print(summary)
-                console.print(LATEST_RELEASE_URL)
-                console.print()
+                console.print(
+                    Padding(
+                        f"[bold yellow]Update v{latest_tag}[/bold yellow]\n"
+                        f"{summary}\n" + LATEST_RELEASE_URL,
+                        2,
+                    )
+                )
 
                 webbrowser.open(LATEST_RELEASE_URL, new=2)
 
@@ -422,7 +426,7 @@ if __name__ == "__main__":
 
     # Print a header containing information about the program
 
-    # Normal:       Mic Drop Results (v3.10) [latest]
+    # Normal:       Mic Drop Results (v3.10)
     #               https://github.com/SicariusBlack/mic-drop-results
 
     # With update:  Update v3.11
@@ -616,9 +620,12 @@ if __name__ == "__main__":
         # Download avatars while generating slides
         thread_avatar.start()
 
-    console.print("\n\nGenerating slides...")
     console.print(
-        "Please do not click on any PowerPoint window that may appear during the process.\n"
+        Padding(
+            "[bold yellow]Generating slides...[/bold yellow]\n"
+            "Please do not click on any PowerPoint window that may appear during the process.\n",
+            (2, 2, 0, 2),
+        )
     )
 
     for sheet, df in groups.items():
@@ -712,6 +719,12 @@ if __name__ == "__main__":
         bar.add()
 
     # Section H: Launch the file
-    console.print(f"\nExported to {OUTPUT_DIR}")
-    inp("Press Enter to open output folder...", hide_text=True)
+    inp(
+        Padding(
+            f"[bold yellow]Exported to {OUTPUT_DIR}[/bold yellow]\n"
+            "Press Enter to open output folder...",
+            (2, 2, 0, 2),
+        ),
+        hide_text=True,
+    )
     os.startfile(OUTPUT_DIR)

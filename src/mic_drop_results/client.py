@@ -7,23 +7,12 @@ from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 import requests
 import time
-from functools import partial
 from threading import Event
-from typing import Iterable
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 
 import cv2
 import numpy as np
-from rich.progress import (
-    BarColumn,
-    DownloadColumn,
-    Progress,
-    TaskID,
-    TextColumn,
-    TimeRemainingColumn,
-    TransferSpeedColumn,
-)
 
 import constants
 from constants import *
