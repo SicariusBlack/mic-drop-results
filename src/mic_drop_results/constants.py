@@ -2,6 +2,7 @@ from pathlib import Path
 import sys
 
 from rich.console import Console
+from rich.progress import Progress
 
 
 REPO_URL = "https://github.com/SicariusBlack/mic-drop-results"
@@ -18,3 +19,9 @@ AVATAR_DIR = MAIN_DIR / "avatars"
 TEMP_DIR = MAIN_DIR / ".temp"
 
 console = Console(highlight=False, width=120)
+
+# Mutable globals (usage: import constants; constants.var)
+queue_len = 0
+progress = Progress()
+avatar_urls: list[tuple] = []
+is_downloading = False

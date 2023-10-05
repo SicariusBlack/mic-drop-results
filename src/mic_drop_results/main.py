@@ -4,11 +4,12 @@
 # you may not use this file except in compliance with the License.
 
 import atexit
+from concurrent.futures import ThreadPoolExecutor
 import contextlib
 import ctypes
 from io import BytesIO
 import itertools
-from multiprocessing import Pool, freeze_support
+from multiprocessing import freeze_support
 import os
 from signal import signal, SIGINT, SIG_IGN
 from subprocess import check_call, run, DEVNULL
@@ -32,9 +33,16 @@ from pywintypes import com_error
 import requests
 import win32com.client
 
-from client import ProgramStatus, fetch_latest_version, download_avatar
+from client import (
+    ProgramStatus,
+    fetch_avatar,
+    fetch_latest_version,
+    download_avatars,
+    _get_download_banner,
+)
 from compiled_regex import *
 from config import Config
+import constants
 from constants import *
 from errors import Error, ErrorType, print_exception_hook
 from exceptions import *
@@ -250,7 +258,6 @@ def _import_avatars():
     max_attempt = 5  # maximum number of attempts
     has_task = False  # whether a download task exists (to skip avatar download banner)
     uids_unknown = []  # uids that failed to download
-    pool = Pool(min(4, len(token_list) + 1))
 
     for attempt in range(1, max_attempt + 1):
         uids = []  # uids that are not downloaded yet
@@ -269,30 +276,58 @@ def _import_avatars():
         if not uids:  # if queue is empty, break and finish the task
             break
 
-        queue_len = len(uids)  # number of uids in the queue
+        constants.queue_len = len(uids)  # number of uids in the queue
         if attempt == 1:
             # Initialize the download task
             has_task = True
-            console.print(f"\n\nDownloading avatars... ({queue_len} in queue)")
-            console.print(
-                "Make sure your internet connection is stable while we are downloading."
-            )
+            # console.print(f"\n\nDownloading avatars... ({constants.queue_len} in queue)")
+            # console.print(
+            #     "Make sure your internet connection is stable while we are downloading."
+            # )
         elif attempt >= max_attempt:
             failed = True
             uids_unknown += uids  # add all uids in the queue to the unknown list
             break
 
         try:
-            pool.starmap(
-                download_avatar,
-                zip(
-                    uids,
-                    itertools.islice(  # distribute tokens evenly between pools
-                        itertools.cycle(token_list), queue_len
+            with Progress(transient=True) as progress:
+                task_avatar = progress.add_task(
+                    _get_download_banner(
+                        "Make sure your internet connection is stable while we are downloading."
                     ),
-                    [cfg.avatar_resolution] * queue_len,
-                ),
-            )
+                    total=constants.queue_len,
+                )
+                # constants.status_avatar = Status(
+                #     get_download_banner(
+                #         "Make sure your internet connection is stable while we are downloading."
+                #     )
+                # )
+
+                constants.is_downloading = True
+                thread_download = threading.Thread(target=download_avatars)
+                thread_download.start()  # download while fetching avatars
+
+                with ThreadPoolExecutor(
+                    max_workers=min(32, (os.cpu_count() or 1))
+                ) as pool:
+                    for uid, api_token in zip(
+                        uids,
+                        itertools.islice(  # distribute tokens evenly among instances
+                            itertools.cycle(token_list), constants.queue_len
+                        ),
+                    ):
+                        pool.submit(
+                            fetch_avatar,
+                            uid,
+                            api_token,
+                            cfg.avatar_resolution,
+                            progress,
+                            task_avatar,
+                        )
+
+                constants.is_downloading = False
+                thread_download.join()
+
         except (ConnectionError, TimeoutError) as e:
             if attempt >= 3:
                 Error(20).throw(err_type=ErrorType.WARNING)
@@ -306,8 +341,6 @@ def _import_avatars():
 
     if has_task and not failed:
         console.print("\033[A\033[2K\033[A\033[2K" + "Avatar download complete!")
-        pool.close()
-        pool.join()
 
 
 if __name__ == "__main__":
@@ -562,7 +595,8 @@ if __name__ == "__main__":
     with open(abs_dir(TEMP_DIR, "Module1.bas"), "w") as f:
         f.write(module1_bas)
 
-    thread_avatar = threading.Thread(target=_import_avatars, args=())
+    ### Main body
+    thread_avatar = threading.Thread(target=_import_avatars)
     if avatar_mode:
         last_clear_dir = abs_dir(TEMP_DIR, "last_clear_avatar_cache.txt")
 
@@ -572,7 +606,7 @@ if __name__ == "__main__":
         except (FileNotFoundError, ValueError):
             last_clear_time = 0
 
-        if time.time() - last_clear_time > 1800 * 12:  # clear every 12 hours
+        if time.time() - last_clear_time > 3600 * 12:  # clear every 12 hours
             for avatar_dir in os.scandir(AVATAR_DIR):
                 os.unlink(avatar_dir)
 

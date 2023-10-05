@@ -7,6 +7,8 @@ from collections.abc import Callable, Generator
 import ctypes
 import re
 import sys
+import threading
+import time
 from typing import Any, TypeVar
 
 import cv2
@@ -209,13 +211,13 @@ class ProgressBar:
     def set_description(self, desc: str = "") -> None:
         """Sets the description shown below the progress bar."""
         self.desc = "\n" + desc
-        self.refresh()
+        # self.refresh()
 
     def add(self, increment: int = 1) -> None:
         """Updates the progress by a specified increment."""
         self.prog += increment
         self.prog = min(self.prog, self.total)
-        self.refresh()
+        # self.refresh()
 
 
 def get_avatar_dir(
