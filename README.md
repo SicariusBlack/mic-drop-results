@@ -30,6 +30,6 @@ To install, click here to download [**mic-drop-results.zip**](https://github.com
 </p>
 
 
-<h2 align="center">Report a Problem</h2>
+<h2 align="center">Contact the Developer</h2>
 
 Any questions, concerns, bug reports, and suggestions should be directed to [SicariusBlack](https://discord.com/users/1104424999365918841) on Discord. We value all your ideas and we would love to hear from you.
