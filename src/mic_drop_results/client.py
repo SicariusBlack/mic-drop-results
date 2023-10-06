@@ -49,7 +49,7 @@ def _fetch_avatar_url(uid: str, api_token: str) -> str | None:  # TODO: docstrin
     try:
         header = {"Authorization": f"Bot {api_token}"}
         response = requests.get(
-            f"https://discord.com/api/v10/users/{uid}", headers=header, timeout=20
+            f"https://discord.com/api/v10/users/{uid}", headers=header, timeout=15
         )
         # if not ('message' in response.json() or 'avatar' in response.json())
     except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout) as e:
@@ -75,8 +75,7 @@ def _fetch_avatar_url(uid: str, api_token: str) -> str | None:  # TODO: docstrin
             raise InvalidTokenError(api_token) from e
 
         elif "limit" in msg:
-            r = response.json()["retry_after"] + 10
-            console.print("\033[A\033[2K" f"You are being rate-limited by the API.")
+            r = response.json()["retry_after"] + 1
             time.sleep(r)
             _fetch_avatar_url(uid, api_token)
 
@@ -104,7 +103,7 @@ def fetch_avatar(uid, api_token, size, status):
 
 
 def download_avatars():
-    while constants.is_downloading:
+    while constants.is_downloading == True:
         with ThreadPoolExecutor(max_workers=2) as pool:
             while len(constants.avatar_urls) > 0:
                 uid, avatar_url = constants.avatar_urls[0]
@@ -112,11 +111,15 @@ def download_avatars():
 
                 pool.submit(_download, avatar_url, img_dir)
 
-                constants.avatar_urls.pop(0)
+                try:
+                    constants.avatar_urls.pop(0)
+                except ValueError:
+                    pass
 
 
 def _get_download_banner(desc: str) -> str:
+    indent = " " * (constants.padding - 2)
     return (
-        "[bold yellow]Downloading avatars...[/bold yellow] "
-        f"({constants.downloaded} of {constants.queue_len} in queue)\n  {desc}"
+        f"{indent}[bold yellow]Downloading avatars...[/bold yellow] "
+        f"({constants.downloaded} of {constants.queue_len} in queue)\n{' ' * constants.padding}{desc}"
     )

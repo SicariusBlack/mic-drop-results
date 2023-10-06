@@ -18,6 +18,7 @@ AVATAR_DIR = MAIN_DIR / "avatars"
 TEMP_DIR = MAIN_DIR / ".temp"
 
 console = Console(highlight=False, width=120)
+padding = 4
 
 # Mutable globals (usage: import constants; constants.var)
 downloaded = 0

@@ -48,7 +48,6 @@ from constants import *
 from errors import Error, ErrorType, print_exception_hook
 from exceptions import *
 from utils import (
-    ProgressBar,
     inp,
     enable_console,
     disable_console,
@@ -291,7 +290,8 @@ def _import_avatars():
             with console.status(
                 _get_download_banner(
                     "Make sure your internet connection is stable while we are downloading."
-                )
+                ),
+                refresh_per_second=100,
             ) as status:
                 constants.is_downloading = True
                 thread_download = threading.Thread(target=download_avatars)
@@ -306,9 +306,14 @@ def _import_avatars():
                             itertools.cycle(token_list), constants.queue_len
                         ),
                     ):
-                        pool.submit(
+                        future = pool.submit(
                             fetch_avatar, uid, api_token, cfg.avatar_resolution, status
                         )
+
+                try:
+                    future.result()  # type: ignore
+                except NameError:
+                    pass
 
                 constants.is_downloading = False
                 thread_download.join()
@@ -328,10 +333,12 @@ def _import_avatars():
         console.print(
             "\033[A\033[2K",
             Padding(
-                "[bold yellow]Avatar download complete![bold yellow]", (0, 2, 2, 2)
+                "[bold yellow]Avatar download complete![bold yellow]",
+                (0, constants.padding, 2, constants.padding),
             ),
             sep="",
         )
+        disable_console()
     # TODO: Fix while loop
 
 
@@ -404,7 +411,7 @@ if __name__ == "__main__":
                     Padding(
                         f"[bold yellow]Update v{latest_tag}[/bold yellow]\n"
                         f"{summary}\n" + LATEST_RELEASE_URL,
-                        2,
+                        (2, constants.padding, 2, constants.padding),
                     )
                 )
 
@@ -427,7 +434,7 @@ if __name__ == "__main__":
     #               Mic Drop Results (v3.10) [update available]
 
     status_msg = f" [{status.value}]" if status else ""
-    console.print(f"Mic Drop Results (v{version_tag}){status_msg}", style="bold")
+    console.print(f"[bold]Mic Drop Results (v{version_tag}){status_msg}[/bold]")
 
     if status != ProgramStatus.UPDATE_AVAILABLE:
         # When an update is available, the download link is already shown above.
@@ -595,7 +602,7 @@ if __name__ == "__main__":
         Padding(
             "[bold yellow]Generating slides...[/bold yellow]\n"
             "Please do not click on any PowerPoint window that may appear during the process.",
-            2,
+            (2, constants.padding, 2, constants.padding),
         )
     )
 
@@ -620,18 +627,14 @@ if __name__ == "__main__":
         thread_avatar.start()
 
     for sheet, df in groups.items():
-        bar = ProgressBar(  # initialize progress bar
-            8, title=sheet, max_title_length=max(map(len, groups.keys()))
-        )
-
         # Open template.pptm
-        bar.set_description("Opening template.pptm")
         ppt = win32com.client.Dispatch("PowerPoint.Application")
         ppt.Presentations.Open(abs_dir("template.pptm"))
-        bar.add()
+
+        # Minimize the window
+        ppt.ActiveWindow.WindowState = 2
 
         # Import macros
-        bar.set_description("Importing macros")
         try:
             ppt.VBE.ActiveVBProject.VBComponents.Import(
                 abs_dir(TEMP_DIR, "Module1.bas")
@@ -641,10 +644,8 @@ if __name__ == "__main__":
                 Error(41).throw()
             else:
                 raise e
-        bar.add()
 
         # Duplicate slides
-        bar.set_description("Duplicating slides")
         slides_count = ppt.Run("Count")
 
         # Check for invalid template IDs
@@ -672,26 +673,21 @@ if __name__ == "__main__":
         # Duplicate initial template slides
         for template in df["__template"]:
             ppt.Run("Duplicate", template)
-        bar.add()
         ppt.Run(
             "DelSlide", *range(1, slides_count + 1)
         )  # delete initial template slides
-        bar.add()
 
         # Save as .pptx
-        bar.set_description("Saving templates")
         output_dir = abs_dir(OUTPUT_DIR, f"{sheet}.pptx")
         ppt.Run("SaveAs", str(output_dir))
         ppt.Quit()
-        bar.add()
 
-        # Open .pptx file and fill slides with judging data
-        bar.set_description("Waiting for avatars")
+        # Wait for avatars
         if avatar_mode:
             thread_avatar.join()
-        bar.set_description("Filling in judging data")
+
+        # Open .pptx file and fill slides with judging data
         prs = Presentation(str(output_dir))
-        bar.add()
         for i, slide in enumerate(prs.slides):
             fill_slide(
                 slide,
@@ -702,19 +698,16 @@ if __name__ == "__main__":
                     for k, v in df.iloc[i].to_dict().items()
                 },
             )
-        bar.add()
 
         # Save .pptx file
-        bar.set_description(f"Saving as {output_dir}")
         prs.save(output_dir)
-        bar.add()
 
     # Section H: Launch the file
     inp(
         Padding(
             f"[bold yellow]Exported to {OUTPUT_DIR}[/bold yellow]\n"
             "Press Enter to open the output folder...",
-            (0, 2, 0, 2),
+            (0, constants.padding, 2, constants.padding),
         ),
         hide_text=True,
     )

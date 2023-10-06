@@ -8,7 +8,7 @@ from enum import Enum, auto
 import sys
 from traceback import format_exception
 
-from colorama import Fore, Style
+from rich.padding import Padding
 
 from compiled_regex import *
 from constants import *
@@ -27,15 +27,14 @@ class Tag(Enum):
 class Traceback:
     templates = {
         "screenshot": [
-            "Please take a screenshot of everything displayed below when filling out a bug report."
-            " Thank you for your patience in getting this issue resolved."
+            "To help us fix this bug, please capture and attach a screenshot of everything you see below. "
+            "We appreciate your cooperation in helping us resolve this issue.",
         ],
         "invalid_config": [
-            "Please verify that these config variables are in their valid formats"
-            " as specified in the notes from settings.ini."
+            "Make sure that these configs follow the valid formats as explained in the notes from settings.ini:"
         ],
         "developer_portal": [
-            "You can follow this link to Discord's Developer Portal and create your token.\n"
+            "Visit Discord's Developer Portal and follow the steps in token.txt to create your token.\n"
             "https://discord.com/developers/applications"
         ],
     }
@@ -47,103 +46,92 @@ class Traceback:
         # 20 – 29: API errors
         20: [
             Tag.INTERNET,
-            "Failed to communicate with Discord's API.",
-            "We are unable to download avatars at the moment.",
-            "Please check your internet connection and try again.",
+            "Failed to communicate with Discord's API",
+            "We are unable to download avatars at the moment. Please check your internet connection and try again.",
         ],
         21: [
             Tag.FILE_TOKEN,
-            "No valid bot token found.",
-            "Please add your token(s) to token.txt or turn avatar mode in settings.ini off entirely.",
+            "No valid bot token found",
+            "You need to add your token(s) in token.txt or disable avatar mode in settings.ini.",
             *templates["developer_portal"],
         ],
         21.1: [
             Tag.FILE_TOKEN,
-            "Invalid bot token.",
-            "The following bot token is either invalid, has been reset, or deactivated by Discord.",
-            "Please replace the following token from token.txt with a new, valid one.",
+            "Invalid bot token",
+            "Your bot token is either invalid or has been deactivated. Please replace this token from token.txt with a new valid one:",
             *templates["developer_portal"],
         ],
         22: [Tag.DEV, "Unknown Discord's API error."],
         23: [
             Tag.FILE_DATA,
-            "Failed to fetch the data of certain users.",
-            "We are unable to download the avatars of the following" + " users:",
-            "Make sure these user IDs are valid and that they have not"
-            + " deleted nor moved to a new account with the same name.",
+            "Failed to fetch the data of certain users",
+            "We are unable to download the avatars of these users:",
+            "Verify that these IDs are valid and that the corresponding accounts have not been deleted.",
         ],
         # 30 – 39: Config errors
         30: [
             Tag.FILE_SETTINGS,
-            "Missing config variables.",
-            "The following config variables do not exist in the current"
-            + " settings file:",
-            "Please download the latest version of settings.ini from"
-            + " this source and try again:\n"
+            "Missing config",
+            "You are using an outdated settings file that does not have the required config:",
+            "To fix this, download and use the latest settings.ini file from this source:\n"
             + TEMPLATES_URL,
         ],
         31: [
             Tag.FILE_SETTINGS,
-            "Invalid data type for config variable.",
+            "Invalid data type for config",
             *templates["invalid_config"],
         ],
         31.1: [
             Tag.FILE_SETTINGS,
-            "Config variable failed requirement check.",
+            "Config failed requirement check",
             *templates["invalid_config"],
         ],
         # 40 – 59: System errors
         40: [
             Tag.SYS,
-            "Missing required files.",
-            "Please download the missing files at:\n" + TEMPLATES_URL,
+            "Missing required files",
+            "This program cannot run without these essential files:",
+            "Please download the missing files from this source and paste them into your working directory.\n"
+            + TEMPLATES_URL,
         ],
         41: [
             Tag.SYS,
-            "Failed to import VBA macros due to a privacy setting.",
-            "Please open PowerPoint and navigate to:\nFile > Options"
-            + " > Trust Center > Trust Center Settings > Macro Settings",
-            'Make sure "Trust access to the VBA project object model"'
-            + " option is checked.",
+            "Failed to import VBA macros due to a privacy settings",
+            "Please open PowerPoint and navigate to:\n"
+            "File > Options > Trust Center > Trust Center Settings > Macro Settings\n\n"
+            'Make sure the "Trust access to the VBA project object model" option is checked.',
         ],
         # 60 and above: Data errors
         60: [
             Tag.FILE_DATA,
-            "Sorting columns cannot contain text.",
-            "The sorting columns of the following sheet contain text"
-            + " but expect numeric data throughout.",
-            "Have you pasted data in the wrong column, by any chance?",
+            "Sorting columns cannot contain text",
+            "The following sheet has text values in the columns that should only contain numbers. This may cause errors in the sorting process.\n"
+            "Please check if you have entered data in the correct columns.",
         ],
         61: [
             Tag.FILE_DATA,
-            "Sorting columns cannot contain empty values.",
-            "The sorting columns of the following sheet contain empty"
-            + " cell values.",
-            "These empty values will be replaced by 0's if you proceed" + " onward.",
+            "Sorting columns cannot contain empty values",
+            "Some cells in the columns that you want to sort are blank. This may affect the accuracy of the sorting process.\n"
+            "The system will automatically fill these cells with zeros if you continue. Please confirm if you wish to proceed.",
         ],
         68: [
             Tag.FILE_DATA,
-            "No valid sheet found.",
-            "We have examined every sheet from the following Excel file:\n"
-            + str(abs_dir("data.xlsm")),
-            "No sheet appears to be in the correct and usable format.",
-            "Please download a sample data.xlsm file from this source"
-            + " and use it as a reference for customizing your own:\n"
+            "No valid sheet found",
+            "None of the sheets in data.xlsm have the correct and usable format that we require.",
+            "Please download a sample data.xlsm file from this source and use it as a reference to customize your own file.\n"
             + TEMPLATES_URL,
         ],
         70: [
             Tag.FILE_DATA,
-            "Missing an underscore before every user ID.",
-            "Please add an underscore (_) before every user ID from the"
-            + ' "__uid" column. For example: _1010885414850154587',
-            "This is intended to prevent Microsoft Excel and the"
-            + " program froms undesirably rounding the UIDs.",
+            "Missing an underscore before every user ID",
+            'To avoid unwanted rounding of the user IDs by Excel or the program, please prefix an underscore (_) to each user ID in the "__uid" column.',
+            "For example, the user ID 1104424999365918841 should be written as _1104424999365918841.",
+            "This will ensure that the user IDs are treated as text values and not as numbers.",
         ],
         71: [
             Tag.FILE_DATA,
-            "Template does not exist.",
-            "The following template(s) cannot be matched with any slide"
-            + " from template.pptm.",
+            "Template does not exist",
+            "We could not find any matching slides for the following template(s) in template.pptm:",
         ],
     }
 
@@ -225,7 +213,7 @@ class Error(Traceback):
                 style = "yellow"
 
             console.print(
-                f"\n\n[b]{err_type.name}:[/b] {content[0]}"
+                f"[b]{err_type.name}:[/b] {content[0]}"
                 + f" (Traceback code: {self.tb_code})",
                 style=style,
             )  # error details
@@ -235,13 +223,15 @@ class Error(Traceback):
             console.print(content[1])  # steps to resolve
 
             if len(content) > 2:
-                self._print_indent(*content[2:], sep="\n\n    ")  # extra details
+                for part in content[2:]:
+                    console.print(Padding(part, (1, 4, 0, 4)))  # extra details
+                # self._print_indent(*content[2:], sep="\n\n    ")  # extra details
 
         if err_type == ErrorType.ERROR:
-            inp("\nPress Enter to exit the program...", hide_text=True)
+            inp("\nPress Enter to exit the program...\n\n", hide_text=True)
             sys.exit(1)
         else:
-            inp("\nPress Enter to skip this warning...", hide_text=True)
+            inp("\nPress Enter to skip this warning...\n\n", hide_text=True)
 
     def _print_indent(self, *content, sep, indent=4) -> None:
         console.print(
