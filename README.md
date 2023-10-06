@@ -9,7 +9,7 @@
 
 
 <p align="center">
-  A program that generates result slides from judging data<br>
+  Mass slides generation program for the Mic Drop contest<br>
   <a href="https://discord.gg/X9hteAdVCH"><b>More info about Mic Drop here</b></a>
 </p>
 
