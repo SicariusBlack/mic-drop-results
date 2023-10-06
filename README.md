@@ -1,4 +1,4 @@
-<div align="center"><br/><picture>
+<div align="center"><picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/README/mdr-logo-white.svg">
   <source media="(prefers-color-scheme: light)" srcset=".github/assets/README/mdr-logo.svg">
   <img alt="Mic Drop Results" src=".github/assets/README/mdr-logo.svg" height=58>
