@@ -49,4 +49,4 @@ To install, click here to download [**mic-drop-results.zip**](https://github.com
 
 <h2 align="center">Meet the Developer</h2>
 
-Any questions, concerns, bug reports, and suggestions should be directed to [SicariusBlack](https://discord.com/users/1104424999365918841) on Discord. I value your feedback and I would love to hear from you!
+All questions, concerns, bug reports, and suggestions should be directed to [SicariusBlack](https://discord.com/users/1104424999365918841) on Discord. I value your feedback and I would love to hear from you!
