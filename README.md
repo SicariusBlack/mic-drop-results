@@ -1,4 +1,5 @@
-<h1 align="center"><picture><img src=".github/assets/README/Mic Drop Results Logo.png" height=60></picture></h1>
+<div align="center"><picture><img src=".github/assets/README/Mic Drop Results Logo.png" height=60></picture></div>
+
 
 <p align="center">
   A program that generates result slides from judging data<br>
