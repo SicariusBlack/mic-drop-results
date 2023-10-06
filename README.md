@@ -19,11 +19,31 @@ To install, click here to download [**mic-drop-results.zip**](https://github.com
 <h2 align="center">Showcase</h2>
 
 <p align="center">
-  <picture><img src=".github/assets/README/1.png" width=380></picture>
-  <picture><img src=".github/assets/README/2.png" width=380></picture>
-  <picture><img src=".github/assets/README/3.png" width=380></picture>
-  <picture><img src=".github/assets/README/4.png" width=380></picture>
-  <picture><img src=".github/assets/README/5.png" width=380></picture>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/README/1.png">
+    <source media="(prefers-color-scheme: light)" srcset=".github/assets/README/1.png">
+    <img src=".github/assets/README/1.png" width=380>
+  </picture>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/README/2.png">
+    <source media="(prefers-color-scheme: light)" srcset=".github/assets/README/2.png">
+    <img src=".github/assets/README/2.png" width=380>
+  </picture>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/README/3.png">
+    <source media="(prefers-color-scheme: light)" srcset=".github/assets/README/3.png">
+    <img src=".github/assets/README/3.png" width=380>
+  </picture>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/README/4.png">
+    <source media="(prefers-color-scheme: light)" srcset=".github/assets/README/4.png">
+    <img src=".github/assets/README/4.png" width=380>
+  </picture>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/README/5.png">
+    <source media="(prefers-color-scheme: light)" srcset=".github/assets/README/5.png">
+    <img src=".github/assets/README/5.png" width=380>
+  </picture>
 </p>
 
 
