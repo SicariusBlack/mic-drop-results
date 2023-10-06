@@ -1,5 +1,6 @@
 <div align="center"><picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/README/Mic Drop Results Logo White.svg">
+  <source media="(prefers-color-scheme: light)" srcset=".github/assets/README/Mic Drop Results Logo.svg">
   <img alt="Mic Drop Results" src=".github/assets/README/Mic Drop Results Logo.svg" height=55>
 </picture></div>
 
