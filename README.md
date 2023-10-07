@@ -1,7 +1,7 @@
 <div align="center"><picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/README/mdr-logo-white.svg">
   <source media="(prefers-color-scheme: light)" srcset=".github/assets/README/mdr-logo.svg">
-  <img alt="Mic Drop Results" src=".github/assets/README/mdr-logo.svg" height=60>
+  <img alt="Mic Drop Results" src=".github/assets/README/mdr-logo.svg" height=55>
 </picture></div>
 
 
