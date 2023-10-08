@@ -5,7 +5,7 @@
 
 import copy
 from enum import Enum, auto
-import sys
+import os
 from traceback import format_exception
 
 from rich.padding import Padding
@@ -179,7 +179,12 @@ class Error(Traceback):
         return f"E-{code}"
 
     def throw(self, *details: str, err_type: ErrorType = ErrorType.ERROR) -> None:
-        self.content += [*details]
+        # self.content += [*details]
+
+        if len(self.content) >= 3:
+            self.content = self.content[:2] + [*details] + self.content[2:]
+        else:
+            self.content += [*details]
 
         # Redact sensitive information
         for i, x in enumerate(self.content):
@@ -205,33 +210,37 @@ class Error(Traceback):
             err_type (optional): the error type taken from the ErrorType
                 class. Defaults to ErrorType.ERROR.
         """
-        if content:
-            style = None
-            if err_type == ErrorType.ERROR:
-                style = "red"
-            elif err_type == ErrorType.WARNING:
-                style = "yellow"
+        assert content, "Please provide details on this error."
+        assert (
+            len(content) >= 2
+        ), "An error name and a short description of the error need to be provided."
 
-            console.print(
-                f"[b]{err_type.name}:[/b] {content[0]}"
-                + f" (Traceback code: {self.tb_code})",
-                style=style,
-            )  # error details
+        style = None
+        if err_type == ErrorType.ERROR:
+            style = "red"
+        elif err_type == ErrorType.WARNING:
+            style = "yellow"
 
-        if len(content) > 1:
-            console.print()
-            console.print(content[1])  # steps to resolve
+        console.print(
+            f"[b]{err_type.name}:[/b] {content[0]}"
+            + f" (Traceback code: {self.tb_code})",
+            style=style,
+        )  # error details
 
-            if len(content) > 2:
-                for part in content[2:]:
-                    console.print(Padding(part, (1, 4, 0, 4)))  # extra details
-                # self._print_indent(*content[2:], sep="\n\n    ")  # extra details
+        console.line(1)
+        console.print(content[1])  # steps to resolve
+        console.line(1)
+
+        for part in content[2:]:
+            console.print(Padding(part, (1, 4, 0, 4)))  # extra details
 
         if err_type == ErrorType.ERROR:
-            inp("\nPress Enter to exit the program...\n\n", hide_text=True)
-            sys.exit(1)
+            console.line(2)
+            inp("Press Enter to exit the program...\n\n")
+            os._exit(1)
         else:
-            inp("\nPress Enter to skip this warning...\n\n", hide_text=True)
+            console.line(2)
+            inp("Press Enter to skip this warning...\n\n", hide_text=True)
 
     def _print_indent(self, *content, sep, indent=4) -> None:
         console.print(

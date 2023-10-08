@@ -5,6 +5,7 @@
 
 from collections.abc import Callable, Generator
 import ctypes
+from itertools import islice
 import re
 import sys
 import threading
@@ -63,6 +64,10 @@ def as_type(t: Callable[[A], T], val: A) -> T | A:
         return t(val)
     except ValueError:
         return val
+
+
+def chunk(iterable, batch):
+    return [*islice(iterable, batch)]
 
 
 def hex_to_rgb(hex_val: str) -> tuple[int, ...]:

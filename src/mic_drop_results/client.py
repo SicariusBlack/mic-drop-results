@@ -20,9 +20,6 @@ from exceptions import *
 from utils import is_number, get_avatar_dir
 
 
-done_event = Event()
-
-
 # Section A: GitHub API
 class ProgramStatus(Enum):
     UPDATE_AVAILABLE = "update available"
@@ -45,12 +42,18 @@ def _fetch_avatar_url(uid: str, api_token: str) -> str | None:  # TODO: docstrin
     if not is_number(uid):
         return None
 
+    time.sleep(constants.delay * constants.max_workers)
+
     # Try sending out a request to the API for the avatar's hash
     try:
         header = {"Authorization": f"Bot {api_token}"}
-        response = requests.get(
-            f"https://discord.com/api/v10/users/{uid}", headers=header, timeout=15
-        )
+        if constants.is_rate_limited == True:
+            time.sleep(1)
+            return _fetch_avatar_url(uid, api_token)
+        else:
+            response = requests.get(
+                f"https://discord.com/api/v10/users/{uid}", headers=header, timeout=15
+            )
         # if not ('message' in response.json() or 'avatar' in response.json())
     except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout) as e:
         raise ConnectionError from e
@@ -75,9 +78,11 @@ def _fetch_avatar_url(uid: str, api_token: str) -> str | None:  # TODO: docstrin
             raise InvalidTokenError(api_token) from e
 
         elif "limit" in msg:
-            r = response.json()["retry_after"] + 1
+            constants.is_rate_limited = True
+            r = response.json()["retry_after"]
             time.sleep(r)
-            _fetch_avatar_url(uid, api_token)
+            constants.is_rate_limited = False
+            return _fetch_avatar_url(uid, api_token)
 
         elif "unknown" not in msg:
             raise DiscordAPIError(api_token, response.json()) from e
@@ -113,7 +118,7 @@ def download_avatars():
 
                 try:
                     constants.avatar_urls.pop(0)
-                except ValueError:
+                except IndexError:
                     pass
 
 
@@ -121,5 +126,5 @@ def _get_download_banner(desc: str) -> str:
     indent = " " * (constants.padding - 2)
     return (
         f"{indent}[bold yellow]Downloading avatars...[/bold yellow] "
-        f"({constants.downloaded} of {constants.queue_len} in queue)\n{' ' * constants.padding}{desc}"
+        f"({constants.downloaded} of {constants.queue_len} downloaded)\n{' ' * constants.padding}{desc}"
     )

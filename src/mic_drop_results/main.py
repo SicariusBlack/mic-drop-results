@@ -6,7 +6,6 @@
 import atexit
 from concurrent.futures import ThreadPoolExecutor
 import contextlib
-import ctypes
 from io import BytesIO
 import itertools
 from multiprocessing import freeze_support
@@ -19,7 +18,6 @@ import time
 import warnings
 import webbrowser
 
-from colorama import init, Fore
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -51,6 +49,7 @@ from utils import (
     inp,
     enable_console,
     disable_console,
+    chunk,
     is_number,
     as_type,
     hex_to_rgb,
@@ -234,12 +233,12 @@ def preview_df(
     preview = repr(df.head(8)) if n_cols < len(df.columns) else repr(df)
 
     # Highlight text_to_highlight
-    preview = preview.replace(prefix, Fore.RED + "  ").replace(suffix, Fore.RESET)
+    preview = preview.replace(prefix, "[red]  ").replace(suffix, "[/red]")
 
     # Highlight column names
     for n in range(n_cols):
         col = df.columns.tolist()[n]
-        preview = preview.replace(" " + col, f" {Fore.RED}{col}{Fore.RESET}", 1)
+        preview = preview.replace(" " + col, f" [red]{col}[/red]", 1)
 
     # Add ... at the end of each line if preview is a snippet
     if n_cols < len(df.columns):
@@ -249,7 +248,7 @@ def preview_df(
     preview = "[b]" + preview.replace("\n", "[/b]\n", 1)
 
     if not highlight:
-        preview = preview.replace(Fore.RED, "")
+        preview = preview.replace("[red]", "")
     return preview
 
 
@@ -297,22 +296,40 @@ def _import_avatars():
                 thread_download = threading.Thread(target=download_avatars)
                 thread_download.start()  # download while fetching avatars
 
-                with ThreadPoolExecutor(
-                    max_workers=min(32, (os.cpu_count() or 1) + 2)
-                ) as pool:
-                    for uid, api_token in zip(
+                task_list = list(
+                    zip(
                         uids,
                         itertools.islice(  # distribute tokens evenly among instances
                             itertools.cycle(token_list), constants.queue_len
                         ),
+                    )
+                )
+                constants.max_workers = min(32, (os.cpu_count() or 1) + 2)
+                constants.delay = 0.28 / len(token_list)
+
+                with ThreadPoolExecutor(max_workers=constants.max_workers) as pool:
+                    for task_batch in np.array_split(
+                        task_list, len(task_list) // (80 * len(token_list)) + 1
                     ):
-                        future = pool.submit(
-                            fetch_avatar, uid, api_token, cfg.avatar_resolution, status
-                        )
+                        futures = []
+                        for uid, api_token in task_batch:
+                            futures.append(
+                                pool.submit(
+                                    fetch_avatar,
+                                    uid,
+                                    api_token,
+                                    cfg.avatar_resolution,
+                                    status,
+                                )
+                            )
+
+                        # Wait and finish before moving on to the next batch
+                        for future in futures:
+                            future.result()
 
                 try:
                     future.result()  # type: ignore
-                except NameError:
+                except AttributeError:
                     pass
 
                 constants.is_downloading = False
@@ -345,9 +362,9 @@ def _import_avatars():
 if __name__ == "__main__":
     # TODO: Check merging algorithm
     # TODO: Avatar download task progress
-    version_tag = "3.0"
+    version_tag = "2.1"
     console.clear()
-    console.set_window_title("Mic Drop Results")
+    console.set_window_title(f"Mic Drop Results {version_tag}")
     disable_console()
 
     # Section A: Fix console-related issues
@@ -356,7 +373,6 @@ if __name__ == "__main__":
     atexit.register(enable_console)
     warnings.simplefilter(action="ignore", category=UserWarning)
     sys.excepthook = print_exception_hook  # avoid exiting program on exception
-    init()  # enable ANSI escape sequences
 
     # Section B: Check for missing files
     if missing_files := [
@@ -409,13 +425,16 @@ if __name__ == "__main__":
 
                 console.print(
                     Padding(
-                        f"[bold yellow]Update v{latest_tag}[/bold yellow]\n"
-                        f"{summary}\n" + LATEST_RELEASE_URL,
+                        f"[bold yellow]Update available: Version {latest_tag}[/bold yellow]\n"
+                        f"{summary}\n"
+                        f"Visit release: {LATEST_RELEASE_URL}",
                         (2, constants.padding, 2, constants.padding),
                     )
                 )
 
+                time.sleep(3)
                 webbrowser.open(LATEST_RELEASE_URL, new=2)
+                time.sleep(3)
 
             elif latest < current:
                 status = ProgramStatus.BETA
@@ -434,12 +453,9 @@ if __name__ == "__main__":
     #               Mic Drop Results (v3.10) [update available]
 
     status_msg = f" [{status.value}]" if status else ""
-    console.print(f"[bold]Mic Drop Results (v{version_tag}){status_msg}[/bold]")
-
-    if status != ProgramStatus.UPDATE_AVAILABLE:
-        # When an update is available, the download link is already shown above.
-        # To avoid confusion, we only print one link at a time.
-        console.print(REPO_URL)
+    console.print(f"[bold]Mic Drop Results{status_msg}[/bold]", justify="center")
+    console.print(f"Version {version_tag}", justify="center")
+    console.print(REPO_URL, justify="center")
 
     # Section F: Read and process the data file
     xls = pd.ExcelFile(abs_dir("data.xlsm"))
@@ -601,7 +617,7 @@ if __name__ == "__main__":
     console.print(
         Padding(
             "[bold yellow]Generating slides...[/bold yellow]\n"
-            "Please do not click on any PowerPoint window that may appear during the process.",
+            "To prevent any errors or interruptions, please avoid clicking on any PowerPoint window that pops up during the process.",
             (2, constants.padding, 2, constants.padding),
         )
     )
@@ -632,7 +648,10 @@ if __name__ == "__main__":
         ppt.Presentations.Open(abs_dir("template.pptm"))
 
         # Minimize the window
-        ppt.ActiveWindow.WindowState = 2
+        try:
+            ppt.ActiveWindow.WindowState = 2
+        except:  # catch all "no opened window" errors
+            pass
 
         # Import macros
         try:

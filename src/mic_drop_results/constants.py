@@ -17,11 +17,14 @@ OUTPUT_DIR = MAIN_DIR / "output"
 AVATAR_DIR = MAIN_DIR / "avatars"
 TEMP_DIR = MAIN_DIR / ".temp"
 
-console = Console(highlight=False, width=120)
+console = Console(highlight=False)
 padding = 4
 
 # Mutable globals (usage: import constants; constants.var)
 downloaded = 0
 queue_len = 0
+delay = 0
+is_rate_limited = False
+max_workers = 0
 avatar_urls: list[tuple] = []
 is_downloading = False

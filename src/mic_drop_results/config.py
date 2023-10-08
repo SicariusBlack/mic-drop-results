@@ -7,8 +7,6 @@ from collections.abc import Callable
 import configparser
 from typing import Any
 
-from colorama import Fore
-
 from compiled_regex import *
 from errors import Error
 
@@ -42,7 +40,7 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
         try:
             self._validate(self.config)  # validate config vars' conditions
         except AssertionError as e:
-            Error(31.1).throw(Fore.RED + e.args[0] + Fore.RESET)
+            Error(31.1).throw("[red]" + e.args[0] + "[/red]")
 
         self.__dict__ = self.config  # assign config vars to class attributes
 
