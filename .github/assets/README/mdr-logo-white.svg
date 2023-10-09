@@ -5,9 +5,9 @@
         font-size: 200px;
         fill: #fff;
         text-anchor: end;
-        font-family: "DM Serif Text";
+        font-family: "DM Serif Display";
       }
     </style>
   </defs>
-  <text id="Mic_Drop_Results" data-name="Mic Drop Results" class="cls-1" x="1590" y="186.375"><tspan x="1590">Mic Drop Results</tspan></text>
+  <text id="Mic_Drop_Results" data-name="Mic Drop Results" class="cls-1" x="1593.999" y="186.375"><tspan x="1593.999">Mic Drop Results</tspan></text>
 </svg>
