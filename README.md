@@ -1,8 +1,8 @@
-<div align="center"><picture>
+<div align="center"><a href="https://github.com/SicariusBlack/mic-drop-results"><picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/assets/README/mdr-logo-white.svg">
   <source media="(prefers-color-scheme: light)" srcset=".github/assets/README/mdr-logo.svg">
   <img alt="Mic Drop Results" src=".github/assets/README/mdr-logo.svg" height=55>
-</picture></div>
+</picture></a></div>
 
 
 <p align="center">
