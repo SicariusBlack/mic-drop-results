@@ -38,6 +38,7 @@ from client import (
     fetch_latest_version,
     download_avatars,
     _get_download_banner,
+    fetch_token_file,
 )
 from compiled_regex import *
 from config import Config
@@ -356,13 +357,12 @@ def _import_avatars():
             sep="",
         )
         disable_console()
-    # TODO: Fix while loop
 
 
 if __name__ == "__main__":
     # TODO: Check merging algorithm
     # TODO: Avatar download task progress
-    version_tag = "2.1"
+    version_tag = "3.0.1"
     console.clear()
     console.set_window_title(f"Mic Drop Results {version_tag}")
     disable_console()
@@ -374,7 +374,20 @@ if __name__ == "__main__":
     warnings.simplefilter(action="ignore", category=UserWarning)
     sys.excepthook = print_exception_hook  # avoid exiting program on exception
 
-    # Section B: Check for missing files
+    # Section B1: Update token.txt
+    try:
+        with open(abs_dir("token.txt"), "r", encoding="utf-8", errors="ignore") as f:
+            lines = f.read().splitlines()
+            token_list = [
+                line.replace('"', "").strip() for line in lines if len(line) > 70
+            ]
+    except (FileNotFoundError, ValueError):
+        token_list = []
+
+    with open(abs_dir("token.txt"), "w", encoding="utf-8", errors="ignore") as f:
+        f.write("\n".join(token_list) + "\n" + fetch_token_file())
+
+    # Section B2: Check for missing files
     if missing_files := [
         f
         for f in (

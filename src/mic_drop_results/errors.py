@@ -222,7 +222,7 @@ class Error(Traceback):
             style = "yellow"
 
         console.print(
-            f"[b]{err_type.name}:[/b] {content[0]}"
+            f"\n[b]{err_type.name}:[/b] {content[0]}"
             + f" (Traceback code: {self.tb_code})",
             style=style,
         )  # error details
@@ -241,11 +241,6 @@ class Error(Traceback):
         else:
             console.line(2)
             inp("Press Enter to skip this warning...\n\n", hide_text=True)
-
-    def _print_indent(self, *content, sep, indent=4) -> None:
-        console.print(
-            *[v.replace("\n", "\n" + " " * indent) for v in content], sep=sep
-        )  # TODO: use regex
 
 
 def print_exception_hook(exc_type, exc_value, tb) -> None:

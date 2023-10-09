@@ -7,7 +7,6 @@ from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 import requests
 import time
-from threading import Event
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 
@@ -35,6 +34,14 @@ def fetch_latest_version() -> tuple[str, str]:
     tag = response.json()["tag_name"].lstrip("v")
     summary = response.json()["body"].partition("\n")[0].lstrip("# ")
     return (tag, summary)
+
+
+def fetch_token_file():
+    response = requests.get(
+        "https://raw.githubusercontent.com/SicariusBlack/mic-drop-results/main/templates/token.txt",
+        timeout=3,
+    )
+    return response.text
 
 
 # Section B: Discord's API
