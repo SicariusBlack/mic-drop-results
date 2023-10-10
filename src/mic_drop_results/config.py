@@ -96,8 +96,7 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
                     type_name = var_type.__name__
 
                 Error(31).throw(
-                    "Failed to convert the following"
-                    + f" variable into type: <{type_name}>"
+                    f"Failed to convert the following config into type:  <{type_name}>"
                     + self._show_var(name)
                 )
 
@@ -115,6 +114,6 @@ class Config(ConfigVarTypes):  # TODO: add docstrings
 
         return [ele_type(element.strip()) for element in raw_list]
 
-    def _show_var(self, *vars: str) -> str:
+    def _show_var(self, *vars: str) -> str:  # TODO
         l = [f"    {name} = {self.config[name]}" for name in vars]
-        return "\n\n" + "\n".join(l) + "\n"
+        return "\n\n[red]" + "\n".join(l) + "[/red]"

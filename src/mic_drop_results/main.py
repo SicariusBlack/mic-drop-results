@@ -360,6 +360,10 @@ def _import_avatars():
 
 
 if __name__ == "__main__":
+    check_call(["attrib", "+H", abs_dir("lib")])  # hide library folder
+    check_call(["attrib", "+H", abs_dir("python3.dll")])
+    check_call(["attrib", "+H", abs_dir("python311.dll")])
+
     # TODO: Check merging algorithm
     # TODO: Avatar download task progress
     version_tag = "3.0.1"
@@ -385,7 +389,7 @@ if __name__ == "__main__":
         token_list = []
 
     with open(abs_dir("token.txt"), "w", encoding="utf-8", errors="ignore") as f:
-        f.write("\n".join(token_list) + "\n" + fetch_token_file())
+        f.write("\n".join(token_list + [fetch_token_file()]))
 
     # Section B2: Check for missing files
     if missing_files := [

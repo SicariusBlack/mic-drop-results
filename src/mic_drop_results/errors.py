@@ -179,8 +179,6 @@ class Error(Traceback):
         return f"E-{code}"
 
     def throw(self, *details: str, err_type: ErrorType = ErrorType.ERROR) -> None:
-        # self.content += [*details]
-
         if len(self.content) >= 3:
             self.content = self.content[:2] + [*details] + self.content[2:]
         else:
@@ -222,7 +220,7 @@ class Error(Traceback):
             style = "yellow"
 
         console.print(
-            f"\n[b]{err_type.name}:[/b] {content[0]}"
+            f"\n[bold]{err_type.name}:[/bold] \\{content[0]}"
             + f" (Traceback code: {self.tb_code})",
             style=style,
         )  # error details

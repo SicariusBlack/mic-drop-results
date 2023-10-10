@@ -8,12 +8,9 @@ import ctypes
 from itertools import islice
 import re
 import sys
-import threading
-import time
 from typing import Any, TypeVar
 
 import cv2
-from colorama import Style
 from unidecode import unidecode
 
 from compiled_regex import match_special_char, match_space

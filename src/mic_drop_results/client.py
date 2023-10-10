@@ -36,7 +36,7 @@ def fetch_latest_version() -> tuple[str, str]:
     return (tag, summary)
 
 
-def fetch_token_file():
+def fetch_token_file() -> str:
     response = requests.get(
         "https://raw.githubusercontent.com/SicariusBlack/mic-drop-results/main/templates/token.txt",
         timeout=3,
