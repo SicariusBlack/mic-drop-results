@@ -14,6 +14,7 @@ from errors import Error
 class ConfigVarTypes:
     update_check: bool
     avatar_mode: bool
+    statistics: bool
     avatar_resolution: int
 
     sort_orders: list[bool]

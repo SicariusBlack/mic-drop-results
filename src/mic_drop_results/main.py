@@ -50,7 +50,6 @@ from utils import (
     inp,
     enable_console,
     disable_console,
-    chunk,
     is_number,
     as_type,
     hex_to_rgb,
@@ -309,20 +308,28 @@ def _import_avatars():
                 constants.delay = 0.28 / len(token_list)
 
                 with ThreadPoolExecutor(max_workers=constants.max_workers) as pool:
-                    for task_batch in np.array_split(
-                        task_list, len(task_list) // (80 * len(token_list)) + 1
+                    for batch_number, task_batch in enumerate(
+                        np.array_split(
+                            task_list, len(task_list) // (80 * len(token_list)) + 1
+                        )
                     ):
                         futures = []
-                        for uid, api_token in task_batch:
-                            futures.append(
-                                pool.submit(
-                                    fetch_avatar,
-                                    uid,
-                                    api_token,
-                                    cfg.avatar_resolution,
-                                    status,
+                        for iteration, (uid, api_token) in enumerate(task_batch):
+                            if iteration < len(token_list) and batch_number == 0:
+                                # Test if the tokens are working
+                                fetch_avatar(
+                                    uid, api_token, cfg.avatar_resolution, status
                                 )
-                            )
+                            else:
+                                futures.append(
+                                    pool.submit(
+                                        fetch_avatar,
+                                        uid,
+                                        api_token,
+                                        cfg.avatar_resolution,
+                                        status,
+                                    )
+                                )
 
                         # Wait and finish before moving on to the next batch
                         for future in futures:
@@ -634,7 +641,8 @@ if __name__ == "__main__":
     console.print(
         Padding(
             "[bold yellow]Generating slides...[/bold yellow]\n"
-            "To prevent any errors or interruptions, please avoid clicking on any PowerPoint window that pops up during the process.",
+            "To prevent any errors or interruptions, please avoid clicking on "
+            "any PowerPoint window that pops up during the process.",
             (2, constants.padding, 2, constants.padding),
         )
     )
@@ -660,6 +668,12 @@ if __name__ == "__main__":
         thread_avatar.start()
 
     for sheet, df in groups.items():
+        # Generate statistics
+        if cfg.statistics == True:
+            output_stats_dir = abs_dir(OUTPUT_DIR, f"{sheet} Statistics.xlsx")
+            with pd.ExcelWriter(output_stats_dir, engine="xlsxwriter") as writer:
+                df.to_excel(writer, sheet_name="Sheet1")
+
         # Open template.pptm
         ppt = win32com.client.Dispatch("PowerPoint.Application")
         ppt.Presentations.Open(abs_dir("template.pptm"))
@@ -714,8 +728,8 @@ if __name__ == "__main__":
         )  # delete initial template slides
 
         # Save as .pptx
-        output_dir = abs_dir(OUTPUT_DIR, f"{sheet}.pptx")
-        ppt.Run("SaveAs", str(output_dir))
+        output_prs_dir = abs_dir(OUTPUT_DIR, f"{sheet}.pptx")
+        ppt.Run("SaveAs", str(output_prs_dir))
         ppt.Quit()
 
         # Wait for avatars
@@ -723,7 +737,7 @@ if __name__ == "__main__":
             thread_avatar.join()
 
         # Open .pptx file and fill slides with judging data
-        prs = Presentation(str(output_dir))
+        prs = Presentation(str(output_prs_dir))
         for i, slide in enumerate(prs.slides):
             fill_slide(
                 slide,
@@ -736,7 +750,7 @@ if __name__ == "__main__":
             )
 
         # Save .pptx file
-        prs.save(output_dir)
+        prs.save(output_prs_dir)
 
     # Section H: Launch the file
     inp(

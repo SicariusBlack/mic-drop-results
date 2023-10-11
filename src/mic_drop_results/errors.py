@@ -12,7 +12,7 @@ from rich.padding import Padding
 
 from compiled_regex import *
 from constants import *
-from utils import inp, abs_dir
+from utils import inp
 
 
 class Tag(Enum):
