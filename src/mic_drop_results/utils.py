@@ -13,7 +13,7 @@ from typing import Any, TypeVar
 import cv2
 from unidecode import unidecode
 
-from compiled_regex import match_special_char, match_space
+from compiled_regex import match_non_username_char, match_space
 from constants import *
 
 
@@ -261,7 +261,7 @@ def parse_coef(run_text: str, *, field_name: str) -> int:
 
 def clean_name(text) -> str:
     text = unidecode(str(text))  # simplify special unicode characters
-    if t := match_special_char.sub("", text):  # remove special characters
+    if t := match_non_username_char.sub("", text):  # remove special characters
         text = t
     text = match_space.sub("", text).lower()  # remove space
     return text

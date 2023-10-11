@@ -10,7 +10,7 @@ match_url = re.compile(
 match_field_name = re.compile(
     r"(?<={)([\w \-]*?)(?=})"  # "field_name" from "{field_name}"
 )
-match_username = re.compile(
+match_windows_username = re.compile(
     r"(?<=(?:\\|\/)Users(?:\\|\/)).+?(?=(?:\\|\/))",  # "username" from "C:\Users\username\"
     re.IGNORECASE,
 )
@@ -19,7 +19,7 @@ match_username = re.compile(
 # Section B: Substitute
 match_forbidden_char = re.compile(r'[\\\/:"*?<>|]+')
 match_space = re.compile(r"\s")
-match_special_char = re.compile(r"[^a-z0-9]", re.IGNORECASE)
+match_non_username_char = re.compile(r"[^a-z0-9_.]", re.IGNORECASE)
 
 
 # Section C: Full match

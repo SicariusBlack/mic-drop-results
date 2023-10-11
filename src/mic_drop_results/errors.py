@@ -186,7 +186,7 @@ class Error(Traceback):
 
         # Redact sensitive information
         for i, x in enumerate(self.content):
-            self.content[i] = match_username.sub("user", str(x))
+            self.content[i] = match_windows_username.sub("user", str(x))
 
         self._print(*self.content, err_type=err_type)
 
