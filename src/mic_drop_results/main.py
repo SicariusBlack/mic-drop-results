@@ -607,9 +607,9 @@ if __name__ == "__main__":
 
                 for col in overlapped_cols:
                     df[col] = df[f"{col}_y"].fillna(df[f"{col}_x"])
-                    df = df.drop(columns=[f"{col}_x", f"{col}_y"])
+                    # df = df.drop(columns=[f"{col}_x", f"{col}_y"]) TODO
 
-                df = df.drop(columns="__merge_anchor")
+                # df = df.drop(columns="__merge_anchor")
 
         if "__uid" not in df.columns:
             avatar_mode = False
@@ -671,8 +671,12 @@ if __name__ == "__main__":
         # Generate statistics
         if cfg.statistics == True:
             output_stats_dir = abs_dir(OUTPUT_DIR, f"{sheet} Statistics.xlsx")
-            with pd.ExcelWriter(output_stats_dir, engine="xlsxwriter") as writer:
-                df.to_excel(writer, sheet_name="Sheet1")
+
+            try:
+                with pd.ExcelWriter(output_stats_dir, engine="xlsxwriter") as writer:
+                    df.to_excel(writer, sheet_name="Sheet1")
+            except PermissionError:  # TODO
+                pass
 
         # Open template.pptm
         ppt = win32com.client.Dispatch("PowerPoint.Application")
