@@ -101,6 +101,11 @@ class Traceback:
             "File > Options > Trust Center > Trust Center Settings > Macro Settings\n\n"
             'Make sure the "Trust access to the VBA project object model" option is checked.',
         ],
+        42: [
+            Tag.SYS,
+            "Failed to open an Excel file",
+            "Please save your work, close all Excel windows, and try again.",
+        ],
         # 60 and above: Data errors
         60: [
             Tag.FILE_DATA,
@@ -227,10 +232,11 @@ class Error(Traceback):
 
         console.line(1)
         console.print(content[1])  # steps to resolve
-        console.line(1)
 
-        for part in content[2:]:
-            console.print(Padding(part, (1, 4, 0, 4)))  # extra details
+        if len(content) > 2:
+            console.line(1)
+            for part in content[2:]:
+                console.print(Padding(part, (1, 4, 0, 4)))  # extra details
 
         if err_type == ErrorType.ERROR:
             console.line(2)

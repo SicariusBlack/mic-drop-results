@@ -19,7 +19,7 @@ match_windows_username = re.compile(
 # Section B: Substitute
 match_forbidden_char = re.compile(r'[\\\/:"*?<>|]+')
 match_space = re.compile(r"\s")
-match_non_username_char = re.compile(r"[^a-z0-9_.]", re.IGNORECASE)
+match_non_username_char = re.compile(r"([^a-z0-9_.]|(?<=\.)\.|(?<=#).+)", re.IGNORECASE)
 
 
 # Section C: Full match

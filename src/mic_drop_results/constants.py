@@ -14,6 +14,7 @@ else:
     MAIN_DIR = Path(__file__).resolve().parent
 
 OUTPUT_DIR = MAIN_DIR / "output"
+STATS_DIR = OUTPUT_DIR / "statistics"
 AVATAR_DIR = MAIN_DIR / "avatars"
 TEMP_DIR = MAIN_DIR / ".temp"
 

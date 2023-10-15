@@ -476,8 +476,7 @@ if __name__ == "__main__":
     #
     #               Mic Drop Results (v3.10) [update available]
 
-    status_msg = f" [{status.value}]" if status else ""
-    console.print(f"[bold]Mic Drop Results{status_msg}[/bold]", justify="center")
+    console.print(f"[bold]Mic Drop Results[/bold] ", justify="center")
     console.print(f"Version {version_tag}", justify="center")
     console.print(REPO_URL, justify="center")
 
@@ -501,6 +500,7 @@ if __name__ == "__main__":
         table = workbook[sheet]
         if table.empty or table.shape < (1, 2):  # (1 row, 2 cols) min
             continue
+        table = table.replace(np.nan, None)
         database[sheet] = table
 
     groups: dict[str, pd.DataFrame] = {}
@@ -511,6 +511,7 @@ if __name__ == "__main__":
         df = workbook[sheet]
         if df.empty or df.shape < (1, n_scols):  # (1 row, n_scols cols) min
             continue
+        df = df.replace(np.nan, None)
 
         scols = df.columns.tolist()[:n_scols]  # get sorting cols
         SHEET_INFO = (
@@ -606,10 +607,10 @@ if __name__ == "__main__":
                 # Note: merging wtih an existing column will produce duplicates
 
                 for col in overlapped_cols:
-                    df[col] = df[f"{col}_y"].fillna(df[f"{col}_x"])
-                    # df = df.drop(columns=[f"{col}_x", f"{col}_y"]) TODO
+                    df[col] = df[f"{col}_x"].fillna(df[f"{col}_y"])
+                    df = df.drop(columns=[f"{col}_x", f"{col}_y"])
 
-                # df = df.drop(columns="__merge_anchor")
+                df = df.drop(columns="__merge_anchor")
 
         if "__uid" not in df.columns:
             avatar_mode = False
@@ -629,6 +630,7 @@ if __name__ == "__main__":
     )
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
+    os.makedirs(STATS_DIR, exist_ok=True)
     os.makedirs(AVATAR_DIR, exist_ok=True)
     os.makedirs(TEMP_DIR, exist_ok=True)
     check_call(["attrib", "+H", TEMP_DIR])  # hide temp folder
@@ -670,13 +672,19 @@ if __name__ == "__main__":
     for sheet, df in groups.items():
         # Generate statistics
         if cfg.statistics == True:
-            output_stats_dir = abs_dir(OUTPUT_DIR, f"{sheet} Statistics.xlsx")
+            output_stats_dir = abs_dir(STATS_DIR, f"{sheet} Statistics.xlsx")
 
-            try:
-                with pd.ExcelWriter(output_stats_dir, engine="xlsxwriter") as writer:
-                    df.to_excel(writer, sheet_name="Sheet1")
-            except PermissionError:  # TODO
-                pass
+            while True:
+                try:
+                    with pd.ExcelWriter(
+                        output_stats_dir, engine="xlsxwriter"
+                    ) as writer:
+                        df.fillna("").to_excel(writer, sheet_name="data", index=False)
+                except PermissionError:  # TODO
+                    Error(42).throw(err_type=ErrorType.WARNING)
+                    continue
+
+                break
 
         # Open template.pptm
         ppt = win32com.client.Dispatch("PowerPoint.Application")
