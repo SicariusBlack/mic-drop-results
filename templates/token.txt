@@ -10,7 +10,8 @@ steps in this guide. You can use more  than
 one token  to avoid exceeding the  API rate
 limits.
 
-  https://banz04.github.io/mic-drop-results/docs/token.html
+  https://sicariusblack.github.io/mic-drop-results/docs/token.html
+
 
 IMPORTANT  NOTICE:  THIS  FEATURE  DOES NOT
 REQUIRE YOU TO ADD THE BOTS TO ANY  DISCORD
