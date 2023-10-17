@@ -103,8 +103,8 @@ class Traceback:
         ],
         42: [
             Tag.SYS,
-            "Failed to open an Excel file",
-            "Please save your work, close all Excel windows, and try again.",
+            "Failed to open Excel file",
+            "Please save your work, close the following window, and try again.",
         ],
         # 60 and above: Data errors
         60: [
@@ -225,7 +225,7 @@ class Error(Traceback):
             style = "yellow"
 
         console.print(
-            f"\n[bold]{err_type.name}:[/bold] \\{content[0]}"
+            f"[bold]{err_type.name}:[/bold] \\{content[0]}"
             + f" (Traceback code: {self.tb_code})",
             style=style,
         )  # error details
@@ -244,7 +244,9 @@ class Error(Traceback):
             os._exit(1)
         else:
             console.line(2)
-            inp("Press Enter to skip this warning...\n\n", hide_text=True)
+            inp("Press Enter to continue...\n\n", hide_text=True)
+            console.rule("session resumed")
+            console.line(2)
 
 
 def print_exception_hook(exc_type, exc_value, tb) -> None:

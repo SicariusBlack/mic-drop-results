@@ -31,6 +31,7 @@ from pywintypes import com_error
 from rich.padding import Padding
 import requests
 import win32com.client
+import xlwings as xw
 
 from client import (
     ProgramStatus,
@@ -94,9 +95,6 @@ def _replace_avatar(slide: Slide, shape, run, *, uid: str) -> None:
 
 
 def _replace_text(run, field_name, *, text: str) -> None:
-    if text == "nan":  # change numpy's nan back to empty value
-        text = ""
-
     if field_name.startswith(cfg.trigger_word):  # apply to {triggerword_blahblah}
         # Find breakpoints and apply conditional formatting to numbers
         for ind, breakpoint in enumerate(cfg.ranges[::-1]):
@@ -333,12 +331,10 @@ def _import_avatars():
 
                         # Wait and finish before moving on to the next batch
                         for future in futures:
-                            future.result()
-
-                try:
-                    future.result()  # type: ignore
-                except AttributeError:
-                    pass
+                            try:
+                                future.result()
+                            except AttributeError:
+                                pass
 
                 constants.is_downloading = False
                 thread_download.join()
@@ -371,8 +367,6 @@ if __name__ == "__main__":
     check_call(["attrib", "+H", abs_dir("python3.dll")])
     check_call(["attrib", "+H", abs_dir("python311.dll")])
 
-    # TODO: Check merging algorithm
-    # TODO: Avatar download task progress
     version_tag = "3.0.1"
     console.clear()
     console.set_window_title(f"Mic Drop Results {version_tag}")
@@ -465,24 +459,14 @@ if __name__ == "__main__":
             else:
                 status = ProgramStatus.UP_TO_DATE
 
-    # Print a header containing information about the program
-
-    # Normal:       Mic Drop Results (v3.10)
-    #               https://github.com/SicariusBlack/mic-drop-results
-
-    # With update:  Update v3.11
-    #               A summary of the update will appear in this line.
-    #               https://github.com/SicariusBlack/mic-drop-results/releases/latest/
-    #
-    #               Mic Drop Results (v3.10) [update available]
-
+    # Print the program's header
     console.print(f"[bold]Mic Drop Results[/bold] ", justify="center")
     console.print(f"Version {version_tag}", justify="center")
     console.print(REPO_URL, justify="center")
 
     # Section F: Read and process the data file
     xls = pd.ExcelFile(abs_dir("data.xlsm"))
-    workbook: dict[int | str, pd.DataFrame] = pd.read_excel(xls, sheet_name=None)
+    workbook: dict[str, pd.DataFrame] = pd.read_excel(xls, sheet_name=None)
     xls.close()
 
     sheet_names = [
@@ -676,14 +660,56 @@ if __name__ == "__main__":
 
             while True:
                 try:
-                    with pd.ExcelWriter(
-                        output_stats_dir, engine="xlsxwriter"
-                    ) as writer:
-                        df.fillna("").to_excel(writer, sheet_name="data", index=False)
-                except PermissionError:  # TODO
-                    Error(42).throw(err_type=ErrorType.WARNING)
-                    continue
+                    with xw.App(visible=False) as app:  # TODO: Simplify code
+                        # Write data sheet
+                        with pd.ExcelWriter(output_stats_dir) as writer:
+                            df.fillna("").to_excel(
+                                writer, sheet_name="data", index=False
+                            )
 
+                        # Write lookup sheet
+                        stats_workbook = xw.Book(output_stats_dir)
+
+                        sheet_lookup = stats_workbook.sheets.add("lookup")
+                        sheet_data = stats_workbook.sheets["data"]
+
+                        stats_workbook.api.Styles("Normal").Font.Name = "Arial Nova"
+                        stats_workbook.api.Styles("Normal").Font.Size = 10
+                        stats_workbook.api.Styles(
+                            "Normal"
+                        ).VerticalAlignment = -4108  # align center
+
+                        sheet_data.range("1:1").api.Font.Name = "Arial Nova"
+                        sheet_data.range("1:1").api.Font.Size = 10
+                        sheet_data.range(
+                            "1:1"
+                        ).api.VerticalAlignment = -4108  # align center
+
+                        sheet_lookup.range("A:A").api.RowHeight = 15
+                        sheet_data.range("A:A").api.RowHeight = 15
+
+                        sheet_lookup.range("A1").value = "name"
+                        sheet_lookup.range("B1").value = "avg"
+                        sheet_lookup.range(
+                            "B2"
+                        ).formula2 = "=IF(ISBLANK($A2), 0, FILTER(CHOOSECOLS(data!$A:$Z, MATCH(B$1, data!$1:$1, 0)), CHOOSECOLS(data!$A:$Z, MATCH($A$1, data!$1:$1, 0))=$A2))"
+
+                        sheet_lookup.range("A:A").api.Borders(2).Weight = 2
+                        sheet_lookup.range("1:1").api.Borders(4).Weight = 2
+
+                        sheet_lookup.range("1:1").font.bold = True
+                        sheet_lookup.range(
+                            "1:1"
+                        ).api.HorizontalAlignment = -4108  # align center
+
+                        stats_workbook.save()
+                        stats_workbook.close()
+
+                except PermissionError:
+                    Error(42).throw(
+                        f"{sheet} Statistics.xlsx - Excel", err_type=ErrorType.WARNING
+                    )
+                    continue
                 break
 
         # Open template.pptm
@@ -757,7 +783,7 @@ if __name__ == "__main__":
                     k.lstrip("__"): str(
                         v
                     )  # treat program-domain vars like normal vars when replacing
-                    for k, v in df.iloc[i].to_dict().items()
+                    for k, v in df.iloc[i].fillna("").to_dict().items()
                 },
             )
 

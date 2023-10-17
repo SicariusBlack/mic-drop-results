@@ -115,7 +115,15 @@ def fetch_avatar(uid, api_token, size, status):
 
 
 def download_avatars():
-    while constants.is_downloading == True:
+    retry = 10
+    while True:
+        if constants.is_downloading == False and len(constants.avatar_urls) == 0:
+            retry -= 1
+            if retry < 1:
+                break
+            else:
+                continue
+
         with ThreadPoolExecutor(max_workers=2) as pool:
             while len(constants.avatar_urls) > 0:
                 uid, avatar_url = constants.avatar_urls[0]
