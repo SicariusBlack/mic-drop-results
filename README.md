@@ -7,13 +7,13 @@
 
 <p align="center">
   Mass slides generation program for the Mic Drop contest<br>
-  <a href="https://discord.gg/X9hteAdVCH"><b>More info about Mic Drop here</b></a>
+  <a href="https://discord.gg/X9hteAdVCH"><b>More info about Mic Drop</b></a>
 </p>
 
 
 <h2 align="center">Installation</h2>
 
-To install, click here to download [**mic-drop-results.zip**](https://github.com/banz04/mic-drop-results/releases/latest/download/mic-drop-results.zip) and extract it to a folder of choice. This folder will be your automated slides workstation from now on.
+To install the program, simply download [**mic-drop-results.zip**](https://github.com/banz04/mic-drop-results/releases/latest/download/mic-drop-results.zip) and extract its contents to a folder of your choosing. This folder will serve as your automated slides workstation from now on.
 
 
 <h2 align="center">Showcase</h2>
@@ -47,6 +47,6 @@ To install, click here to download [**mic-drop-results.zip**](https://github.com
 </p>
 
 
-<h2 align="center">Meet the Developer</h2>
+<h2 align="center">Contact the Developer</h2>
 
-If you have any questions, concerns, bug reports, or suggestions, please feel free to reach out to [SicariusBlack](https://discord.com/users/1104424999365918841) on Discord. Your feedback means a lot to me and I would love to hear from you!
+If you have any questions, encounter any bugs, or have ideas for improvement, please feel free to reach out to [SicariusBlack](https://discord.com/users/1104424999365918841) on Discord. We value your feedback and would be happy to hear from you.
