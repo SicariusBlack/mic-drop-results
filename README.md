@@ -13,7 +13,7 @@
 
 <h2 align="center">Installation</h2>
 
-To install the program, simply download [**mic-drop-results.zip**](https://github.com/banz04/mic-drop-results/releases/latest/download/mic-drop-results.zip) and extract its contents to a folder of your choosing. This folder will serve as your automated slides workstation from now on.
+To install the program, simply download [**mic-drop-results.zip**](https://github.com/SicariusBlack/mic-drop-results/releases/latest/download/mic-drop-results.zip) and extract its contents to a folder of your choosing. This folder will serve as your automated slides workstation from now on.
 
 
 <h2 align="center">Showcase</h2>
