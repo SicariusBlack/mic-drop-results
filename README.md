@@ -7,7 +7,7 @@
 
 <p align="center">
   Automated slide-generation program for the Mic Drop contest<br>
-  <a href="https://discord.gg/X9hteAdVCH"><b>More info about Mic Drop</b></a>
+  <a href="https://discord.gg/q7F4ZX3Efw"><b>More info about Mic Drop</b></a>
 </p>
 
 
