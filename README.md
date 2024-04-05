@@ -45,8 +45,3 @@ To install the program, simply download [**mic-drop-results.zip**](https://githu
     <img src=".github/assets/README/5.png" width=380>
   </picture>
 </p>
-
-
-<h2 align="center">Contact the Developer</h2>
-
-If you have any questions, encounter any bugs, or have ideas for improvement, please feel free to reach out to [SicariusBlack](https://discord.com/users/1104424999365918841) on Discord. We value your feedback and would be happy to hear from you.
